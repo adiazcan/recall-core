@@ -169,7 +169,7 @@ web/
 │   ├── stores/          # Global Zustand stores
 │   ├── lib/             # Utilities, API client, helpers
 │   └── routes.tsx       # React Router configuration
-└── tests/
+└── src/tests/
 ```
 
 **Zustand conventions**:

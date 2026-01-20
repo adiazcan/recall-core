@@ -10,6 +10,7 @@
 *.userosscache
 *.sln.docstates
 *.env
+.env*
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -300,6 +301,8 @@ FakesAssemblies/
 # Node.js Tools for Visual Studio
 .ntvs_analysis.dat
 node_modules/
+dist/
+build/
 
 # Visual Studio 6 build log
 *.plg
@@ -403,6 +406,13 @@ FodyWeavers.xsd
 !.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/*.code-snippets
+
+# IDEs and OS files
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
 
 # Local History for Visual Studio Code
 .history/

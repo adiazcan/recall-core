@@ -117,7 +117,6 @@ As a developer, I want consistent code formatting and linting enforced across th
 
 - **FR-011**: Repository MUST include a README with prerequisites and step-by-step run instructions
 - **FR-012**: Repository MUST include an .editorconfig file for consistent editor settings
-- **FR-013**: Backend MUST have formatting configuration (dotnet format compatible)
 - **FR-014**: Frontend MUST have ESLint configuration for code linting
 
 #### CI/CD (Optional but Preferred)

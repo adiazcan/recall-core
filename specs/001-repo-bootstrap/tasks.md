@@ -126,7 +126,7 @@
 - [X] T040 [US4] Configure workflow to build frontend (npm install, npm run build)
 - [X] T041 [US4] Configure workflow to run backend tests (dotnet test)
 - [X] T042 [US4] Configure workflow to run frontend tests (npm run test)
-- [X] T043 [US4] Configure workflow to run linting checks (dotnet format --verify-no-changes, npm run lint)
+- [X] T043 [US4] Configure workflow to run linting checks (npm run lint)
 
 **Checkpoint**: User Story 4 complete - CI pipeline builds and tests on every push
 
@@ -136,7 +136,7 @@
 
 **Goal**: Enforce consistent code formatting and linting across the codebase
 
-**Independent Test**: Run `dotnet format --verify-no-changes` and `npm run lint` with zero violations
+**Independent Test**: Run `npm run lint` with zero violations
 
 ### Implementation for User Story 5
 

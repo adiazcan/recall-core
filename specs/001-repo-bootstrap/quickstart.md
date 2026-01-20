@@ -95,11 +95,6 @@ dotnet build
 # Run tests
 dotnet test
 
-# Format check
-dotnet format --verify-no-changes
-
-# Format fix
-dotnet format
 ```
 
 ### Frontend

@@ -2,12 +2,10 @@
 =============================================================================
 SYNC IMPACT REPORT
 =============================================================================
-Version change: 1.2.0 → 1.3.0 (minor: added Dapr for microservices)
+Version change: 1.3.0 → 1.3.1 (patch: added backend namespace convention)
 
 Modified sections:
-- Technical Standards: Added Dapr as microservices runtime
-- Added Dapr Integration section with building blocks and conventions
-- Updated Reliability principle to reference Dapr resiliency policies
+- Technical Standards: Added backend namespace convention (Recall.Core)
 
 Templates requiring updates:
 - ✅ plan-template.md (Constitution Check section aligns)
@@ -140,6 +138,7 @@ Follow-up TODOs: None
 | **Orchestration** | **Aspire 13 AppHost**          | Code-first dev orchestration, service discovery, built-in telemetry |
 | **Microservices** | **Dapr 1.14+**                 | Service invocation, pub/sub, state, resiliency |
 | Backend API       | C# / .NET 10 minimal API       | Async support, type safety, performance  |
+| **Backend Namespace** | `Recall.Core`              | Root namespace for all backend projects  |
 | Database          | MongoDB                        | Full-text search, flexible documents     |
 | Cache/Queue       | Redis                          | Async ingestion, caching, simple queues  |
 | Frontend          | TypeScript + React 19          | Type safety, component model, ecosystem  |
@@ -409,4 +408,4 @@ builder.Build().Run();
 
 **Guidance**: For runtime development guidance, refer to project README.md and `/specs/` documentation.
 
-**Version**: 1.3.0 | **Ratified**: 2026-01-20 | **Last Amended**: 2026-01-20
+**Version**: 1.3.1 | **Ratified**: 2026-01-20 | **Last Amended**: 2026-01-20

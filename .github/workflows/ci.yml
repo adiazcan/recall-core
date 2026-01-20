@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: "src/web/package-lock.json"
+
+      - name: Restore backend
+        run: dotnet restore src/RecallCore.sln
+
+      - name: Build backend
+        run: dotnet build src/RecallCore.sln --configuration Release --no-restore
+
+      - name: Run backend tests
+        run: dotnet test src/RecallCore.sln --configuration Release --no-build
+
+      - name: Install frontend dependencies
+        working-directory: src/web
+        run: npm install
+
+      - name: Build frontend
+        working-directory: src/web
+        run: npm run build
+
+      - name: Run frontend tests
+        working-directory: src/web
+        run: npm run test
+
+      - name: Run frontend lint
+        working-directory: src/web
+        run: npm run lint --if-present

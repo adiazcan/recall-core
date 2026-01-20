@@ -1,0 +1,58 @@
+openapi: 3.0.3
+info:
+  title: Recall Core API
+  description: Personal bookmarking application API - Bootstrap iteration
+  version: 0.1.0
+  contact:
+    name: Recall Core Team
+
+servers:
+  - url: http://localhost:5080
+    description: Local development server
+
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Health check endpoint
+      description: |
+        Returns the health status of the API. Used by orchestration tools 
+        (Aspire, Kubernetes) and the frontend to verify the backend is operational.
+      tags:
+        - System
+      responses:
+        '200':
+          description: API is healthy and operational
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+        '503':
+          description: API is unhealthy (dependencies unavailable)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: unhealthy
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          description: Health status indicator
+          enum:
+            - ok
+            - unhealthy
+          example: ok
+
+tags:
+  - name: System
+    description: System health and operational endpoints

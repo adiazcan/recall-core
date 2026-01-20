@@ -11,10 +11,10 @@ Bootstrap the Recall Core stack locally with Aspire.
 ## Quick Start
 
 1. Restore dependencies:
-	- .NET: `dotnet restore`
-	- Web: `cd src/web && npm install`
+    - .NET: `dotnet restore`
+    - Web: `cd src/web && npm install`
 2. Run the full stack:
-	- `dotnet run --project src/Recall.Core.AppHost`
+    - `dotnet run --project src/Recall.Core.AppHost`
 
 The Aspire dashboard will open and list:
 

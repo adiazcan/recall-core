@@ -13,7 +13,7 @@ public sealed class CollectionService(ICollectionRepository repository) : IColle
         CancellationToken cancellationToken = default)
     {
         var name = NormalizeName(request.Name);
-        var description = NormalizeDescription(request.Description);
+        var description = NormalizeDescription(request.Description, allowNull: true);
         var parentId = await NormalizeParentIdAsync(request.ParentId, cancellationToken);
 
         var now = DateTime.UtcNow;
@@ -165,7 +165,11 @@ public sealed class CollectionService(ICollectionRepository repository) : IColle
     {
         if (description is null)
         {
-            return allowNull ? null : null;
+            if (allowNull)
+            {
+                return null;
+            }
+            throw new RequestValidationException("validation_error", "Description is required.");
         }
 
         var trimmed = description.Trim();

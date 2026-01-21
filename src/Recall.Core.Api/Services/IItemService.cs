@@ -6,6 +6,7 @@ namespace Recall.Core.Api.Services;
 public interface IItemService
 {
     Task<SaveItemResult> SaveItemAsync(CreateItemRequest request, CancellationToken cancellationToken = default);
+    Task<Item?> GetItemByIdAsync(string id, CancellationToken cancellationToken = default);
     Task<ItemListResponse> ListItemsAsync(
         string? status,
         string? collectionId,
@@ -14,6 +15,8 @@ public interface IItemService
         string? cursor,
         int? limit,
         CancellationToken cancellationToken = default);
+    Task<Item?> UpdateItemAsync(string id, UpdateItemRequest request, CancellationToken cancellationToken = default);
+    Task<bool> DeleteItemAsync(string id, CancellationToken cancellationToken = default);
 }
 
 public sealed record SaveItemResult(Item Item, bool Created);

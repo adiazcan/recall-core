@@ -15,6 +15,13 @@ public sealed class ItemRepository(IMongoDatabase database) : IItemRepository
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<Item?> GetByIdAsync(ObjectId id, CancellationToken cancellationToken = default)
+    {
+        return await _items
+            .Find(item => item.Id == id)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<Item> InsertAsync(Item item, CancellationToken cancellationToken = default)
     {
         await _items.InsertOneAsync(item, cancellationToken: cancellationToken);
@@ -65,17 +72,42 @@ public sealed class ItemRepository(IMongoDatabase database) : IItemRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<Item?> UpdateAsync(ObjectId id, UpdateDefinition<Item> update, CancellationToken cancellationToken = default)
+    {
+        var options = new FindOneAndUpdateOptions<Item, Item>
+        {
+            ReturnDocument = ReturnDocument.After,
+            IsUpsert = false
+        };
+
+        return await _items.FindOneAndUpdateAsync<Item, Item>(
+            item => item.Id == id,
+            update,
+            options,
+            cancellationToken);
+    }
+
+    public async Task<long> DeleteAsync(ObjectId id, CancellationToken cancellationToken = default)
+    {
+        var result = await _items.DeleteOneAsync(item => item.Id == id, cancellationToken);
+        return result.DeletedCount;
+    }
+
     public async Task<IReadOnlyList<TagCount>> GetAllTagsWithCountsAsync(CancellationToken cancellationToken = default)
     {
-        var results = await _items
-            .Aggregate<BsonDocument>()
-            .Unwind("$tags")
-            .Group(new BsonDocument
+        var pipeline = new[]
+        {
+            new BsonDocument("$unwind", "$tags"),
+            new BsonDocument("$group", new BsonDocument
             {
                 { "_id", "$tags" },
                 { "count", new BsonDocument("$sum", 1) }
-            })
-            .Sort(new BsonDocument("count", -1))
+            }),
+            new BsonDocument("$sort", new BsonDocument("count", -1))
+        };
+
+        var results = await _items
+            .Aggregate<BsonDocument>(pipeline)
             .ToListAsync(cancellationToken);
 
         return results

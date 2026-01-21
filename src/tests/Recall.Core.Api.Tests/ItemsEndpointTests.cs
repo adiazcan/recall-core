@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
+using MongoDB.Bson;
 using Recall.Core.Api.Models;
 using Recall.Core.Api.Tests.TestFixtures;
 using Xunit;
@@ -143,6 +144,160 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         Assert.Empty(favoritePayload!.Items);
     }
 
+    [Fact]
+    public async Task GetItem_ReturnsItem()
+    {
+        using var client = CreateClient();
+
+        var createResponse = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        {
+            Url = "https://example.com/details",
+            Title = "Details"
+        });
+
+        var created = await createResponse.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(created);
+
+        var getResponse = await client.GetAsync($"/api/v1/items/{created!.Id}");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+
+        var payload = await getResponse.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(payload);
+        Assert.Equal(created.Id, payload!.Id);
+        Assert.Equal("https://example.com/details", payload.Url);
+        Assert.Equal("Details", payload.Title);
+    }
+
+    [Fact]
+    public async Task GetItem_NotFoundReturnsNotFound()
+    {
+        using var client = CreateClient();
+
+        var response = await client.GetAsync($"/api/v1/items/{ObjectId.GenerateNewId()}");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.NotNull(error);
+        Assert.Equal("not_found", error!.Error.Code);
+    }
+
+    [Fact]
+    public async Task UpdateItem_ReturnsUpdatedItem()
+    {
+        using var client = CreateClient();
+
+        var collectionResponse = await client.PostAsJsonAsync("/api/v1/collections", new CreateCollectionRequest
+        {
+            Name = "Updates"
+        });
+
+        var collection = await collectionResponse.Content.ReadFromJsonAsync<CollectionDto>();
+        Assert.NotNull(collection);
+
+        var createResponse = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        {
+            Url = "https://example.com/update",
+            Title = "Original"
+        });
+
+        var item = await createResponse.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(item);
+
+        var updateResponse = await client.PatchAsJsonAsync($"/api/v1/items/{item!.Id}", new UpdateItemRequest
+        {
+            Title = "Updated",
+            Excerpt = "Short excerpt",
+            Status = "archived",
+            IsFavorite = true,
+            CollectionId = collection!.Id,
+            Tags = ["Tech", "Updates"]
+        });
+
+        Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
+
+        var updated = await updateResponse.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(updated);
+        Assert.Equal("Updated", updated!.Title);
+        Assert.Equal("Short excerpt", updated.Excerpt);
+        Assert.Equal("archived", updated.Status);
+        Assert.True(updated.IsFavorite);
+        Assert.Equal(collection.Id, updated.CollectionId);
+        Assert.Contains("tech", updated.Tags);
+        Assert.Contains("updates", updated.Tags);
+    }
+
+    [Fact]
+    public async Task UpdateItem_InvalidCollectionReturnsBadRequest()
+    {
+        using var client = CreateClient();
+
+        var createResponse = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        {
+            Url = "https://example.com/invalid-collection"
+        });
+
+        var item = await createResponse.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(item);
+
+        var updateResponse = await client.PatchAsJsonAsync($"/api/v1/items/{item!.Id}", new UpdateItemRequest
+        {
+            CollectionId = ObjectId.GenerateNewId().ToString()
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, updateResponse.StatusCode);
+
+        var error = await updateResponse.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.NotNull(error);
+        Assert.Equal("validation_error", error!.Error.Code);
+    }
+
+    [Fact]
+    public async Task UpdateItem_NotFoundReturnsNotFound()
+    {
+        using var client = CreateClient();
+
+        var updateResponse = await client.PatchAsJsonAsync($"/api/v1/items/{ObjectId.GenerateNewId()}", new UpdateItemRequest
+        {
+            Status = "archived"
+        });
+
+        Assert.Equal(HttpStatusCode.NotFound, updateResponse.StatusCode);
+
+        var error = await updateResponse.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.NotNull(error);
+        Assert.Equal("not_found", error!.Error.Code);
+    }
+
+    [Fact]
+    public async Task DeleteItem_ReturnsNoContent()
+    {
+        using var client = CreateClient();
+
+        var createResponse = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        {
+            Url = "https://example.com/delete"
+        });
+
+        var item = await createResponse.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(item);
+
+        var deleteResponse = await client.DeleteAsync($"/api/v1/items/{item!.Id}");
+        Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteItem_NotFoundReturnsNotFound()
+    {
+        using var client = CreateClient();
+
+        var deleteResponse = await client.DeleteAsync($"/api/v1/items/{ObjectId.GenerateNewId()}");
+        Assert.Equal(HttpStatusCode.NotFound, deleteResponse.StatusCode);
+
+        var error = await deleteResponse.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.NotNull(error);
+        Assert.Equal("not_found", error!.Error.Code);
+    }
+
     private HttpClient CreateClient()
     {
         var databaseName = $"recalldb-tests-{Guid.NewGuid():N}";
@@ -162,13 +317,22 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         if (baseConnectionString.Contains('?', StringComparison.Ordinal))
         {
             var index = baseConnectionString.IndexOf('?', StringComparison.Ordinal);
+            var basePart = baseConnectionString.AsSpan(0, index).TrimEnd('/');
             return string.Concat(
-                baseConnectionString.AsSpan(0, index),
+                basePart,
                 "/",
                 databaseName,
                 baseConnectionString.AsSpan(index));
         }
 
-        return string.Concat(baseConnectionString, "/", databaseName);
+        var trimmed = baseConnectionString.TrimEnd('/');
+        var connectionString = string.Concat(trimmed, "/", databaseName);
+
+        if (trimmed.Contains('@', StringComparison.Ordinal))
+        {
+            connectionString = string.Concat(connectionString, "?authSource=admin");
+        }
+
+        return connectionString;
     }
 }

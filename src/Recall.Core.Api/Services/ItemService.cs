@@ -6,7 +6,7 @@ using Recall.Core.Api.Repositories;
 
 namespace Recall.Core.Api.Services;
 
-public sealed class ItemService(IItemRepository repository) : IItemService
+public sealed class ItemService(IItemRepository repository, ICollectionRepository collections) : IItemService
 {
     public async Task<SaveItemResult> SaveItemAsync(CreateItemRequest request, CancellationToken cancellationToken = default)
     {
@@ -51,6 +51,12 @@ public sealed class ItemService(IItemRepository repository) : IItemService
         }
     }
 
+    public async Task<Item?> GetItemByIdAsync(string id, CancellationToken cancellationToken = default)
+    {
+        var objectId = ParseObjectId(id, "ItemId must be a valid ObjectId.");
+        return await repository.GetByIdAsync(objectId, cancellationToken);
+    }
+
     public async Task<ItemListResponse> ListItemsAsync(
         string? status,
         string? collectionId,
@@ -90,6 +96,64 @@ public sealed class ItemService(IItemRepository repository) : IItemService
             Cursor = nextCursor,
             HasMore = hasMore
         };
+    }
+
+    public async Task<Item?> UpdateItemAsync(string id, UpdateItemRequest request, CancellationToken cancellationToken = default)
+    {
+        var objectId = ParseObjectId(id, "ItemId must be a valid ObjectId.");
+
+        var updates = new List<UpdateDefinition<Item>>();
+
+        if (request.Title is not null)
+        {
+            var title = NormalizeOptionalText(request.Title, 500, "Title");
+            updates.Add(Builders<Item>.Update.Set(item => item.Title, title));
+        }
+
+        if (request.Excerpt is not null)
+        {
+            var excerpt = NormalizeOptionalText(request.Excerpt, 1000, "Excerpt");
+            updates.Add(Builders<Item>.Update.Set(item => item.Excerpt, excerpt));
+        }
+
+        if (request.Status is not null)
+        {
+            var status = NormalizeUpdateStatus(request.Status);
+            updates.Add(Builders<Item>.Update.Set(item => item.Status, status));
+        }
+
+        if (request.IsFavorite.HasValue)
+        {
+            updates.Add(Builders<Item>.Update.Set(item => item.IsFavorite, request.IsFavorite.Value));
+        }
+
+        if (request.CollectionId is not null)
+        {
+            var collectionId = await NormalizeCollectionAssignmentAsync(request.CollectionId, cancellationToken);
+            updates.Add(Builders<Item>.Update.Set(item => item.CollectionId, collectionId));
+        }
+
+        if (request.Tags is not null)
+        {
+            var tags = NormalizeTags(request.Tags);
+            updates.Add(Builders<Item>.Update.Set(item => item.Tags, tags));
+        }
+
+        if (updates.Count == 0)
+        {
+            throw new RequestValidationException("validation_error", "At least one field must be provided.");
+        }
+
+        updates.Add(Builders<Item>.Update.Set(item => item.UpdatedAt, DateTime.UtcNow));
+        var update = Builders<Item>.Update.Combine(updates);
+        return await repository.UpdateAsync(objectId, update, cancellationToken);
+    }
+
+    public async Task<bool> DeleteItemAsync(string id, CancellationToken cancellationToken = default)
+    {
+        var objectId = ParseObjectId(id, "ItemId must be a valid ObjectId.");
+        var deleted = await repository.DeleteAsync(objectId, cancellationToken);
+        return deleted > 0;
     }
 
     private static (string Url, string? Title, List<string> Tags) NormalizeRequest(CreateItemRequest request)
@@ -171,6 +235,91 @@ public sealed class ItemService(IItemRepository repository) : IItemService
         }
 
         return normalized.Length == 0 ? null : normalized;
+    }
+
+    private static string? NormalizeOptionalText(string? value, int maxLength, string fieldName)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Length > maxLength)
+        {
+            throw new RequestValidationException("validation_error", $"{fieldName} must be {maxLength} characters or fewer.");
+        }
+
+        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
+    }
+
+    private static string NormalizeUpdateStatus(string status)
+    {
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            throw new RequestValidationException("validation_error", "Status must be unread or archived.");
+        }
+
+        var normalized = status.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "unread" => normalized,
+            "archived" => normalized,
+            _ => throw new RequestValidationException("validation_error", "Status must be unread or archived.")
+        };
+    }
+
+    private static List<string> NormalizeTags(IEnumerable<string> tags)
+    {
+        var normalizedTags = new List<string>();
+        foreach (var tag in tags)
+        {
+            if (string.IsNullOrWhiteSpace(tag))
+            {
+                continue;
+            }
+
+            var normalized = tag.Trim().ToLowerInvariant();
+            if (normalized.Length > 50)
+            {
+                throw new RequestValidationException("validation_error", "Tags must be 50 characters or fewer.");
+            }
+
+            normalizedTags.Add(normalized);
+        }
+
+        return normalizedTags.Distinct(StringComparer.Ordinal).ToList();
+    }
+
+    private async Task<ObjectId?> NormalizeCollectionAssignmentAsync(string collectionId, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(collectionId) || string.Equals(collectionId, "inbox", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        if (!ObjectId.TryParse(collectionId, out var objectId))
+        {
+            throw new RequestValidationException("validation_error", "CollectionId must be a valid ObjectId.");
+        }
+
+        var collection = await collections.GetByIdAsync(objectId, cancellationToken);
+        if (collection is null)
+        {
+            throw new RequestValidationException("validation_error", "Collection not found.");
+        }
+
+        return objectId;
+    }
+
+    private static ObjectId ParseObjectId(string? value, string message)
+    {
+        if (string.IsNullOrWhiteSpace(value) || !ObjectId.TryParse(value, out var objectId))
+        {
+            throw new RequestValidationException("validation_error", message);
+        }
+
+        return objectId;
     }
 
     private static (bool InboxOnly, ObjectId? CollectionId) NormalizeCollectionFilter(string? collectionId)

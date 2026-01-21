@@ -162,29 +162,29 @@ Per plan.md structure:
 
 ### DTOs for User Story 4
 
-- [ ] T032 [P] [US4] Create CollectionDto in src/Recall.Core.Api/Models/CollectionDto.cs
-- [ ] T033 [P] [US4] Create CreateCollectionRequest and UpdateCollectionRequest in src/Recall.Core.Api/Models/CollectionRequestModels.cs
-- [ ] T034 [P] [US4] Create CollectionListResponse in src/Recall.Core.Api/Models/CollectionListResponse.cs
+- [x] T032 [P] [US4] Create CollectionDto in src/Recall.Core.Api/Models/CollectionDto.cs
+- [x] T033 [P] [US4] Create CreateCollectionRequest and UpdateCollectionRequest in src/Recall.Core.Api/Models/CollectionRequestModels.cs
+- [x] T034 [P] [US4] Create CollectionListResponse in src/Recall.Core.Api/Models/CollectionListResponse.cs
 
 ### Repository Layer for User Story 4
 
-- [ ] T035 [P] [US4] Create ICollectionRepository interface in src/Recall.Core.Api/Repositories/ICollectionRepository.cs
-- [ ] T036 [US4] Implement CollectionRepository in src/Recall.Core.Api/Repositories/CollectionRepository.cs with CRUD operations
+- [x] T035 [P] [US4] Create ICollectionRepository interface in src/Recall.Core.Api/Repositories/ICollectionRepository.cs
+- [x] T036 [US4] Implement CollectionRepository in src/Recall.Core.Api/Repositories/CollectionRepository.cs with CRUD operations
 
 ### Service Layer for User Story 4
 
-- [ ] T037 [P] [US4] Create ICollectionService interface in src/Recall.Core.Api/Services/ICollectionService.cs
-- [ ] T038 [US4] Implement CollectionService in src/Recall.Core.Api/Services/CollectionService.cs with delete modes (default/cascade)
+- [x] T037 [P] [US4] Create ICollectionService interface in src/Recall.Core.Api/Services/ICollectionService.cs
+- [x] T038 [US4] Implement CollectionService in src/Recall.Core.Api/Services/CollectionService.cs with delete modes (default/cascade)
 
 ### Endpoint for User Story 4
 
-- [ ] T039 [US4] Create CollectionsEndpoints module in src/Recall.Core.Api/Endpoints/CollectionsEndpoints.cs with full CRUD
-- [ ] T039b [US4] Add GET /api/v1/collections/{id} endpoint to src/Recall.Core.Api/Endpoints/CollectionsEndpoints.cs (returns Collection with itemCount)
-- [ ] T040 [US4] Register CollectionsEndpoints and DI services in src/Recall.Core.Api/Program.cs
+- [x] T039 [US4] Create CollectionsEndpoints module in src/Recall.Core.Api/Endpoints/CollectionsEndpoints.cs with full CRUD
+- [x] T039b [US4] Add GET /api/v1/collections/{id} endpoint to src/Recall.Core.Api/Endpoints/CollectionsEndpoints.cs (returns Collection with itemCount)
+- [x] T040 [US4] Register CollectionsEndpoints and DI services in src/Recall.Core.Api/Program.cs
 
 ### Tests for User Story 4
 
-- [ ] T041 [US4] Create CollectionsEndpointTests in src/tests/Recall.Core.Api.Tests/CollectionsEndpointTests.cs (CRUD, delete modes, 409 conflict)
+- [x] T041 [US4] Create CollectionsEndpointTests in src/tests/Recall.Core.Api.Tests/CollectionsEndpointTests.cs (CRUD, delete modes, 409 conflict)
 
 **Checkpoint**: User Story 4 complete - can manage collections
 
@@ -198,23 +198,23 @@ Per plan.md structure:
 
 ### DTOs for User Story 5
 
-- [ ] T042 [US5] Create UpdateItemRequest DTO in src/Recall.Core.Api/Models/UpdateItemRequest.cs
+- [x] T042 [US5] Create UpdateItemRequest DTO in src/Recall.Core.Api/Models/UpdateItemRequest.cs
 
 ### Repository Layer for User Story 5
 
-- [ ] T043 [US5] Add UpdateAsync method to IItemRepository and ItemRepository in src/Recall.Core.Api/Repositories/
+- [x] T043 [US5] Add UpdateAsync method to IItemRepository and ItemRepository in src/Recall.Core.Api/Repositories/
 
 ### Service Layer for User Story 5
 
-- [ ] T044 [US5] Add UpdateItemAsync method to IItemService and ItemService with collectionId validation
+- [x] T044 [US5] Add UpdateItemAsync method to IItemService and ItemService with collectionId validation
 
 ### Endpoint for User Story 5
 
-- [ ] T045 [US5] Add PATCH /api/v1/items/{id} endpoint to src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+- [x] T045 [US5] Add PATCH /api/v1/items/{id} endpoint to src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
 
 ### Tests for User Story 5
 
-- [ ] T046 [US5] Add ItemsEndpointTests.UpdateItem_* tests in src/tests/Recall.Core.Api.Tests/ItemsEndpointTests.cs
+- [x] T046 [US5] Add ItemsEndpointTests.UpdateItem_* tests in src/tests/Recall.Core.Api.Tests/ItemsEndpointTests.cs
 
 **Checkpoint**: User Story 5 complete - can update item metadata
 
@@ -228,19 +228,19 @@ Per plan.md structure:
 
 ### Repository Layer for User Story 6
 
-- [ ] T047 [US6] Add DeleteAsync method to IItemRepository and ItemRepository in src/Recall.Core.Api/Repositories/
+- [x] T047 [US6] Add DeleteAsync method to IItemRepository and ItemRepository in src/Recall.Core.Api/Repositories/
 
 ### Service Layer for User Story 6
 
-- [ ] T048 [US6] Add DeleteItemAsync method to IItemService and ItemService
+- [x] T048 [US6] Add DeleteItemAsync method to IItemService and ItemService
 
 ### Endpoint for User Story 6
 
-- [ ] T049 [US6] Add DELETE /api/v1/items/{id} endpoint to src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+- [x] T049 [US6] Add DELETE /api/v1/items/{id} endpoint to src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
 
 ### Tests for User Story 6
 
-- [ ] T050 [US6] Add ItemsEndpointTests.DeleteItem_* tests in src/tests/Recall.Core.Api.Tests/ItemsEndpointTests.cs (204, 404)
+- [x] T050 [US6] Add ItemsEndpointTests.DeleteItem_* tests in src/tests/Recall.Core.Api.Tests/ItemsEndpointTests.cs (204, 404)
 
 **Checkpoint**: User Story 6 complete - can delete items
 
@@ -254,19 +254,19 @@ Per plan.md structure:
 
 ### Repository Layer for User Story 7
 
-- [ ] T051 [US7] Add GetByIdAsync method to IItemRepository and ItemRepository in src/Recall.Core.Api/Repositories/
+- [x] T051 [US7] Add GetByIdAsync method to IItemRepository and ItemRepository in src/Recall.Core.Api/Repositories/
 
 ### Service Layer for User Story 7
 
-- [ ] T052 [US7] Add GetItemByIdAsync method to IItemService and ItemService
+- [x] T052 [US7] Add GetItemByIdAsync method to IItemService and ItemService
 
 ### Endpoint for User Story 7
 
-- [ ] T053 [US7] Add GET /api/v1/items/{id} endpoint to src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+- [x] T053 [US7] Add GET /api/v1/items/{id} endpoint to src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
 
 ### Tests for User Story 7
 
-- [ ] T054 [US7] Add ItemsEndpointTests.GetItem_* tests in src/tests/Recall.Core.Api.Tests/ItemsEndpointTests.cs (200, 404)
+- [x] T054 [US7] Add ItemsEndpointTests.GetItem_* tests in src/tests/Recall.Core.Api.Tests/ItemsEndpointTests.cs (200, 404)
 
 **Checkpoint**: All user stories complete
 
@@ -276,9 +276,9 @@ Per plan.md structure:
 
 **Purpose**: Final validation and cleanup
 
-- [ ] T055 [P] Run all tests to verify end-to-end functionality
-- [ ] T056 [P] Validate quickstart.md scenarios work against running API
-- [ ] T057 Verify OpenAPI documentation at /swagger matches contracts/openapi.yaml
+- [x] T055 [P] Run all tests to verify end-to-end functionality
+- [x] T056 [P] Validate quickstart.md scenarios work against running API
+- [x] T057 Verify OpenAPI documentation at /swagger matches contracts/openapi.yaml
 
 ---
 

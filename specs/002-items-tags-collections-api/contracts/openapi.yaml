@@ -1,829 +1,338 @@
-openapi: 3.0.3
+openapi: 3.1.1
 info:
-  title: Recall Core API
-  description: |
-    Personal bookmarking application API - Items, Tags, and Collections.
-    
-    This iteration provides CRUD-lite APIs for saving URLs (items), organizing
-    them into collections, and tagging them. Single-user, no authentication.
-    
-    **Out of scope**: Ingestion/enrichment, reader mode, full-text search, auth.
-  version: 0.2.0
-  contact:
-    name: Recall Core Team
-
+  title: Recall.Core.Api | v1
+  version: 1.0.0
 servers:
-  - url: http://localhost:5080
-    description: Local development server
-
+- url: http://localhost:5080/
 paths:
-  /health:
+  /swagger:
     get:
-      operationId: getHealth
-      summary: Health check endpoint
-      description: Returns the health status of the API.
       tags:
-        - System
+      - Recall.Core.Api
       responses:
         '200':
-          description: API is healthy and operational
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HealthResponse'
-              example:
-                status: ok
-
-  # ============================================================================
-  # ITEMS
-  # ============================================================================
+          description: OK
+  /swagger/index.html:
+    get:
+      tags:
+      - Recall.Core.Api
+      responses:
+        '200':
+          description: OK
+  /health:
+    get:
+      tags:
+      - System
+      summary: Health check endpoint
+      description: Returns the health status of the API.
+      operationId: GetHealth
+      responses:
+        '200':
+          description: OK
   /api/v1/items:
     post:
-      operationId: createItem
-      summary: Save a URL
-      description: |
-        Save a new URL for later. If the URL already exists (after normalization),
-        returns the existing item with status 200 instead of creating a duplicate.
       tags:
-        - Items
+      - Items
+      summary: Save a URL
+      description: Save a new URL for later with optional title and tags.
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateItemRequest'
-            example:
-              url: "https://example.com/article"
-              title: "Interesting Article"
-              tags: ["tech", "reading"]
+        required: true
       responses:
-        '201':
-          description: Item created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Item'
         '200':
-          description: URL already exists - returning existing item
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Item'
-        '400':
-          description: Invalid request (malformed URL, validation error)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error:
-                  code: invalid_url
-                  message: "URL must be http or https"
-
+          description: OK
     get:
-      operationId: listItems
-      summary: List saved items
-      description: |
-        Retrieve paginated list of saved items. Supports filtering by status,
-        collection, tags, and favorites. Results sorted by most recent first.
       tags:
-        - Items
+      - Items
+      summary: List saved items
+      description: Retrieve a paginated list of saved items with optional filters.
       parameters:
-        - name: status
-          in: query
-          schema:
-            type: string
-            enum: [unread, archived]
-          description: Filter by item status
-        - name: collectionId
-          in: query
-          schema:
-            type: string
-          description: Filter by collection ID (use "inbox" for items without collection)
-        - name: tag
-          in: query
-          schema:
-            type: string
-          description: Filter by tag name
-        - name: isFavorite
-          in: query
-          schema:
-            type: boolean
-          description: Filter by favorite status
-        - name: cursor
-          in: query
-          schema:
-            type: string
-          description: Pagination cursor from previous response
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 50
-            default: 20
-          description: Number of items per page (max 50)
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: collectionId
+        in: query
+        schema:
+          type: string
+      - name: tag
+        in: query
+        schema:
+          type: string
+      - name: isFavorite
+        in: query
+        schema:
+          type: boolean
+      - name: cursor
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          pattern: ^-?(?:0|[1-9]\d*)$
+          type:
+          - integer
+          - string
+          format: int32
       responses:
         '200':
-          description: Paginated list of items
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ItemListResponse'
-
+          description: OK
   /api/v1/items/{id}:
     get:
-      operationId: getItem
-      summary: Get item details
-      description: Retrieve the full details of a specific saved item.
       tags:
-        - Items
+      - Items
+      summary: Get item details
+      description: Retrieve a single saved item by id.
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Item ID
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
         '200':
-          description: Item details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Item'
-        '404':
-          description: Item not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error:
-                  code: not_found
-                  message: "Item not found"
-
+          description: OK
     patch:
-      operationId: updateItem
-      summary: Update item metadata
-      description: |
-        Update an item's metadata. Supports partial updates - only provided
-        fields are modified. Use this to archive, favorite, change collection,
-        edit title/excerpt, or modify tags.
       tags:
-        - Items
+      - Items
+      summary: Update item metadata
+      description: Update item fields like status, favorite, collection, title, excerpt,
+        or tags.
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Item ID
-      requestBody:
+      - name: id
+        in: path
         required: true
+        schema:
+          type: string
+      requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdateItemRequest'
-            example:
-              status: "archived"
-              isFavorite: true
-              tags: ["tech", "ai"]
+        required: true
       responses:
         '200':
-          description: Item updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Item'
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Item not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
+          description: OK
     delete:
-      operationId: deleteItem
+      tags:
+      - Items
       summary: Delete an item
       description: Permanently remove a saved item.
-      tags:
-        - Items
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Item ID
-      responses:
-        '204':
-          description: Item deleted successfully
-        '404':
-          description: Item not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  # ============================================================================
-  # TAGS
-  # ============================================================================
-  /api/v1/tags:
-    get:
-      operationId: listTags
-      summary: List all tags with counts
-      description: |
-        Retrieve all unique tags used across items, along with the count of
-        items for each tag. Sorted by count descending.
-      tags:
-        - Tags
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
         '200':
-          description: List of tags with counts
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TagListResponse'
-
+          description: OK
+  /api/v1/tags:
+    get:
+      tags:
+      - Tags
+      summary: List all tags with counts
+      description: Retrieve all tags used across items with item counts.
+      responses:
+        '200':
+          description: OK
   /api/v1/tags/{name}:
     patch:
-      operationId: renameTag
-      summary: Rename a tag globally
-      description: |
-        Rename a tag across all items that use it. The new name will be
-        normalized to lowercase.
       tags:
-        - Tags
+      - Tags
+      summary: Rename a tag globally
+      description: Rename a tag across all items that use it.
       parameters:
-        - name: name
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Current tag name (case-insensitive)
-      requestBody:
+      - name: name
+        in: path
         required: true
+        schema:
+          type: string
+      requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/RenameTagRequest'
-            example:
-              newName: "technology"
+        required: true
       responses:
         '200':
-          description: Tag renamed successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TagOperationResponse'
-              example:
-                oldName: "tech"
-                newName: "technology"
-                itemsUpdated: 15
-        '404':
-          description: Tag not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
+          description: OK
     delete:
-      operationId: deleteTag
-      summary: Delete a tag
-      description: |
-        Remove a tag from all items (detach mode). Items themselves are not deleted.
       tags:
-        - Tags
+      - Tags
+      summary: Delete a tag
+      description: Remove a tag from all items.
       parameters:
-        - name: name
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Tag name to delete (case-insensitive)
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
         '200':
-          description: Tag deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TagOperationResponse'
-              example:
-                oldName: "obsolete"
-                newName: null
-                itemsUpdated: 5
-        '404':
-          description: Tag not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  # ============================================================================
-  # COLLECTIONS
-  # ============================================================================
+          description: OK
   /api/v1/collections:
     post:
-      operationId: createCollection
+      tags:
+      - Collections
       summary: Create a collection
       description: Create a new collection for organizing items.
-      tags:
-        - Collections
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateCollectionRequest'
-            example:
-              name: "Tech Articles"
-              description: "Articles about technology"
-      responses:
-        '201':
-          description: Collection created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Collection'
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: Collection name already exists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error:
-                  code: conflict
-                  message: "A collection with this name already exists"
-
-    get:
-      operationId: listCollections
-      summary: List collections
-      description: |
-        Retrieve all collections with their item counts. Sorted by name.
-      tags:
-        - Collections
+        required: true
       responses:
         '200':
-          description: List of collections
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CollectionListResponse'
-
+          description: OK
+    get:
+      tags:
+      - Collections
+      summary: List collections
+      description: Retrieve all collections with their item counts.
+      responses:
+        '200':
+          description: OK
   /api/v1/collections/{id}:
     get:
-      operationId: getCollection
+      tags:
+      - Collections
       summary: Get collection details
       description: Retrieve a specific collection with its item count.
-      tags:
-        - Collections
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Collection ID
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
         '200':
-          description: Collection details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Collection'
-        '404':
-          description: Collection not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
+          description: OK
     patch:
-      operationId: updateCollection
-      summary: Update a collection
-      description: |
-        Update a collection's name, description, or parent. Supports partial updates.
       tags:
-        - Collections
+      - Collections
+      summary: Update a collection
+      description: Update a collection's name, description, or parent.
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Collection ID
-      requestBody:
+      - name: id
+        in: path
         required: true
+        schema:
+          type: string
+      requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdateCollectionRequest'
-            example:
-              name: "Technology"
-              parentId: "507f1f77bcf86cd799439011"
+        required: true
       responses:
         '200':
-          description: Collection updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Collection'
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Collection not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: Collection name already exists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
+          description: OK
     delete:
-      operationId: deleteCollection
-      summary: Delete a collection
-      description: |
-        Delete a collection. By default, items in the collection are moved to
-        inbox (orphaned). Use mode=cascade to delete items along with the collection.
       tags:
-        - Collections
+      - Collections
+      summary: Delete a collection
+      description: Delete a collection with default or cascade mode.
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Collection ID
-        - name: mode
-          in: query
-          schema:
-            type: string
-            enum: [default, cascade]
-            default: default
-          description: |
-            Deletion mode:
-            - default: Items moved to inbox
-            - cascade: Items deleted with collection
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: mode
+        in: query
+        schema:
+          type: string
       responses:
-        '204':
-          description: Collection deleted successfully
-        '404':
-          description: Collection not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
+        '200':
+          description: OK
 components:
   schemas:
-    # ==========================================================================
-    # COMMON
-    # ==========================================================================
-    HealthResponse:
-      type: object
-      required:
-        - status
-      properties:
-        status:
-          type: string
-          enum: [ok, unhealthy]
-          example: ok
-
-    ErrorResponse:
-      type: object
-      required:
-        - error
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorDetail'
-
-    ErrorDetail:
-      type: object
-      required:
-        - code
-        - message
-      properties:
-        code:
-          type: string
-          description: Machine-readable error code
-          example: validation_error
-        message:
-          type: string
-          description: Human-readable error message
-          example: "URL must be http or https"
-
-    # ==========================================================================
-    # ITEMS
-    # ==========================================================================
-    Item:
-      type: object
-      required:
-        - id
-        - url
-        - normalizedUrl
-        - status
-        - isFavorite
-        - tags
-        - createdAt
-        - updatedAt
-      properties:
-        id:
-          type: string
-          description: Unique item identifier
-          example: "507f1f77bcf86cd799439011"
-        url:
-          type: string
-          format: uri
-          description: Original URL as provided
-          example: "https://example.com/article"
-        normalizedUrl:
-          type: string
-          format: uri
-          description: Canonicalized URL for deduplication
-          example: "https://example.com/article"
-        title:
-          type: string
-          nullable: true
-          description: Item title
-          example: "Interesting Article"
-        excerpt:
-          type: string
-          nullable: true
-          description: Brief description or excerpt
-          example: "A summary of the article..."
-        status:
-          type: string
-          enum: [unread, archived]
-          description: Item status
-          example: "unread"
-        isFavorite:
-          type: boolean
-          description: Favorite flag
-          example: false
-        collectionId:
-          type: string
-          nullable: true
-          description: Collection ID (null = inbox)
-          example: "507f1f77bcf86cd799439012"
-        tags:
-          type: array
-          items:
-            type: string
-          description: Tag labels (lowercase)
-          example: ["tech", "reading"]
-        createdAt:
-          type: string
-          format: date-time
-          description: Creation timestamp (UTC)
-          example: "2026-01-21T10:00:00Z"
-        updatedAt:
-          type: string
-          format: date-time
-          description: Last update timestamp (UTC)
-          example: "2026-01-21T10:00:00Z"
-
-    CreateItemRequest:
-      type: object
-      required:
-        - url
-      properties:
-        url:
-          type: string
-          format: uri
-          description: URL to save (http/https only, max 2048 chars)
-          example: "https://example.com/article"
-        title:
-          type: string
-          description: Optional title (max 500 chars)
-          example: "Interesting Article"
-        tags:
-          type: array
-          items:
-            type: string
-          description: Optional tags (normalized to lowercase)
-          example: ["tech", "reading"]
-
-    UpdateItemRequest:
-      type: object
-      properties:
-        title:
-          type: string
-          nullable: true
-          description: Update title (max 500 chars)
-        excerpt:
-          type: string
-          nullable: true
-          description: Update excerpt (max 1000 chars)
-        status:
-          type: string
-          enum: [unread, archived]
-          description: Update status
-        isFavorite:
-          type: boolean
-          description: Update favorite flag
-        collectionId:
-          type: string
-          nullable: true
-          description: Update collection (null = move to inbox)
-        tags:
-          type: array
-          items:
-            type: string
-          description: Replace tags (normalized to lowercase)
-
-    ItemListResponse:
-      type: object
-      required:
-        - items
-        - hasMore
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Item'
-        cursor:
-          type: string
-          nullable: true
-          description: Cursor for next page (null if no more results)
-          example: "eyJpZCI6IjUwN2YxZjc3YmNmODZjZDc5OTQzOTAxMSIsImNyZWF0ZWRBdCI6IjIwMjYtMDEtMjFUMTA6MDA6MDBaIn0="
-        hasMore:
-          type: boolean
-          description: Whether more results exist
-          example: true
-
-    # ==========================================================================
-    # TAGS
-    # ==========================================================================
-    Tag:
-      type: object
-      required:
-        - name
-        - count
-      properties:
-        name:
-          type: string
-          description: Tag name (lowercase)
-          example: "tech"
-        count:
-          type: integer
-          description: Number of items with this tag
-          example: 15
-
-    TagListResponse:
-      type: object
-      required:
-        - tags
-      properties:
-        tags:
-          type: array
-          items:
-            $ref: '#/components/schemas/Tag'
-
-    RenameTagRequest:
-      type: object
-      required:
-        - newName
-      properties:
-        newName:
-          type: string
-          description: New tag name (will be normalized to lowercase)
-          example: "technology"
-
-    TagOperationResponse:
-      type: object
-      required:
-        - itemsUpdated
-      properties:
-        oldName:
-          type: string
-          description: Previous tag name
-          example: "tech"
-        newName:
-          type: string
-          nullable: true
-          description: New tag name (null for delete)
-          example: "technology"
-        itemsUpdated:
-          type: integer
-          description: Number of items affected
-          example: 15
-
-    # ==========================================================================
-    # COLLECTIONS
-    # ==========================================================================
-    Collection:
-      type: object
-      required:
-        - id
-        - name
-        - itemCount
-        - createdAt
-        - updatedAt
-      properties:
-        id:
-          type: string
-          description: Unique collection identifier
-          example: "507f1f77bcf86cd799439012"
-        name:
-          type: string
-          description: Collection name
-          example: "Tech Articles"
-        description:
-          type: string
-          nullable: true
-          description: Collection description
-          example: "Articles about technology"
-        parentId:
-          type: string
-          nullable: true
-          description: Parent collection ID (null = root)
-          example: null
-        itemCount:
-          type: integer
-          description: Number of items in collection
-          example: 12
-        createdAt:
-          type: string
-          format: date-time
-          description: Creation timestamp (UTC)
-          example: "2026-01-21T10:00:00Z"
-        updatedAt:
-          type: string
-          format: date-time
-          description: Last update timestamp (UTC)
-          example: "2026-01-21T10:00:00Z"
-
     CreateCollectionRequest:
       type: object
-      required:
-        - name
       properties:
         name:
           type: string
-          description: Collection name (must be unique, max 100 chars)
-          example: "Tech Articles"
         description:
-          type: string
-          description: Optional description (max 500 chars)
-          example: "Articles about technology"
+          type:
+          - 'null'
+          - string
         parentId:
+          type:
+          - 'null'
+          - string
+    CreateItemRequest:
+      type: object
+      properties:
+        url:
           type: string
-          description: Optional parent collection ID
-          example: null
-
+        title:
+          type:
+          - 'null'
+          - string
+        tags:
+          type:
+          - 'null'
+          - array
+          items:
+            type: string
+    RenameTagRequest:
+      type: object
+      properties:
+        newName:
+          type: string
     UpdateCollectionRequest:
       type: object
       properties:
         name:
-          type: string
-          description: Update name (max 100 chars)
+          type:
+          - 'null'
+          - string
         description:
-          type: string
-          nullable: true
-          description: Update description (max 500 chars)
+          type:
+          - 'null'
+          - string
         parentId:
-          type: string
-          nullable: true
-          description: Update parent collection
-
-    CollectionListResponse:
+          type:
+          - 'null'
+          - string
+    UpdateItemRequest:
       type: object
-      required:
-        - collections
       properties:
-        collections:
-          type: array
+        title:
+          type:
+          - 'null'
+          - string
+        excerpt:
+          type:
+          - 'null'
+          - string
+        status:
+          type:
+          - 'null'
+          - string
+        isFavorite:
+          type:
+          - 'null'
+          - boolean
+        collectionId:
+          type:
+          - 'null'
+          - string
+        tags:
+          type:
+          - 'null'
+          - array
           items:
-            $ref: '#/components/schemas/Collection'
-
+            type: string
 tags:
-  - name: System
-    description: System health and operational endpoints
-  - name: Items
-    description: Save, list, update, and delete bookmarked URLs
-  - name: Tags
-    description: Manage tags across items
-  - name: Collections
-    description: Organize items into collections (folders)
+- name: Recall.Core.Api
+- name: System
+- name: Items
+- name: Tags
+- name: Collections

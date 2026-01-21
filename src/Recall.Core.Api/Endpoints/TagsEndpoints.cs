@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Recall.Core.Api.Models;
 using Recall.Core.Api.Repositories;
 using Recall.Core.Api.Services;
@@ -8,20 +10,23 @@ public static class TagsEndpoints
 {
     public static IEndpointRouteBuilder MapTagsEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/api/v1/tags", async (IItemRepository repository, CancellationToken cancellationToken) =>
-            {
-                var tags = await repository.GetAllTagsWithCountsAsync(cancellationToken);
-                var response = new TagListResponse
+        endpoints.MapGet("/api/v1/tags", async Task<Ok<TagListResponse>>
+            (IItemRepository repository, CancellationToken cancellationToken)
+                =>
                 {
-                    Tags = tags.Select(tag => new TagDto
+                    var tags = await repository.GetAllTagsWithCountsAsync(cancellationToken);
+                    var response = new TagListResponse
                     {
-                        Name = tag.Name,
-                        Count = tag.Count
-                    }).ToList()
-                };
+                        Tags = tags.Select(tag => new TagDto
+                        {
+                            Name = tag.Name,
+                            Count = tag.Count
+                        }).ToList()
+                    };
 
-                return Results.Ok(response);
-            })
+                    return TypedResults.Ok(response);
+                })
+            .Produces<Ok<TagListResponse>>(StatusCodes.Status200OK)
             .WithTags("Tags")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
@@ -30,35 +35,40 @@ public static class TagsEndpoints
                 return Task.CompletedTask;
             });
 
-        endpoints.MapPatch("/api/v1/tags/{name}", async (
+        endpoints.MapPatch("/api/v1/tags/{name}", async Task<Results<Ok<TagOperationResponse>, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
+            (
                 string name,
                 RenameTagRequest request,
                 IItemRepository repository,
-                CancellationToken cancellationToken) =>
-            {
-                try
+                CancellationToken cancellationToken)
+                =>
                 {
-                    var oldName = NormalizeTagName(name, "Tag name is required.");
-                    var newName = NormalizeTagName(request.NewName, "New tag name is required.");
-
-                    var itemsUpdated = await repository.RenameTagAsync(oldName, newName, cancellationToken);
-                    if (itemsUpdated == 0)
+                    try
                     {
-                        return Results.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Tag not found.")));
+                        var oldName = NormalizeTagName(name, "Tag name is required.");
+                        var newName = NormalizeTagName(request.NewName, "New tag name is required.");
+
+                        var itemsUpdated = await repository.RenameTagAsync(oldName, newName, cancellationToken);
+                        if (itemsUpdated == 0)
+                        {
+                            return TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Tag not found.")));
+                        }
+
+                        return TypedResults.Ok(new TagOperationResponse
+                        {
+                            OldName = oldName,
+                            NewName = newName,
+                            ItemsUpdated = (int)itemsUpdated
+                        });
                     }
-
-                    return Results.Ok(new TagOperationResponse
+                    catch (RequestValidationException ex)
                     {
-                        OldName = oldName,
-                        NewName = newName,
-                        ItemsUpdated = (int)itemsUpdated
-                    });
-                }
-                catch (RequestValidationException ex)
-                {
-                    return Results.BadRequest(new ErrorResponse(new ErrorDetail(ex.Code, ex.Message)));
-                }
-            })
+                        return TypedResults.BadRequest(new ErrorResponse(new ErrorDetail(ex.Code, ex.Message)));
+                    }
+                })
+            .Produces<Ok<TagOperationResponse>>(StatusCodes.Status200OK)
+            .Produces<BadRequest<ErrorResponse>>(StatusCodes.Status400BadRequest)
+            .Produces<NotFound<ErrorResponse>>(StatusCodes.Status404NotFound)
             .WithTags("Tags")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
@@ -67,32 +77,37 @@ public static class TagsEndpoints
                 return Task.CompletedTask;
             });
 
-        endpoints.MapDelete("/api/v1/tags/{name}", async (
+        endpoints.MapDelete("/api/v1/tags/{name}", async Task<Results<Ok<TagOperationResponse>, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
+            (
                 string name,
                 IItemRepository repository,
-                CancellationToken cancellationToken) =>
-            {
-                try
+                CancellationToken cancellationToken)
+                =>
                 {
-                    var tagName = NormalizeTagName(name, "Tag name is required.");
-                    var itemsUpdated = await repository.DeleteTagAsync(tagName, cancellationToken);
-                    if (itemsUpdated == 0)
+                    try
                     {
-                        return Results.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Tag not found.")));
-                    }
+                        var tagName = NormalizeTagName(name, "Tag name is required.");
+                        var itemsUpdated = await repository.DeleteTagAsync(tagName, cancellationToken);
+                        if (itemsUpdated == 0)
+                        {
+                            return TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Tag not found.")));
+                        }
 
-                    return Results.Ok(new TagOperationResponse
+                        return TypedResults.Ok(new TagOperationResponse
+                        {
+                            OldName = tagName,
+                            NewName = null,
+                            ItemsUpdated = (int)itemsUpdated
+                        });
+                    }
+                    catch (RequestValidationException ex)
                     {
-                        OldName = tagName,
-                        NewName = null,
-                        ItemsUpdated = (int)itemsUpdated
-                    });
-                }
-                catch (RequestValidationException ex)
-                {
-                    return Results.BadRequest(new ErrorResponse(new ErrorDetail(ex.Code, ex.Message)));
-                }
-            })
+                        return TypedResults.BadRequest(new ErrorResponse(new ErrorDetail(ex.Code, ex.Message)));
+                    }
+                })
+            .Produces<Ok<TagOperationResponse>>(StatusCodes.Status200OK)
+            .Produces<BadRequest<ErrorResponse>>(StatusCodes.Status400BadRequest)
+            .Produces<NotFound<ErrorResponse>>(StatusCodes.Status404NotFound)
             .WithTags("Tags")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {

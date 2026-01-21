@@ -44,7 +44,7 @@ When context files are insufficient:
 ## Backend (.NET) Guidelines
 - Target framework: net10.0 (do not use newer APIs).
 - Namespace root: Recall.Core.
-- Minimal API endpoints are defined in Program.cs and use .WithTags(...) and .WithOpenApi(...).
+- Minimal API endpoints are defined in Program.cs and use .WithTags(...) and .AddOpenApiOperationTransformer(...) for OpenAPI documentation.
 - Development-only OpenAPI setup is configured in Program.cs; keep it consistent.
 - CORS is configured to allow loopback origins only; follow existing policy.
 - Use ServiceDefaults via AddServiceDefaults() for telemetry, health checks, and service discovery.

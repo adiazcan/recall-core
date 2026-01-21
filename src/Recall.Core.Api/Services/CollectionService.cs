@@ -165,7 +165,11 @@ public sealed class CollectionService(ICollectionRepository repository) : IColle
     {
         if (description is null)
         {
-            return allowNull ? null : null;
+            if (allowNull)
+            {
+                return null;
+            }
+            throw new RequestValidationException("validation_error", "Description is required.");
         }
 
         var trimmed = description.Trim();

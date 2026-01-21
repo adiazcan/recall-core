@@ -111,7 +111,7 @@ public class TagsEndpointTests : IClassFixture<MongoDbFixture>
     private HttpClient CreateClient()
     {
         var databaseName = $"recalldb-tests-{Guid.NewGuid():N}";
-        var connectionString = BuildConnectionString(_mongo.ConnectionString, databaseName);
+        var connectionString = MongoDbFixture.BuildConnectionString(_mongo.ConnectionString, databaseName);
 
         var factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
@@ -120,29 +120,5 @@ public class TagsEndpointTests : IClassFixture<MongoDbFixture>
             });
 
         return factory.CreateClient();
-    }
-
-    private static string BuildConnectionString(string baseConnectionString, string databaseName)
-    {
-        if (baseConnectionString.Contains('?', StringComparison.Ordinal))
-        {
-            var index = baseConnectionString.IndexOf('?', StringComparison.Ordinal);
-            var basePart = baseConnectionString.AsSpan(0, index).TrimEnd('/');
-            return string.Concat(
-                basePart,
-                "/",
-                databaseName,
-                baseConnectionString.AsSpan(index));
-        }
-
-        var trimmed = baseConnectionString.TrimEnd('/');
-        var connectionString = string.Concat(trimmed, "/", databaseName);
-
-        if (trimmed.Contains('@', StringComparison.Ordinal))
-        {
-            connectionString = string.Concat(connectionString, "?authSource=admin");
-        }
-
-        return connectionString;
     }
 }

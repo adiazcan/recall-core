@@ -20,4 +20,28 @@ public sealed class MongoDbFixture : IAsyncLifetime
     {
         await _container.DisposeAsync();
     }
+
+    public static string BuildConnectionString(string baseConnectionString, string databaseName)
+    {
+        if (baseConnectionString.Contains('?', StringComparison.Ordinal))
+        {
+            var index = baseConnectionString.IndexOf('?', StringComparison.Ordinal);
+            var basePart = baseConnectionString.AsSpan(0, index).TrimEnd('/');
+            return string.Concat(
+                basePart,
+                "/",
+                databaseName,
+                baseConnectionString.AsSpan(index));
+        }
+
+        var trimmed = baseConnectionString.TrimEnd('/');
+        var connectionString = string.Concat(trimmed, "/", databaseName);
+
+        if (trimmed.Contains('@', StringComparison.Ordinal))
+        {
+            connectionString = string.Concat(connectionString, "?authSource=admin");
+        }
+
+        return connectionString;
+    }
 }

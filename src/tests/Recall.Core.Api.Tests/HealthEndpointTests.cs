@@ -18,7 +18,8 @@ public class HealthEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task GetHealth_ReturnsOkStatusAndPayload()
     {
-        using var client = CreateClient();
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
 
         var response = await client.GetAsync("/health");
 
@@ -31,18 +32,16 @@ public class HealthEndpointTests : IClassFixture<MongoDbFixture>
         Assert.Equal("ok", status);
     }
 
-    private HttpClient CreateClient()
+    private WebApplicationFactory<Program> CreateFactory()
     {
         var databaseName = $"recalldb-tests-{Guid.NewGuid():N}";
         var connectionString = BuildConnectionString(_mongo.ConnectionString, databaseName);
 
-        var factory = new WebApplicationFactory<Program>()
+        return new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
                 builder.UseSetting("ConnectionStrings:recalldb", connectionString);
             });
-
-        return factory.CreateClient();
     }
 
     private static string BuildConnectionString(string baseConnectionString, string databaseName)

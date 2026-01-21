@@ -21,7 +21,8 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task CreateItem_ReturnsCreatedWithSavedItem()
     {
-        using var client = CreateClient();
+        using var testClient = CreateClient();
+        var client = testClient.Client;
 
         var response = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
         {
@@ -42,7 +43,8 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task CreateItem_DuplicateUrlReturnsOkWithExistingItem()
     {
-        using var client = CreateClient();
+        using var testClient = CreateClient();
+        var client = testClient.Client;
 
         var first = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
         {
@@ -69,7 +71,8 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task CreateItem_InvalidUrlReturnsBadRequest()
     {
-        using var client = CreateClient();
+        using var testClient = CreateClient();
+        var client = testClient.Client;
 
         var response = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
         {
@@ -87,7 +90,8 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task ListItems_ReturnsPaginatedResults()
     {
-        using var client = CreateClient();
+        using var testClient = CreateClient();
+        var client = testClient.Client;
 
         await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest { Url = "https://example.com/a" });
         await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest { Url = "https://example.com/b" });
@@ -114,7 +118,8 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task ListItems_AppliesTagAndFavoriteFilters()
     {
-        using var client = CreateClient();
+        using var testClient = CreateClient();
+        var client = testClient.Client;
 
         await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
         {
@@ -147,7 +152,8 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task GetItem_ReturnsItem()
     {
-        using var client = CreateClient();
+        using var testClient = CreateClient();
+        var client = testClient.Client;
 
         var createResponse = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
         {
@@ -171,7 +177,8 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task GetItem_NotFoundReturnsNotFound()
     {
-        using var client = CreateClient();
+        using var testClient = CreateClient();
+        var client = testClient.Client;
 
         var response = await client.GetAsync($"/api/v1/items/{ObjectId.GenerateNewId()}");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -184,7 +191,8 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task UpdateItem_ReturnsUpdatedItem()
     {
-        using var client = CreateClient();
+        using var testClient = CreateClient();
+        var client = testClient.Client;
 
         var collectionResponse = await client.PostAsJsonAsync("/api/v1/collections", new CreateCollectionRequest
         {
@@ -229,7 +237,8 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task UpdateItem_InvalidCollectionReturnsBadRequest()
     {
-        using var client = CreateClient();
+        using var testClient = CreateClient();
+        var client = testClient.Client;
 
         var createResponse = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
         {
@@ -254,7 +263,8 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task UpdateItem_NotFoundReturnsNotFound()
     {
-        using var client = CreateClient();
+        using var testClient = CreateClient();
+        var client = testClient.Client;
 
         var updateResponse = await client.PatchAsJsonAsync($"/api/v1/items/{ObjectId.GenerateNewId()}", new UpdateItemRequest
         {
@@ -271,7 +281,8 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task DeleteItem_ReturnsNoContent()
     {
-        using var client = CreateClient();
+        using var testClient = CreateClient();
+        var client = testClient.Client;
 
         var createResponse = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
         {
@@ -288,7 +299,8 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task DeleteItem_NotFoundReturnsNotFound()
     {
-        using var client = CreateClient();
+        using var testClient = CreateClient();
+        var client = testClient.Client;
 
         var deleteResponse = await client.DeleteAsync($"/api/v1/items/{ObjectId.GenerateNewId()}");
         Assert.Equal(HttpStatusCode.NotFound, deleteResponse.StatusCode);
@@ -298,7 +310,7 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         Assert.Equal("not_found", error!.Error.Code);
     }
 
-    private HttpClient CreateClient()
+    private TestClientWrapper CreateClient()
     {
         var databaseName = $"recalldb-tests-{Guid.NewGuid():N}";
         var connectionString = BuildConnectionString(_mongo.ConnectionString, databaseName);
@@ -309,7 +321,25 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
                 builder.UseSetting("ConnectionStrings:recalldb", connectionString);
             });
 
-        return factory.CreateClient();
+        return new TestClientWrapper(factory, factory.CreateClient());
+    }
+
+    private sealed class TestClientWrapper : IDisposable
+    {
+        private readonly WebApplicationFactory<Program> _factory;
+        public HttpClient Client { get; }
+
+        public TestClientWrapper(WebApplicationFactory<Program> factory, HttpClient client)
+        {
+            _factory = factory;
+            Client = client;
+        }
+
+        public void Dispose()
+        {
+            Client.Dispose();
+            _factory.Dispose();
+        }
     }
 
     private static string BuildConnectionString(string baseConnectionString, string databaseName)

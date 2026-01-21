@@ -22,7 +22,8 @@ public class CollectionsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task CreateCollection_ReturnsCreated()
     {
-        using var client = CreateClient(out _);
+        using var testClient = CreateClient(out _);
+        var client = testClient.Client;
 
         var response = await client.PostAsJsonAsync("/api/v1/collections", new CreateCollectionRequest
         {
@@ -41,7 +42,8 @@ public class CollectionsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task CreateCollection_DuplicateNameReturnsConflict()
     {
-        using var client = CreateClient(out _);
+        using var testClient = CreateClient(out _);
+        var client = testClient.Client;
 
         await client.PostAsJsonAsync("/api/v1/collections", new CreateCollectionRequest
         {
@@ -63,7 +65,8 @@ public class CollectionsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task ListCollections_ReturnsItemCounts()
     {
-        using var client = CreateClient(out var database);
+        using var testClient = CreateClient(out var database);
+        var client = testClient.Client;
 
         var first = await client.PostAsJsonAsync("/api/v1/collections", new CreateCollectionRequest
         {
@@ -103,7 +106,8 @@ public class CollectionsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task GetCollection_ReturnsItemCount()
     {
-        using var client = CreateClient(out var database);
+        using var testClient = CreateClient(out var database);
+        var client = testClient.Client;
 
         var createResponse = await client.PostAsJsonAsync("/api/v1/collections", new CreateCollectionRequest
         {
@@ -128,7 +132,8 @@ public class CollectionsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task UpdateCollection_ReturnsUpdatedCollection()
     {
-        using var client = CreateClient(out _);
+        using var testClient = CreateClient(out _);
+        var client = testClient.Client;
 
         var createResponse = await client.PostAsJsonAsync("/api/v1/collections", new CreateCollectionRequest
         {
@@ -155,7 +160,8 @@ public class CollectionsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task DeleteCollection_DefaultOrphansItems()
     {
-        using var client = CreateClient(out var database);
+        using var testClient = CreateClient(out var database);
+        var client = testClient.Client;
 
         var createResponse = await client.PostAsJsonAsync("/api/v1/collections", new CreateCollectionRequest
         {
@@ -179,7 +185,8 @@ public class CollectionsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task DeleteCollection_CascadeDeletesItems()
     {
-        using var client = CreateClient(out var database);
+        using var testClient = CreateClient(out var database);
+        var client = testClient.Client;
 
         var createResponse = await client.PostAsJsonAsync("/api/v1/collections", new CreateCollectionRequest
         {
@@ -200,7 +207,7 @@ public class CollectionsEndpointTests : IClassFixture<MongoDbFixture>
         Assert.Empty(remaining);
     }
 
-    private HttpClient CreateClient(out IMongoDatabase database)
+    private TestClientWrapper CreateClient(out IMongoDatabase database)
     {
         var databaseName = $"recalldb-tests-{Guid.NewGuid():N}";
         var connectionString = BuildConnectionString(_mongo.ConnectionString, databaseName);
@@ -213,7 +220,25 @@ public class CollectionsEndpointTests : IClassFixture<MongoDbFixture>
 
         var client = factory.CreateClient();
         database = new MongoClient(connectionString).GetDatabase(databaseName);
-        return client;
+        return new TestClientWrapper(factory, client);
+    }
+
+    private sealed class TestClientWrapper : IDisposable
+    {
+        private readonly WebApplicationFactory<Program> _factory;
+        public HttpClient Client { get; }
+
+        public TestClientWrapper(WebApplicationFactory<Program> factory, HttpClient client)
+        {
+            _factory = factory;
+            Client = client;
+        }
+
+        public void Dispose()
+        {
+            Client.Dispose();
+            _factory.Dispose();
+        }
     }
 
     private static Item BuildItem(string collectionId, string url)

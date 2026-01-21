@@ -58,11 +58,11 @@ app.UseCors();
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }))
     .WithName("GetHealth")
     .WithTags("System")
-    .WithOpenApi(operation =>
+    .AddOpenApiOperationTransformer((operation, context, ct) =>
     {
         operation.Summary = "Health check endpoint";
         operation.Description = "Returns the health status of the API.";
-        return operation;
+        return Task.CompletedTask;
     });
 
 app.Run();

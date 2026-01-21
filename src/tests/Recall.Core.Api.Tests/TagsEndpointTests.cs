@@ -19,7 +19,8 @@ public class TagsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task ListTags_ReturnsTagCounts()
     {
-        using var client = CreateClient();
+        using var testClient = CreateClient();
+        var client = testClient.Client;
 
         await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
         {
@@ -47,7 +48,8 @@ public class TagsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task RenameTag_ReturnsItemsUpdated()
     {
-        using var client = CreateClient();
+        using var testClient = CreateClient();
+        var client = testClient.Client;
 
         await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
         {
@@ -78,7 +80,8 @@ public class TagsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task DeleteTag_RemovesTagFromItems()
     {
-        using var client = CreateClient();
+        using var testClient = CreateClient();
+        var client = testClient.Client;
 
         await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
         {
@@ -108,7 +111,7 @@ public class TagsEndpointTests : IClassFixture<MongoDbFixture>
         Assert.DoesNotContain(listPayload!.Tags, tag => tag.Name == "obsolete");
     }
 
-    private HttpClient CreateClient()
+    private TestClientWrapper CreateClient()
     {
         var databaseName = $"recalldb-tests-{Guid.NewGuid():N}";
         var connectionString = MongoDbFixture.BuildConnectionString(_mongo.ConnectionString, databaseName);
@@ -119,6 +122,24 @@ public class TagsEndpointTests : IClassFixture<MongoDbFixture>
                 builder.UseSetting("ConnectionStrings:recalldb", connectionString);
             });
 
-        return factory.CreateClient();
+        return new TestClientWrapper(factory, factory.CreateClient());
+    }
+
+    private sealed class TestClientWrapper : IDisposable
+    {
+        private readonly WebApplicationFactory<Program> _factory;
+        public HttpClient Client { get; }
+
+        public TestClientWrapper(WebApplicationFactory<Program> factory, HttpClient client)
+        {
+            _factory = factory;
+            Client = client;
+        }
+
+        public void Dispose()
+        {
+            Client.Dispose();
+            _factory.Dispose();
+        }
     }
 }

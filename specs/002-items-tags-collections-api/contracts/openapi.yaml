@@ -1,0 +1,338 @@
+openapi: 3.1.1
+info:
+  title: Recall.Core.Api | v1
+  version: 1.0.0
+servers:
+- url: http://localhost:5080/
+paths:
+  /swagger:
+    get:
+      tags:
+      - Recall.Core.Api
+      responses:
+        '200':
+          description: OK
+  /swagger/index.html:
+    get:
+      tags:
+      - Recall.Core.Api
+      responses:
+        '200':
+          description: OK
+  /health:
+    get:
+      tags:
+      - System
+      summary: Health check endpoint
+      description: Returns the health status of the API.
+      operationId: GetHealth
+      responses:
+        '200':
+          description: OK
+  /api/v1/items:
+    post:
+      tags:
+      - Items
+      summary: Save a URL
+      description: Save a new URL for later with optional title and tags.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateItemRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+    get:
+      tags:
+      - Items
+      summary: List saved items
+      description: Retrieve a paginated list of saved items with optional filters.
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: collectionId
+        in: query
+        schema:
+          type: string
+      - name: tag
+        in: query
+        schema:
+          type: string
+      - name: isFavorite
+        in: query
+        schema:
+          type: boolean
+      - name: cursor
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          pattern: ^-?(?:0|[1-9]\d*)$
+          type:
+          - integer
+          - string
+          format: int32
+      responses:
+        '200':
+          description: OK
+  /api/v1/items/{id}:
+    get:
+      tags:
+      - Items
+      summary: Get item details
+      description: Retrieve a single saved item by id.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+    patch:
+      tags:
+      - Items
+      summary: Update item metadata
+      description: Update item fields like status, favorite, collection, title, excerpt,
+        or tags.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItemRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags:
+      - Items
+      summary: Delete an item
+      description: Permanently remove a saved item.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+  /api/v1/tags:
+    get:
+      tags:
+      - Tags
+      summary: List all tags with counts
+      description: Retrieve all tags used across items with item counts.
+      responses:
+        '200':
+          description: OK
+  /api/v1/tags/{name}:
+    patch:
+      tags:
+      - Tags
+      summary: Rename a tag globally
+      description: Rename a tag across all items that use it.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenameTagRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags:
+      - Tags
+      summary: Delete a tag
+      description: Remove a tag from all items.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+  /api/v1/collections:
+    post:
+      tags:
+      - Collections
+      summary: Create a collection
+      description: Create a new collection for organizing items.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCollectionRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+    get:
+      tags:
+      - Collections
+      summary: List collections
+      description: Retrieve all collections with their item counts.
+      responses:
+        '200':
+          description: OK
+  /api/v1/collections/{id}:
+    get:
+      tags:
+      - Collections
+      summary: Get collection details
+      description: Retrieve a specific collection with its item count.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+    patch:
+      tags:
+      - Collections
+      summary: Update a collection
+      description: Update a collection's name, description, or parent.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCollectionRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags:
+      - Collections
+      summary: Delete a collection
+      description: Delete a collection with default or cascade mode.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: mode
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+components:
+  schemas:
+    CreateCollectionRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type:
+          - 'null'
+          - string
+        parentId:
+          type:
+          - 'null'
+          - string
+    CreateItemRequest:
+      type: object
+      properties:
+        url:
+          type: string
+        title:
+          type:
+          - 'null'
+          - string
+        tags:
+          type:
+          - 'null'
+          - array
+          items:
+            type: string
+    RenameTagRequest:
+      type: object
+      properties:
+        newName:
+          type: string
+    UpdateCollectionRequest:
+      type: object
+      properties:
+        name:
+          type:
+          - 'null'
+          - string
+        description:
+          type:
+          - 'null'
+          - string
+        parentId:
+          type:
+          - 'null'
+          - string
+    UpdateItemRequest:
+      type: object
+      properties:
+        title:
+          type:
+          - 'null'
+          - string
+        excerpt:
+          type:
+          - 'null'
+          - string
+        status:
+          type:
+          - 'null'
+          - string
+        isFavorite:
+          type:
+          - 'null'
+          - boolean
+        collectionId:
+          type:
+          - 'null'
+          - string
+        tags:
+          type:
+          - 'null'
+          - array
+          items:
+            type: string
+tags:
+- name: Recall.Core.Api
+- name: System
+- name: Items
+- name: Tags
+- name: Collections

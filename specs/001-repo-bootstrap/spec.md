@@ -1,146 +1,127 @@
 # Feature Specification: Repository Bootstrap
 
 **Feature Branch**: `001-repo-bootstrap`  
-**Created**: 2026-01-20  
+**Created**: January 20, 2026  
 **Status**: Draft  
-**Input**: User description: "Bootstrap initial solution/repo structure for personal read-it-later knowledge vault app inspired by Pocket/Raindrop. No product features yet—minimal end-to-end smoke path only."
+**Input**: User description: "Bootstrap initial solution/repo structure for personal read-it-later knowledge vault app inspired by Pocket/Raindrop. Deliverables: repo structure, backend with health endpoint, frontend calling health, local dev experience, quality baseline, CI skeleton."
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Developer Runs Full Stack Locally (Priority: P1)
+### User Story 1 - Developer Clones and Runs Project (Priority: P1)
 
-As a developer, I want to clone the repository and run the entire application stack locally with a single command so that I can start contributing immediately without manual configuration.
+A developer clones the repository and wants to run the full application locally to verify the development environment works correctly. They follow the README instructions to start both backend and frontend, then confirm the system is operational by seeing the health status displayed in the browser.
 
-**Why this priority**: This is the foundation for all future development. Without a working local environment, no other work can proceed.
+**Why this priority**: This is the foundational developer experience. If developers cannot clone and run the project, no other development can occur. This validates the entire bootstrap is functional.
 
-**Independent Test**: Can be fully tested by cloning the repo, running the start command, and observing both backend and frontend running together.
+**Independent Test**: Can be fully tested by cloning the repo, following README steps, and observing the health status rendered in the browser. Delivers confidence that the development environment is correctly configured.
 
 **Acceptance Scenarios**:
 
-1. **Given** a fresh clone of the repository, **When** I follow the README instructions, **Then** the backend API starts and responds to requests within 60 seconds
-2. **Given** a fresh clone of the repository, **When** I follow the README instructions, **Then** the frontend web application starts and is accessible in a browser
-3. **Given** both services are running, **When** I access the web application, **Then** it successfully communicates with the backend API
+1. **Given** a freshly cloned repository, **When** a developer follows the README prerequisites and run instructions, **Then** both backend and frontend start without errors
+2. **Given** the backend is running, **When** a developer navigates to the health endpoint URL, **Then** they receive a 200 response with `{ "status": "ok" }`
+3. **Given** both services are running, **When** a developer opens the frontend in a browser, **Then** they see the health status from the backend displayed on the page
 
 ---
 
-### User Story 2 - Developer Verifies System Health (Priority: P1)
+### User Story 2 - Developer Runs Backend Tests (Priority: P2)
 
-As a developer, I want to verify that the backend API is running and healthy so that I can confirm the system is operational before development.
+A developer wants to verify the backend code quality by running the test suite. They execute the test command and see at least one passing test, confirming the test infrastructure is properly configured.
 
-**Why this priority**: Health verification is essential for debugging and ensures the minimal smoke path works end-to-end.
+**Why this priority**: Test infrastructure enables quality assurance from day one. While secondary to running the app, it establishes the quality baseline needed for sustainable development.
 
-**Independent Test**: Can be fully tested by calling the health endpoint and verifying the response.
+**Independent Test**: Can be tested by running `dotnet test` and observing at least one test passes. Delivers confidence in test tooling configuration.
 
 **Acceptance Scenarios**:
 
-1. **Given** the backend API is running, **When** I call GET /health, **Then** I receive a 200 status with `{ "status": "ok" }`
-2. **Given** the frontend is running, **When** I view the main page, **Then** I see the health status displayed from the backend
+1. **Given** the repository is cloned, **When** a developer runs the backend test command, **Then** the test runner executes successfully with at least one passing test
 
 ---
 
-### User Story 3 - Developer Explores API Documentation (Priority: P2)
+### User Story 3 - CI Pipeline Validates Build (Priority: P3)
 
-As a developer, I want to access interactive API documentation so that I can understand and test available endpoints without reading source code.
+When code is pushed to the repository, an automated CI pipeline builds both the backend and frontend to catch compilation errors early.
 
-**Why this priority**: Swagger documentation accelerates onboarding and reduces friction for new contributors.
+**Why this priority**: CI automation prevents broken builds from going unnoticed. While developers can build locally, automated checks provide a safety net for the team.
 
-**Independent Test**: Can be fully tested by accessing the Swagger UI in a browser when running in development mode.
-
-**Acceptance Scenarios**:
-
-1. **Given** the backend API is running in development mode, **When** I navigate to the Swagger endpoint, **Then** I see interactive API documentation
-2. **Given** the Swagger UI is displayed, **When** I expand the /health endpoint, **Then** I can see its description and try it out
-
----
-
-### User Story 4 - CI Pipeline Validates Code Changes (Priority: P2)
-
-As a developer, I want automated builds to run on every push so that I catch compilation errors and test failures early.
-
-**Why this priority**: CI pipeline prevents broken code from being merged and establishes quality gates from day one.
-
-**Independent Test**: Can be fully tested by pushing a commit and observing the GitHub Actions workflow execute.
+**Independent Test**: Can be tested by pushing a commit and observing the GitHub Actions workflow completes successfully. Delivers automated build validation.
 
 **Acceptance Scenarios**:
 
-1. **Given** a push to any branch, **When** the CI pipeline runs, **Then** the backend compiles successfully
-2. **Given** a push to any branch, **When** the CI pipeline runs, **Then** the frontend builds successfully
-3. **Given** a push to any branch, **When** the CI pipeline runs, **Then** all tests pass
-
----
-
-### User Story 5 - Developer Maintains Code Quality (Priority: P3)
-
-As a developer, I want consistent code formatting and linting enforced across the codebase so that code reviews focus on logic rather than style.
-
-**Why this priority**: Establishing quality standards early prevents technical debt accumulation.
-
-**Independent Test**: Can be fully tested by running the format/lint commands and verifying no violations.
-
-**Acceptance Scenarios**:
-
-1. **Given** the repository is cloned, **When** I run the backend formatting check, **Then** it completes without errors on the bootstrap code
-2. **Given** the repository is cloned, **When** I run the frontend linting check, **Then** it completes without errors on the bootstrap code
+1. **Given** a commit is pushed to any branch, **When** the GitHub Actions workflow runs, **Then** the backend builds successfully
+2. **Given** a commit is pushed to any branch, **When** the GitHub Actions workflow runs, **Then** the frontend builds successfully
 
 ---
 
 ### Edge Cases
 
-- What happens when the backend is not running? Frontend should display a clear error message indicating the API is unavailable.
-- What happens when running on a different port? Environment configuration should allow overriding default ports.
-- What happens when prerequisites are missing? README should clearly list all prerequisites and the system should fail with informative errors.
+- What happens when the backend is not running but the frontend loads? Frontend should display a clear error message indicating the backend is unreachable
+- What happens when a developer uses an unsupported Node.js or .NET version? README should specify version requirements; build should fail with clear error messages
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
 #### Repository Structure
+- **FR-001**: Repository MUST contain `/src/backend` directory for the API project
+- **FR-002**: Repository MUST contain `/src/web` directory for the React frontend
+- **FR-003**: Repository MUST contain `/docs` directory for project documentation
+- **FR-004**: Repository MUST contain a README.md with prerequisites and step-by-step run instructions
 
-- **FR-001**: Repository MUST have `src/Recall.Core.Api/`, `src/Recall.Core.AppHost/`, and `src/Recall.Core.ServiceDefaults/` directories for the backend projects
-- **FR-002**: Repository MUST have `src/web/` directory containing the React frontend application
-- **FR-003**: Repository MUST have `docs/` directory for project documentation
+#### Backend
+- **FR-005**: Backend MUST be a .NET Web API project
+- **FR-006**: Backend MUST expose a health endpoint at `GET /health` that returns HTTP 200 with JSON body `{ "status": "ok" }`
+- **FR-007**: Backend MUST have Swagger/OpenAPI documentation enabled in Development environment
+- **FR-008**: Backend MUST support environment-based configuration (Development vs Production)
+- **FR-009**: Backend MUST include at least one test project with a placeholder test
 
-#### Backend API
+#### Frontend
+- **FR-010**: Frontend MUST be a React application (Vite preferred for fast dev experience)
+- **FR-011**: Frontend MUST display the result of calling the backend `/health` endpoint
+- **FR-012**: Frontend MUST have basic routing infrastructure (even with just one route)
+- **FR-013**: Frontend MUST handle and display errors when backend is unreachable
 
-- **FR-004**: Backend MUST expose a GET /health endpoint that returns HTTP 200 with `{ "status": "ok" }`
-- **FR-005**: Backend MUST have Swagger/OpenAPI documentation enabled in Development environment
-- **FR-006**: Backend MUST support environment-based configuration (development vs production settings)
-- **FR-007**: Backend MUST include at least one placeholder test file demonstrating the test setup
+#### Quality Baseline
+- **FR-014**: Repository MUST include `.editorconfig` for consistent code formatting
+- **FR-015**: Backend MUST have `dotnet format` configuration
+- **FR-016**: Frontend MUST have ESLint configuration for code linting
+- **FR-017**: Frontend MUST have Prettier or equivalent for code formatting
 
-#### Frontend Web Application
+#### CI Pipeline
+- **FR-018**: Repository MUST include GitHub Actions workflow file
+- **FR-019**: CI workflow MUST build the backend project
+- **FR-020**: CI workflow MUST build the frontend project
+- **FR-021**: CI workflow MUST run backend tests
 
-- **FR-008**: Frontend MUST render a page that calls the backend /health endpoint
-- **FR-009**: Frontend MUST display the health check result to the user
-- **FR-010**: Frontend MUST have a basic routing structure (even if only one route exists)
+### Key Entities
 
-#### Developer Experience
-
-- **FR-011**: Repository MUST include a README with prerequisites and step-by-step run instructions
-- **FR-012**: Repository MUST include an .editorconfig file for consistent editor settings
-- **FR-014**: Frontend MUST have ESLint configuration for code linting
-
-#### CI/CD (Optional but Preferred)
-
-- **FR-015**: Repository SHOULD include a GitHub Actions workflow that builds the backend
-- **FR-016**: Repository SHOULD include a GitHub Actions workflow that builds the frontend
-- **FR-017**: CI pipeline SHOULD run tests for both backend and frontend
-
-### Assumptions
-
-- Developers have .NET 10 SDK installed (per constitution technology stack)
-- Developers have Node.js LTS installed for frontend development
-- Developers have basic familiarity with terminal/command line
-- Local development does not require Docker for this bootstrap phase
-- No database, authentication, or external services are needed for this iteration
-- Dapr sidecars are deferred to a future iteration; this bootstrap uses Aspire-only orchestration
+- **Health Response**: Represents the API health status; contains a `status` string field indicating operational state
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: A new developer can clone the repo and have both services running within 10 minutes following the README
-- **SC-002**: The health endpoint responds with 200 OK in under 100ms
-- **SC-003**: Frontend successfully displays backend health status without console errors
-- **SC-004**: All code passes formatting and linting checks with zero violations
-- **SC-005**: CI pipeline completes successfully (build + test) within 5 minutes
-- **SC-006**: Swagger UI is accessible and displays the health endpoint documentation
+- **SC-001**: Developer can go from clone to running application in under 10 minutes following README instructions
+- **SC-002**: Health endpoint responds within 100ms under normal conditions
+- **SC-003**: Frontend displays health status within 2 seconds of page load when backend is running
+- **SC-004**: All automated tests pass on a clean clone of the repository
+- **SC-005**: CI pipeline completes successfully within 5 minutes
+- **SC-006**: Code follows consistent formatting as defined by .editorconfig and linting rules
+
+## Assumptions
+
+- Target .NET version: .NET 8 (current LTS)
+- Target Node.js version: Node.js 20 LTS
+- Package manager: npm for frontend (widely supported)
+- Frontend framework: React with Vite (fast HMR, modern tooling)
+- No database required for this iteration
+- No authentication required for this iteration
+- Local development only (no deployment configuration)
+
+## Out of Scope
+
+- User authentication and authorization
+- Database schema and data persistence
+- Bookmark/article ingestion features
+- Production deployment configuration
+- Docker containerization
+- Environment variables for production secrets

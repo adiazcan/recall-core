@@ -1,8 +1,19 @@
+using Aspire.MongoDB.Driver;
+using Recall.Core.Api.Endpoints;
+using Recall.Core.Api.Models;
+using Recall.Core.Api.Repositories;
+using Recall.Core.Api.Services;
 using Recall.Core.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+builder.AddMongoDBClient("recalldb");
+builder.Services.AddHostedService<IndexInitializer>();
+builder.Services.AddScoped<IItemRepository, ItemRepository>();
+builder.Services.AddScoped<IItemService, ItemService>();
+builder.Services.AddScoped<ICollectionRepository, CollectionRepository>();
+builder.Services.AddScoped<ICollectionService, CollectionService>();
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddOpenApi();
@@ -25,7 +36,8 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapGet("/swagger", () => Results.Redirect("/swagger/index.html"));
+    app.MapGet("/swagger", () => Results.Redirect("/swagger/index.html"))
+        .ExcludeFromDescription();
     app.MapGet("/swagger/index.html", () => Results.Content(
         """
         <!DOCTYPE html>
@@ -50,20 +62,26 @@ if (app.Environment.IsDevelopment())
             </body>
         </html>
         """,
-        "text/html"));
+        "text/html"))
+        .ExcludeFromDescription();
 }
 
 app.UseCors();
 
-app.MapGet("/health", () => Results.Ok(new { status = "ok" }))
+app.MapGet("/health", () => Results.Ok(new HealthResponse("ok")))
     .WithName("GetHealth")
     .WithTags("System")
+    .Produces<HealthResponse>()
     .AddOpenApiOperationTransformer((operation, context, ct) =>
     {
         operation.Summary = "Health check endpoint";
         operation.Description = "Returns the health status of the API.";
         return Task.CompletedTask;
     });
+
+app.MapItemsEndpoints();
+app.MapTagsEndpoints();
+app.MapCollectionsEndpoints();
 
 app.Run();
 

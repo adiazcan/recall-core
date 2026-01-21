@@ -1,8 +1,16 @@
+using Aspire.MongoDB.Driver;
+using Recall.Core.Api.Endpoints;
+using Recall.Core.Api.Repositories;
+using Recall.Core.Api.Services;
 using Recall.Core.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+builder.AddMongoDBClient("recalldb");
+builder.Services.AddHostedService<IndexInitializer>();
+builder.Services.AddScoped<IItemRepository, ItemRepository>();
+builder.Services.AddScoped<IItemService, ItemService>();
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddOpenApi();
@@ -64,6 +72,9 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok" }))
         operation.Description = "Returns the health status of the API.";
         return Task.CompletedTask;
     });
+
+app.MapItemsEndpoints();
+app.MapTagsEndpoints();
 
 app.Run();
 

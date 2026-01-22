@@ -347,7 +347,13 @@ With multiple developers after Foundational:
 - [X] [AI-Review][HIGH] Fix implicit 'any' types in collections store (6 occurrences) [src/web/src/features/collections/store.ts:15,23,27,30]
 - [X] [AI-Review][HIGH] Fix implicit 'any' types in items store [src/web/src/features/items/store.ts:28]
 - [X] [AI-Review][HIGH] Add missing typecheck script to package.json scripts section [src/web/package.json]
-- [ ] [AI-Review][HIGH] Investigate why Phase 2 tests show only 1 passing when 4 test files exist [src/tests/Recall.Core.Api.Tests/]
+- [X] [AI-Review][HIGH] Investigate why Phase 2 tests show only 1 passing when 4 test files exist [src/tests/Recall.Core.Api.Tests/]
+  - **RESOLVED**: Docker is not running in WSL 2 environment
+  - 4 test files exist with 23 total tests
+  - All 23 tests fail with: "Docker is either not running or misconfigured"
+  - Tests use Testcontainers.MongoDb which requires Docker to create ephemeral MongoDB instances
+  - **Action Required**: Enable Docker Desktop WSL 2 integration or install Docker Engine in WSL 2
+  - **References**: https://docs.docker.com/go/wsl2/
 - [ ] [AI-Review][HIGH] Commit uncommitted changes in src/web/ - 9 modified files, 9 untracked directories [git status]
 - [X] [AI-Review][HIGH] Create ItemList.tsx component with loading skeleton [src/web/src/features/items/components/ItemList.tsx]
 - [X] [AI-Review][HIGH] Create ItemRow.tsx component for list display [src/web/src/features/items/components/ItemRow.tsx]

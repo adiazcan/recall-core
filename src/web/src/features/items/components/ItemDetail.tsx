@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
-import { formatDistanceToNow } from 'date-fns';
-import { X, ExternalLink, Star, Archive, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { format } from 'date-fns';
+import { X, ExternalLink, Star, Archive, Trash2, Calendar, Plus } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
+import { Badge } from '../../../components/ui/badge';
+import { Textarea } from '../../../components/ui/textarea';
 import { useItemsStore } from '../store';
 import { cn } from '../../../lib/utils';
 
@@ -9,6 +11,7 @@ export function ItemDetail() {
   const selectedItemId = useItemsStore((state) => state.selectedItemId);
   const items = useItemsStore((state) => state.items);
   const selectItem = useItemsStore((state) => state.selectItem);
+  const [notes, setNotes] = useState('');
 
   const item = items.find((i) => i.id === selectedItemId);
 
@@ -64,146 +67,161 @@ export function ItemDetail() {
       <div
         data-item-detail
         className={cn(
-          'fixed right-0 top-0 h-full w-full sm:w-[500px] bg-background border-l shadow-xl z-50',
+          'fixed right-0 top-0 h-full w-full sm:w-[680px] bg-white shadow-xl z-50',
           'transition-transform duration-300 ease-in-out',
           'flex flex-col',
           selectedItemId ? 'translate-x-0' : 'translate-x-full',
         )}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">Item Details</h2>
+        {/* Header with actions */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => selectItem(null)}
-            aria-label="Close details"
+            aria-label="Close"
+            className="h-8 w-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </Button>
+          
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+              className="h-8 w-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
+              disabled
+            >
+              <Star className={cn('h-5 w-5', item.isFavorite && 'fill-yellow-400 text-yellow-400')} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Archive"
+              className="h-8 w-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
+              disabled
+            >
+              <Archive className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Delete"
+              className="h-8 w-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
+              disabled
+            >
+              <Trash2 className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Title and URL */}
-          <div className="space-y-2">
-            <h3 className="text-xl font-semibold">
-              {item.title || new URL(item.url).hostname}
-            </h3>
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
-            >
-              <span className="truncate">{item.url}</span>
-              <ExternalLink className="h-3 w-3 flex-shrink-0 group-hover:text-foreground" />
-            </a>
-          </div>
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-6 pb-8 space-y-6">
+            {/* Image preview placeholder */}
+            {item.imageUrl && (
+              <div className="w-full aspect-video bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg overflow-hidden">
+                <img 
+                  src={item.imageUrl} 
+                  alt={item.title || 'Item preview'} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
 
-          {/* Domain */}
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Domain
-            </p>
-            <p className="text-sm">{item.domain}</p>
-          </div>
-
-          {/* Excerpt */}
-          {item.excerpt && (
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Excerpt
-              </p>
-              <p className="text-sm text-muted-foreground">{item.excerpt}</p>
-            </div>
-          )}
-
-          {/* Status */}
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Status
-            </p>
-            <div className="flex gap-2">
-              <span
-                className={cn(
-                  'px-2 py-1 rounded text-xs font-medium',
-                  item.status === 'unread' && 'bg-blue-100 text-blue-700',
-                  item.status === 'archived' && 'bg-gray-100 text-gray-700',
-                )}
+            {/* Title */}
+            <div>
+              <h1 className="text-2xl font-semibold text-neutral-900 mb-3">
+                {item.title || new URL(item.url).hostname}
+              </h1>
+              
+              {/* URL */}
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 transition-colors"
               >
-                {item.status}
-              </span>
-              {item.isFavorite && (
-                <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-700">
-                  Favorite
-                </span>
-              )}
+                <ExternalLink className="h-4 w-4" />
+                <span className="truncate">{item.url}</span>
+              </a>
             </div>
-          </div>
 
-          {/* Collection */}
-          {item.collectionId && (
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Collection
-              </p>
-              <p className="text-sm">{item.collectionId}</p>
-            </div>
-          )}
-
-          {/* Tags */}
-          {item.tags.length > 0 && (
+            {/* Collection */}
             <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Tags
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {item.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-2 py-1 rounded text-xs font-medium bg-accent text-foreground"
-                  >
-                    {tag}
-                  </span>
-                ))}
+              <div className="flex items-center gap-2 text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                <Archive className="h-3.5 w-3.5" />
+                <span>Collection</span>
+              </div>
+              <div className="text-base text-neutral-900">
+                {item.collectionId || 'None'}
               </div>
             </div>
-          )}
 
-          {/* Timestamps */}
-          <div className="space-y-2 text-xs text-muted-foreground">
-            <div className="flex justify-between">
-              <span>Created</span>
-              <time dateTime={item.createdAt.toISOString()}>
-                {formatDistanceToNow(item.createdAt, { addSuffix: true })}
-              </time>
+            {/* Tags */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                <span>#</span>
+                <span>Tags</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {item.tags.map((tag) => (
+                  <Badge 
+                    key={tag} 
+                    variant="secondary"
+                    className="px-3 py-1.5 rounded-full text-sm bg-green-50 text-green-700 border-0 hover:bg-green-100"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto px-3 py-1.5 rounded-full text-sm text-neutral-600 hover:bg-neutral-100"
+                  disabled
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" />
+                  Add
+                </Button>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span>Updated</span>
-              <time dateTime={item.updatedAt.toISOString()}>
-                {formatDistanceToNow(item.updatedAt, { addSuffix: true })}
-              </time>
+
+            {/* Added timestamp */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                <Calendar className="h-3.5 w-3.5" />
+                <span>Added</span>
+              </div>
+              <div className="text-base text-neutral-900">
+                {format(item.createdAt, 'MMMM d, yyyy')} • {format(item.createdAt, 'h:mm a')}
+              </div>
+            </div>
+
+            {/* Excerpt */}
+            {item.excerpt && (
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  Description
+                </div>
+                <p className="text-base text-neutral-700 leading-relaxed">{item.excerpt}</p>
+              </div>
+            )}
+
+            {/* Personal Notes */}
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold text-neutral-900">
+                Personal Notes
+              </h3>
+              <Textarea
+                placeholder="Add your thoughts here..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="min-h-32 resize-none border-neutral-200 focus-visible:border-neutral-400"
+                disabled
+              />
             </div>
           </div>
-        </div>
-
-        {/* Actions */}
-        <div className="p-4 border-t space-y-2">
-          <div className="flex gap-2">
-            <Button variant="outline" className="flex-1 gap-2" disabled>
-              <Star className="h-4 w-4" />
-              {item.isFavorite ? 'Unfavorite' : 'Favorite'}
-            </Button>
-            <Button variant="outline" className="flex-1 gap-2" disabled>
-              <Archive className="h-4 w-4" />
-              {item.status === 'archived' ? 'Unarchive' : 'Archive'}
-            </Button>
-          </div>
-          <Button variant="destructive" className="w-full gap-2" disabled>
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </Button>
         </div>
       </div>
     </>

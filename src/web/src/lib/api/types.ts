@@ -7,6 +7,7 @@ export interface ItemDto {
   normalizedUrl: string;
   title: string | null;
   excerpt: string | null;
+  imageUrl?: string | null;
   status: ItemStatus;
   isFavorite: boolean;
   collectionId: string | null;
@@ -108,6 +109,7 @@ export function mapItemDtoToItem(dto: ItemDto): Item {
     normalizedUrl: dto.normalizedUrl,
     title: dto.title,
     excerpt: dto.excerpt,
+    imageUrl: dto.imageUrl || undefined,
     domain: extractDomain(dto.url),
     collectionId: dto.collectionId,
     tags: dto.tags,

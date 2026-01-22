@@ -9,7 +9,7 @@ interface SaveUrlDialogProps {
 export function SaveUrlDialog({ open, onOpenChange }: SaveUrlDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-950 text-slate-100">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Save a URL</DialogTitle>
         </DialogHeader>

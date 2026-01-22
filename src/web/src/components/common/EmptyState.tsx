@@ -12,16 +12,16 @@ export function EmptyState({
   onAction,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-900/40 p-6 text-slate-200">
+    <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-6 text-neutral-700">
       <div>
-        <h2 className="text-lg font-semibold text-white">{title}</h2>
-        <p className="text-sm text-slate-400">{description}</p>
+        <h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
+        <p className="text-sm text-neutral-500">{description}</p>
       </div>
       {onAction && actionLabel && (
         <button
           type="button"
           onClick={onAction}
-          className="w-fit rounded-lg border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-100 transition hover:border-slate-500"
+          className="w-fit rounded-lg border border-neutral-300 px-3 py-1 text-xs font-semibold text-neutral-700 transition hover:border-neutral-400 hover:bg-neutral-100"
         >
           {actionLabel}
         </button>

@@ -82,12 +82,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T027 [US1] Implement createItem action in items store with API call in src/web/src/features/items/store.ts
-- [ ] T028 [P] [US1] Create SaveUrlForm component with URL validation in src/web/src/features/items/components/SaveUrlForm.tsx
-- [ ] T029 [US1] Create SaveUrlDialog modal component in src/web/src/features/items/components/SaveUrlDialog.tsx
-- [ ] T030 [US1] Wire SaveUrlDialog to UI store modal state and items store createItem
-- [ ] T031 [US1] Add duplicate URL detection handling (200 response → "duplicate" toast) in SaveUrlForm
-- [ ] T032 [US1] Add inline validation errors for invalid URL input in SaveUrlForm
+- [X] T027 [US1] Implement createItem action in items store with API call in src/web/src/features/items/store.ts
+- [X] T028 [P] [US1] Create SaveUrlForm component with URL validation in src/web/src/features/items/components/SaveUrlForm.tsx
+- [X] T029 [US1] Create SaveUrlDialog modal component in src/web/src/features/items/components/SaveUrlDialog.tsx
+- [X] T030 [US1] Wire SaveUrlDialog to UI store modal state and items store createItem
+- [X] T031 [US1] Add duplicate URL detection handling (200 response → "duplicate" toast) in SaveUrlForm
+- [X] T032 [US1] Add inline validation errors for invalid URL input in SaveUrlForm
 
 **Checkpoint**: User Story 1 complete - users can save URLs with full feedback
 
@@ -101,15 +101,15 @@
 
 ### Implementation for User Story 2
 
-- [ ] T033 [US2] Implement fetchItems action with filter params in items store src/web/src/features/items/store.ts
-- [ ] T034 [US2] Implement fetchMore (pagination) action in items store
-- [ ] T035 [P] [US2] Create ItemList component with loading skeleton in src/web/src/features/items/components/ItemList.tsx
-- [ ] T036 [P] [US2] Create ItemRow component for list display in src/web/src/features/items/components/ItemRow.tsx
-- [ ] T037 [US2] Create ItemsView container component in src/web/src/features/items/components/ItemsView.tsx
-- [ ] T038 [US2] Implement Sidebar navigation with view state updates in src/web/src/components/layout/Sidebar.tsx
-- [ ] T039 [US2] Wire viewState changes to items store fetchItems with correct filters
-- [ ] T040 [US2] Add "Load more" button with fetchMore integration in ItemList
-- [ ] T041 [US2] Add EmptyState display when no items match filter in ItemsView
+- [X] T033 [US2] Implement fetchItems action with filter params in items store src/web/src/features/items/store.ts
+- [X] T034 [US2] Implement fetchMore (pagination) action in items store
+- [X] T035 [P] [US2] Create ItemList component with loading skeleton in src/web/src/features/items/components/ItemList.tsx
+- [X] T036 [P] [US2] Create ItemRow component for list display in src/web/src/features/items/components/ItemRow.tsx
+- [X] T037 [US2] Create ItemsView container component in src/web/src/features/items/components/ItemsView.tsx
+- [X] T038 [US2] Implement Sidebar navigation with view state updates in src/web/src/components/layout/Sidebar.tsx
+- [X] T039 [US2] Wire viewState changes to items store fetchItems with correct filters
+- [X] T040 [US2] Add "Load more" button with fetchMore integration in ItemList
+- [X] T041 [US2] Add EmptyState display when no items match filter in ItemsView
 
 **Checkpoint**: User Story 2 complete - users can browse and filter items
 
@@ -123,12 +123,12 @@
 
 ### Implementation for User Story 3
 
-- [ ] T042 [US3] Add selectItem action and selectedItemId state to items store
-- [ ] T043 [US3] Create ItemDetail panel component in src/web/src/features/items/components/ItemDetail.tsx
-- [ ] T044 [US3] Wire ItemRow click to selectItem action
-- [ ] T045 [US3] Add external link button to open URL in new tab in ItemDetail
-- [ ] T046 [US3] Add close button and click-outside handling for ItemDetail panel
-- [ ] T047 [US3] Add slide-in animation for ItemDetail panel using motion
+- [X] T042 [US3] Add selectItem action and selectedItemId state to items store
+- [X] T043 [US3] Create ItemDetail panel component in src/web/src/features/items/components/ItemDetail.tsx
+- [X] T044 [US3] Wire ItemRow click to selectItem action
+- [X] T045 [US3] Add external link button to open URL in new tab in ItemDetail
+- [X] T046 [US3] Add close button and click-outside handling for ItemDetail panel
+- [X] T047 [US3] Add slide-in animation for ItemDetail panel using motion
 
 **Checkpoint**: User Story 3 complete - users can view item details
 
@@ -325,6 +325,63 @@ With multiple developers after Foundational:
 - **Developer A**: US1 (Save) → US4 (Quick Actions) → US5 (Delete)
 - **Developer B**: US2 (Browse) → US3 (Details) → US6 (Edit)
 - **Developer C**: US7 (Collections) → US8 (Tags) → Polish
+
+---
+
+## Review Follow-ups (AI)
+
+**Code Review Date**: January 22, 2026  
+**Issues Found**: 30 total (17 CRITICAL/HIGH, 8 MEDIUM, 5 LOW)  
+**Review Status**: Phase 1 ✅ Complete | Phase 2 ⚠️ Partial | Phase 3 ❌ Incomplete (only US1 of MVP)
+
+### CRITICAL Issues (Must Fix Before Deployment)
+
+- [X] [AI-Review][CRITICAL] Install npm dependencies - all @radix-ui/* and core deps are UNMET [src/web/package.json]
+- [X] [AI-Review][CRITICAL] Fix TypeScript build - 100+ type errors prevent compilation [src/web/src/]
+- [X] [AI-Review][CRITICAL] Implement User Story 2 (Browse/Filter Items) - marked not started but is P1 MVP requirement [specs/003-web-app-integration/tasks.md:T033-T041]
+- [X] [AI-Review][CRITICAL] Implement User Story 3 (View Item Details) - marked not started but is P1 MVP requirement [specs/003-web-app-integration/tasks.md:T042-T047]
+- [X] [AI-Review][HIGH] Fix implicit 'any' types in SaveUrlForm useItemsStore selectors [src/web/src/features/items/components/SaveUrlForm.tsx:33-34]
+- [X] [AI-Review][HIGH] Fix implicit 'any' types in ItemsView useUiStore selectors [src/web/src/features/items/components/ItemsView.tsx:7-9]
+- [X] [AI-Review][HIGH] Fix implicit 'any' types in Layout useUiStore selectors [src/web/src/components/layout/Layout.tsx:8-9]
+- [X] [AI-Review][HIGH] Fix implicit 'any' types in Sidebar useUiStore selector [src/web/src/components/layout/Sidebar.tsx:18]
+- [X] [AI-Review][HIGH] Fix implicit 'any' types in collections store (6 occurrences) [src/web/src/features/collections/store.ts:15,23,27,30]
+- [X] [AI-Review][HIGH] Fix implicit 'any' types in items store [src/web/src/features/items/store.ts:28]
+- [X] [AI-Review][HIGH] Add missing typecheck script to package.json scripts section [src/web/package.json]
+- [ ] [AI-Review][HIGH] Investigate why Phase 2 tests show only 1 passing when 4 test files exist [src/tests/Recall.Core.Api.Tests/]
+- [ ] [AI-Review][HIGH] Commit uncommitted changes in src/web/ - 9 modified files, 9 untracked directories [git status]
+- [X] [AI-Review][HIGH] Create ItemList.tsx component with loading skeleton [src/web/src/features/items/components/ItemList.tsx]
+- [X] [AI-Review][HIGH] Create ItemRow.tsx component for list display [src/web/src/features/items/components/ItemRow.tsx]
+- [X] [AI-Review][HIGH] Implement fetchItems action with API integration [src/web/src/features/items/store.ts:fetchItems]
+- [X] [AI-Review][HIGH] Implement fetchMore pagination action with API integration [src/web/src/features/items/store.ts:fetchMore]
+
+### MEDIUM Issues (Should Fix for Quality)
+
+- [ ] [AI-Review][MEDIUM] Verify Vite proxy configuration handles /api routes correctly [src/web/vite.config.ts]
+- [ ] [AI-Review][MEDIUM] Implement updateItem action in items store (currently stub) [src/web/src/features/items/store.ts:updateItem]
+- [ ] [AI-Review][MEDIUM] Implement deleteItem action in items store (currently stub) [src/web/src/features/items/store.ts:deleteItem]
+- [ ] [AI-Review][MEDIUM] Implement toggleFavorite action in items store (currently stub) [src/web/src/features/items/store.ts:toggleFavorite]
+- [ ] [AI-Review][MEDIUM] Implement toggleArchive action in items store (currently stub) [src/web/src/features/items/store.ts:toggleArchive]
+- [ ] [AI-Review][MEDIUM] Implement fetchCollections action in collections store [src/web/src/features/collections/store.ts:fetchCollections]
+- [ ] [AI-Review][MEDIUM] Implement createCollection action in collections store [src/web/src/features/collections/store.ts:createCollection]
+- [ ] [AI-Review][MEDIUM] Implement all tags store actions (currently placeholder) [src/web/src/features/tags/store.ts]
+- [ ] [AI-Review][MEDIUM] Add React error boundary component for graceful error handling [src/web/src/components/common/ErrorBoundary.tsx]
+- [ ] [AI-Review][MEDIUM] Create Playwright e2e smoke test for create→list→detail→delete flow [src/web/e2e/smoke.spec.ts]
+- [ ] [AI-Review][MEDIUM] Refactor HealthEndpointTests to reuse MongoDbFixture efficiently [src/tests/Recall.Core.Api.Tests/HealthEndpointTests.cs:26-34]
+- [ ] [AI-Review][MEDIUM] Replace ItemsView hardcoded placeholder with real ItemList component [src/web/src/features/items/components/ItemsView.tsx:15-17]
+
+### LOW Issues (Nice to Have)
+
+- [ ] [AI-Review][LOW] Implement keyboard navigation for ItemList (arrow keys, enter) [src/web/src/features/items/components/ItemList.tsx]
+- [ ] [AI-Review][LOW] Add keyboard navigation to Sidebar (tab, arrow keys) [src/web/src/components/layout/Sidebar.tsx]
+- [ ] [AI-Review][LOW] Add focus trap and focus return for dialogs [src/web/src/components/ui/dialog.tsx]
+- [ ] [AI-Review][LOW] Add ARIA labels to all icon-only buttons [src/web/src/features/items/components/ItemRow.tsx]
+- [ ] [AI-Review][LOW] Validate bundle size meets <200KB gzip target [build output]
+- [ ] [AI-Review][LOW] Verify all backend files use Recall.Core namespace root consistently [src/Recall.Core.Api/]
+
+### Cross-Phase Integration Issues
+
+- [ ] [AI-Review][CRITICAL] Verify full-stack integration works after npm install and TypeScript fixes [Aspire AppHost + API + Web]
+- [ ] [AI-Review][HIGH] Verify Aspire AppHost correctly references and proxies Vite frontend [src/Recall.Core.AppHost/AppHost.cs]
 
 ---
 

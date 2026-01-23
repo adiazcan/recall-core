@@ -78,7 +78,7 @@ export function SaveUrlForm({ onSaved, onCancel }: SaveUrlFormProps) {
           type="url"
           autoFocus
           placeholder="Paste URL to save..."
-          className="flex-1 bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+          className="flex-1 bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-2 text-sm text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
           value={url}
           onChange={(event) => setUrl(event.target.value)}
           aria-invalid={error ? true : undefined}

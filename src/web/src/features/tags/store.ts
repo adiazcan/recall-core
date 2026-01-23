@@ -17,6 +17,12 @@ export const useTagsStore = create<TagsState>((set, get) => ({
   isLoading: false,
   error: null,
   fetchTags: async () => {
+    const { isLoading } = get();
+    // Prevent concurrent fetches
+    if (isLoading) {
+      return;
+    }
+    
     set({ isLoading: true, error: null });
     try {
       const response = await tagsApi.list();

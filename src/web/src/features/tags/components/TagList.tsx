@@ -13,8 +13,11 @@ export function TagList() {
   const setViewState = useUiStore((state) => state.setViewState);
 
   useEffect(() => {
-    fetchTags();
-  }, [fetchTags]);
+    // Only fetch if we don't have tags and aren't currently loading
+    if (tags.length === 0 && !isLoading) {
+      fetchTags();
+    }
+  }, [fetchTags, tags.length, isLoading]);
 
   const handleTagClick = (tagName: string) => {
     const newViewState: ViewState = {

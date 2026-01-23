@@ -360,7 +360,7 @@ With multiple developers after Foundational:
 - [X] [AI-Review][HIGH] US7 AC2: Replace PlaceholderView with ItemsView for /collections/:id route [src/web/src/routes.tsx:20]
 - [X] [AI-Review][HIGH] US8 AC2: Replace PlaceholderView with ItemsView for /tags/:name route [src/web/src/routes.tsx:21]
 - [X] [AI-Review][HIGH] US6 AC2: Add Combobox with tag suggestions for selecting existing tags, not just text input [src/web/src/features/items/components/ItemDetail.tsx:318-341]
-- [ ] [AI-Review][HIGH] Performance: Add guard condition to prevent excessive tag refetches in TagList useEffect [src/web/src/features/tags/components/TagList.tsx:13-15]
+- [X] [AI-Review][HIGH] Performance: Add guard condition to prevent excessive tag refetches in TagList useEffect [src/web/src/features/tags/components/TagList.tsx:13-15]
 - [ ] [AI-Review][HIGH] Error Handling: Increase API timeout from 10s to 30s minimum for slow connections [src/web/src/lib/api/client.ts:72]
 - [ ] [AI-Review][HIGH] Task T079: Actually run and pass quickstart.md full-stack Aspire integration test [tasks.md:T079]
 

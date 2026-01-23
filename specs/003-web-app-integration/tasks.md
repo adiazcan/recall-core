@@ -352,7 +352,7 @@ With multiple developers after Foundational:
 
 ### 🔴 Critical Issues (HIGH)
 
-- [ ] [AI-Review][HIGH] US2 AC7: Implement auto-scroll pagination with Intersection Observer instead of "Load More" button [src/web/src/features/items/components/ItemList.tsx:121-130]
+- [X] [AI-Review][HIGH] US2 AC7: Implement auto-scroll pagination with Intersection Observer instead of "Load More" button [src/web/src/features/items/components/ItemList.tsx:121-130]
 - [ ] [AI-Review][HIGH] Fix 3 failing e2e tests: CRUD flow timeout, empty state text mismatch, API error handling [src/web/e2e/smoke.spec.ts:12-126]
 - [ ] [AI-Review][HIGH] US4 AC5: Fix archive rollback race condition - setTimeout executes even after rollback [src/web/src/features/items/store.ts:202-207]
 - [ ] [AI-Review][HIGH] Security: Validate URL protocol is http/https before rendering in ItemDetail href [src/web/src/features/items/components/ItemDetail.tsx:221-226]

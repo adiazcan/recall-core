@@ -1,4 +1,3 @@
-import { Button } from '../../../components/ui/button';
 import { LoadingState } from '../../../components/common/LoadingState';
 import { EmptyState } from '../../../components/common/EmptyState';
 import type { Item } from '../../../types/entities';
@@ -27,6 +26,7 @@ export function ItemList({
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
+  const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
 
   // Reset focused index when items change
   useEffect(() => {
@@ -36,6 +36,33 @@ export function ItemList({
       setFocusedIndex(items.length - 1);
     }
   }, [items.length, focusedIndex]);
+
+  // Intersection Observer for auto-scroll pagination
+  useEffect(() => {
+    if (!hasMore || isLoadingMore || !loadMoreTriggerRef.current) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && hasMore && !isLoadingMore) {
+          onLoadMore();
+        }
+      },
+      {
+        root: containerRef.current,
+        rootMargin: '100px', // Trigger 100px before reaching the bottom
+        threshold: 0.1,
+      }
+    );
+
+    observer.observe(loadMoreTriggerRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, isLoadingMore, onLoadMore]);
 
   // Scroll to focused item
   useEffect(() => {
@@ -124,20 +151,21 @@ export function ItemList({
             }}
           />
         ))}
-      </div>
 
-      {hasMore && (
-        <div className="p-4 border-t">
-          <Button
-            variant="outline"
-            onClick={onLoadMore}
-            disabled={isLoadingMore}
-            className="w-full"
+        {/* Intersection Observer trigger element */}
+        {hasMore && (
+          <div
+            ref={loadMoreTriggerRef}
+            className="h-20 flex items-center justify-center"
           >
-            {isLoadingMore ? 'Loading...' : 'Load more'}
-          </Button>
-        </div>
-      )}
+            {isLoadingMore && (
+              <div className="text-sm text-muted-foreground">
+                Loading more items...
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

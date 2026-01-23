@@ -210,19 +210,24 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
       ),
     }));
 
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
     try {
       await itemsApi.update(id, { status: newStatus });
       
       // Remove from list after successful archive (will be animated in UI)
       if (newStatus === 'archived') {
-        setTimeout(() => {
+        timeoutId = setTimeout(() => {
           set((state) => ({
             items: state.items.filter((i) => i.id !== id),
           }));
         }, 300); // Wait for animation to complete
       }
     } catch (error) {
-      // Rollback on error
+      // Cancel pending removal and rollback on error
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
       set({ items: previousItems });
       const message = error instanceof ApiError ? error.message : 'Unable to update archive status.';
       set({ error: message });

@@ -353,8 +353,8 @@ With multiple developers after Foundational:
 ### 🔴 Critical Issues (HIGH)
 
 - [X] [AI-Review][HIGH] US2 AC7: Implement auto-scroll pagination with Intersection Observer instead of "Load More" button [src/web/src/features/items/components/ItemList.tsx:121-130]
-- [ ] [AI-Review][HIGH] Fix 3 failing e2e tests: CRUD flow timeout, empty state text mismatch, API error handling [src/web/e2e/smoke.spec.ts:12-126]
-- [ ] [AI-Review][HIGH] US4 AC5: Fix archive rollback race condition - setTimeout executes even after rollback [src/web/src/features/items/store.ts:202-207]
+- [X] [AI-Review][HIGH] Fix 3 failing e2e tests: CRUD flow timeout, empty state text mismatch, API error handling [src/web/e2e/smoke.spec.ts:12-126]
+- [X] [AI-Review][HIGH] US4 AC5: Fix archive rollback race condition - setTimeout executes even after rollback [src/web/src/features/items/store.ts:202-207]
 - [ ] [AI-Review][HIGH] Security: Validate URL protocol is http/https before rendering in ItemDetail href [src/web/src/features/items/components/ItemDetail.tsx:221-226]
 - [ ] [AI-Review][HIGH] Input Validation: Sanitize tag names with regex ^[a-zA-Z0-9-_]+$ to prevent XSS/injection [src/web/src/features/items/components/ItemDetail.tsx:101-123]
 - [ ] [AI-Review][HIGH] US7 AC2: Replace PlaceholderView with ItemsView for /collections/:id route [src/web/src/routes.tsx:20]

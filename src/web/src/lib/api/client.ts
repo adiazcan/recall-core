@@ -72,7 +72,7 @@ async function parseResponseBody(response: Response): Promise<unknown> {
 }
 
 export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-  const { timeoutMs = 10_000, ...fetchOptions } = options;
+  const { timeoutMs = 30_000, ...fetchOptions } = options;
   const controller = new AbortController();
   const headers = new Headers(fetchOptions.headers);
 
@@ -119,7 +119,7 @@ export async function apiRequestWithResponse<T>(
   path: string,
   options: ApiRequestOptions = {},
 ): Promise<{ data: T; status: number }> {
-  const { timeoutMs = 10_000, ...fetchOptions } = options;
+  const { timeoutMs = 30_000, ...fetchOptions } = options;
   const controller = new AbortController();
   const headers = new Headers(fetchOptions.headers);
 

@@ -341,3 +341,43 @@ With multiple developers after Foundational:
 - Run `pnpm dev` to validate changes in browser
 
 ````
+
+---
+
+## Review Follow-ups (AI)
+
+**Code Review Date:** January 23, 2026  
+**Reviewer:** AI Code Reviewer (Adversarial)  
+**Status:** 23 issues found (11 High, 8 Medium, 4 Low)
+
+### 🔴 Critical Issues (HIGH)
+
+- [ ] [AI-Review][HIGH] US2 AC7: Implement auto-scroll pagination with Intersection Observer instead of "Load More" button [src/web/src/features/items/components/ItemList.tsx:121-130]
+- [ ] [AI-Review][HIGH] Fix 3 failing e2e tests: CRUD flow timeout, empty state text mismatch, API error handling [src/web/e2e/smoke.spec.ts:12-126]
+- [ ] [AI-Review][HIGH] US4 AC5: Fix archive rollback race condition - setTimeout executes even after rollback [src/web/src/features/items/store.ts:202-207]
+- [ ] [AI-Review][HIGH] Security: Validate URL protocol is http/https before rendering in ItemDetail href [src/web/src/features/items/components/ItemDetail.tsx:221-226]
+- [ ] [AI-Review][HIGH] Input Validation: Sanitize tag names with regex ^[a-zA-Z0-9-_]+$ to prevent XSS/injection [src/web/src/features/items/components/ItemDetail.tsx:101-123]
+- [ ] [AI-Review][HIGH] US7 AC2: Replace PlaceholderView with ItemsView for /collections/:id route [src/web/src/routes.tsx:20]
+- [ ] [AI-Review][HIGH] US8 AC2: Replace PlaceholderView with ItemsView for /tags/:name route [src/web/src/routes.tsx:21]
+- [ ] [AI-Review][HIGH] US6 AC2: Add Combobox with tag suggestions for selecting existing tags, not just text input [src/web/src/features/items/components/ItemDetail.tsx:318-341]
+- [ ] [AI-Review][HIGH] Performance: Add guard condition to prevent excessive tag refetches in TagList useEffect [src/web/src/features/tags/components/TagList.tsx:13-15]
+- [ ] [AI-Review][HIGH] Error Handling: Increase API timeout from 10s to 30s minimum for slow connections [src/web/src/lib/api/client.ts:72]
+- [ ] [AI-Review][HIGH] Task T079: Actually run and pass quickstart.md full-stack Aspire integration test [tasks.md:T079]
+
+### 🟡 Medium Issues
+
+- [ ] [AI-Review][MEDIUM] Wire or remove disabled Favorite/Archive buttons in ItemDetail header [src/web/src/features/items/components/ItemDetail.tsx:167-181]
+- [ ] [AI-Review][MEDIUM] Code-split routes and use dynamic imports to reduce 511KB bundle (target <400KB) [src/web/vite.config.ts]
+- [ ] [AI-Review][MEDIUM] Implement proper focus trap for ItemDetail modal using react-focus-lock or similar [src/web/src/features/items/components/ItemDetail.tsx:56-90]
+- [ ] [AI-Review][MEDIUM] Add toast deduplication or rate limiting to prevent duplicate error stacks [src/web/src/stores/toast-store.ts]
+- [ ] [AI-Review][MEDIUM] Implement or throw NotImplementedError for updateCollection/deleteCollection stubs [src/web/src/features/collections/store.ts:39-45]
+- [ ] [AI-Review][MEDIUM] Add loading state to collection dropdown in ItemDetail [src/web/src/features/items/components/ItemDetail.tsx:254-268]
+- [ ] [AI-Review][MEDIUM] Wrap ItemRow in React.memo with custom comparison to prevent unnecessary re-renders [src/web/src/features/items/components/ItemRow.tsx]
+- [ ] [AI-Review][MEDIUM] Fix EmptyState text pattern to match e2e test expectations [src/web/src/components/common/EmptyState.tsx]
+
+### 🟢 Low Priority
+
+- [ ] [AI-Review][LOW] Standardize error logging: remove console.error or add to all stores consistently [src/web/src/features/tags/store.ts]
+- [ ] [AI-Review][LOW] Improve SaveUrlForm error messages to differentiate error types [src/web/src/features/items/components/SaveUrlForm.tsx:95-99]
+- [ ] [AI-Review][LOW] Add JSDoc documentation for apiRequest and apiRequestWithResponse functions [src/web/src/lib/api/client.ts]
+- [ ] [AI-Review][LOW] Replace hardcoded waitForTimeout(500) with proper wait conditions in e2e tests [src/web/e2e/smoke.spec.ts:33]

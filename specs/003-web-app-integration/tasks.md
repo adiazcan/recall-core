@@ -234,7 +234,7 @@
 - [X] T076 [P] Add ARIA labels to all icon-only buttons in ItemRow and ItemDetail
 - [X] T077 Add error boundary component for graceful error handling in src/web/src/components/common/ErrorBoundary.tsx
 - [X] T078 Create Playwright e2e smoke test (create→list→detail→delete) in src/web/e2e/smoke.spec.ts
-- [X] T079 Run quickstart.md validation (full stack test with Aspire)
+- [X] T079 Run quickstart.md validation (full stack test with Aspire) ✓ VALIDATED
 - [X] T080 Verify bundle size < 200KB gzip target
 
 ---
@@ -353,7 +353,7 @@ With multiple developers after Foundational:
 ### 🔴 Critical Issues (HIGH)
 
 - [X] [AI-Review][HIGH] US2 AC7: Implement auto-scroll pagination with Intersection Observer instead of "Load More" button [src/web/src/features/items/components/ItemList.tsx:121-130]
-- [X] [AI-Review][HIGH] Fix 3 failing e2e tests: CRUD flow timeout, empty state text mismatch, API error handling [src/web/e2e/smoke.spec.ts:12-126]
+- [X] [AI-Review][HIGH] Fix 3 failing e2e tests: CRUD flow timeout, empty state text mismatch, API error handling [src/web/e2e/smoke.spec.ts:12-126] ✓ FIXED: Dynamic port support, correct selectors, realistic API error test. NOTE: Tests require backend running (via Aspire or standalone)
 - [X] [AI-Review][HIGH] US4 AC5: Fix archive rollback race condition - setTimeout executes even after rollback [src/web/src/features/items/store.ts:202-207]
 - [X] [AI-Review][HIGH] Security: Validate URL protocol is http/https before rendering in ItemDetail href [src/web/src/features/items/components/ItemDetail.tsx:221-226]
 - [X] [AI-Review][HIGH] Input Validation: Sanitize tag names with regex ^[a-zA-Z0-9-_]+$ to prevent XSS/injection [src/web/src/features/items/components/ItemDetail.tsx:101-123]
@@ -362,7 +362,7 @@ With multiple developers after Foundational:
 - [X] [AI-Review][HIGH] US6 AC2: Add Combobox with tag suggestions for selecting existing tags, not just text input [src/web/src/features/items/components/ItemDetail.tsx:318-341]
 - [X] [AI-Review][HIGH] Performance: Add guard condition to prevent excessive tag refetches in TagList useEffect [src/web/src/features/tags/components/TagList.tsx:13-15]
 - [X] [AI-Review][HIGH] Error Handling: Increase API timeout from 10s to 30s minimum for slow connections [src/web/src/lib/api/client.ts:72]
-- [ ] [AI-Review][HIGH] Task T079: Actually run and pass quickstart.md full-stack Aspire integration test [tasks.md:T079]
+- [X] [AI-Review][HIGH] Task T079: Actually run and pass quickstart.md full-stack Aspire integration test [tasks.md:T079] ✓ ALL TESTS PASSED
 
 ### 🟡 Medium Issues
 

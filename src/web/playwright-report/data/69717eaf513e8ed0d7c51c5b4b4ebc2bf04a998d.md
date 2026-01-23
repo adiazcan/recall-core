@@ -1,0 +1,231 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - navigation "Main navigation" [ref=e4]:
+      - heading "Recall" [level=1] [ref=e6]
+      - generic [ref=e7]:
+        - list "Main views" [ref=e8]:
+          - link "Inbox" [ref=e9] [cursor=pointer]:
+            - /url: /inbox
+            - img [ref=e10]
+            - generic [ref=e13]: Inbox
+          - link "Favorites" [ref=e14] [cursor=pointer]:
+            - /url: /favorites
+            - img [ref=e15]
+            - generic [ref=e17]: Favorites
+          - link "Archive" [ref=e18] [cursor=pointer]:
+            - /url: /archive
+            - img [ref=e19]
+            - generic [ref=e22]: Archive
+        - generic [ref=e23]:
+          - heading "Collections" [level=3] [ref=e24]
+          - generic [ref=e25]:
+            - link "Work 0" [ref=e26] [cursor=pointer]:
+              - /url: /collections/6973372a2d7b82350241672c
+              - img [ref=e27]
+              - generic [ref=e29]: Work
+              - generic [ref=e30]: "0"
+            - button "New Collection" [ref=e31]:
+              - img
+              - generic [ref=e32]: New Collection
+        - heading "Tags" [level=3] [ref=e34]
+      - button "User profile and settings" [ref=e40]:
+        - generic [ref=e41]: JD
+        - generic [ref=e42]: John Doe
+        - img [ref=e43]
+    - main [ref=e47]:
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - generic [ref=e50]:
+            - paragraph [ref=e51]: Your library
+            - heading "Inbox" [level=2] [ref=e52]
+          - button "Save URL" [ref=e53]:
+            - img
+            - text: Save URL
+        - list "Items list" [ref=e56]:
+          - listitem [ref=e57] [cursor=pointer]:
+            - generic [ref=e60]: E
+            - generic [ref=e61]:
+              - heading "example.com" [level=3] [ref=e63]
+              - generic [ref=e64]:
+                - generic [ref=e65]: example.com
+                - time [ref=e67]: less than a minute ago
+            - generic [ref=e68]:
+              - button "Add to favorites" [ref=e69]:
+                - img [ref=e70]
+              - button "Archive" [ref=e72]:
+                - img [ref=e73]
+              - link "Open link in new tab" [ref=e76]:
+                - /url: https://example.com/test-1769173751704
+                - img [ref=e77]
+          - listitem [ref=e81] [cursor=pointer]:
+            - generic [ref=e84]: E
+            - generic [ref=e85]:
+              - heading "example.com" [level=3] [ref=e87]
+              - generic [ref=e88]:
+                - generic [ref=e89]: example.com
+                - time [ref=e91]: 1 minute ago
+            - generic [ref=e92]:
+              - button "Add to favorites" [ref=e93]:
+                - img [ref=e94]
+              - button "Archive" [ref=e96]:
+                - img [ref=e97]
+              - link "Open link in new tab" [ref=e100]:
+                - /url: https://example.com/test-1769173703179
+                - img [ref=e101]
+          - listitem [ref=e105] [cursor=pointer]:
+            - generic [ref=e108]: E
+            - generic [ref=e109]:
+              - heading "example.com" [level=3] [ref=e111]
+              - generic [ref=e112]:
+                - generic [ref=e113]: example.com
+                - time [ref=e115]: 3 minutes ago
+            - generic [ref=e116]:
+              - button "Add to favorites" [ref=e117]:
+                - img [ref=e118]
+              - button "Archive" [ref=e120]:
+                - img [ref=e121]
+              - link "Open link in new tab" [ref=e124]:
+                - /url: https://example.com/test-1769173595699
+                - img [ref=e125]
+          - listitem [ref=e129] [cursor=pointer]:
+            - generic [ref=e132]: E
+            - generic [ref=e133]:
+              - heading "example.com" [level=3] [ref=e135]
+              - generic [ref=e136]:
+                - generic [ref=e137]: example.com
+                - time [ref=e139]: 4 minutes ago
+            - generic [ref=e140]:
+              - button "Add to favorites" [ref=e141]:
+                - img [ref=e142]
+              - button "Archive" [ref=e144]:
+                - img [ref=e145]
+              - link "Open link in new tab" [ref=e148]:
+                - /url: https://example.com/test-1769173521713
+                - img [ref=e149]
+          - listitem [ref=e153] [cursor=pointer]:
+            - generic [ref=e156]: E
+            - generic [ref=e157]:
+              - heading "example.com" [level=3] [ref=e159]
+              - generic [ref=e160]:
+                - generic [ref=e161]: example.com
+                - time [ref=e163]: 5 minutes ago
+            - generic [ref=e164]:
+              - button "Add to favorites" [ref=e165]:
+                - img [ref=e166]
+              - button "Archive" [ref=e168]:
+                - img [ref=e169]
+              - link "Open link in new tab" [ref=e172]:
+                - /url: https://example.com/test-1769173433136
+                - img [ref=e173]
+          - listitem [ref=e177] [cursor=pointer]:
+            - generic [ref=e180]: E
+            - generic [ref=e181]:
+              - heading "example.com" [level=3] [ref=e183]
+              - generic [ref=e184]:
+                - generic [ref=e185]: example.com
+                - time [ref=e187]: 7 minutes ago
+            - generic [ref=e188]:
+              - button "Add to favorites" [ref=e189]:
+                - img [ref=e190]
+              - button "Archive" [ref=e192]:
+                - img [ref=e193]
+              - link "Open link in new tab" [ref=e196]:
+                - /url: https://example.com/test-1769173340028
+                - img [ref=e197]
+          - listitem [ref=e201] [cursor=pointer]:
+            - generic [ref=e204]: E
+            - generic [ref=e205]:
+              - heading "example.com" [level=3] [ref=e207]
+              - generic [ref=e208]:
+                - generic [ref=e209]: example.com
+                - time [ref=e211]: 9 minutes ago
+            - generic [ref=e212]:
+              - button "Add to favorites" [ref=e213]:
+                - img [ref=e214]
+              - button "Archive" [ref=e216]:
+                - img [ref=e217]
+              - link "Open link in new tab" [ref=e220]:
+                - /url: https://example.com/test-1769173214287
+                - img [ref=e221]
+          - listitem [ref=e225] [cursor=pointer]:
+            - generic [ref=e228]: E
+            - generic [ref=e229]:
+              - heading "example.com" [level=3] [ref=e231]
+              - generic [ref=e232]:
+                - generic [ref=e233]: example.com
+                - time [ref=e235]: 10 minutes ago
+            - generic [ref=e236]:
+              - button "Add to favorites" [ref=e237]:
+                - img [ref=e238]
+              - button "Archive" [ref=e240]:
+                - img [ref=e241]
+              - link "Open link in new tab" [ref=e244]:
+                - /url: https://example.com/test-1769173135025
+                - img [ref=e245]
+          - listitem [ref=e249] [cursor=pointer]:
+            - generic [ref=e252]: E
+            - generic [ref=e253]:
+              - heading "example.com" [level=3] [ref=e255]
+              - generic [ref=e256]:
+                - generic [ref=e257]: example.com
+                - time [ref=e259]: 22 minutes ago
+            - generic [ref=e260]:
+              - button "Add to favorites" [ref=e261]:
+                - img [ref=e262]
+              - button "Archive" [ref=e264]:
+                - img [ref=e265]
+              - link "Open link in new tab" [ref=e268]:
+                - /url: https://example.com/quickstart-validation
+                - img [ref=e269]
+          - listitem [ref=e273] [cursor=pointer]:
+            - generic [ref=e276]: E
+            - generic [ref=e277]:
+              - heading "example.com" [level=3] [ref=e279]
+              - generic [ref=e280]:
+                - generic [ref=e281]: example.com
+                - time [ref=e283]: 44 minutes ago
+            - generic [ref=e284]:
+              - button "Add to favorites" [ref=e285]:
+                - img [ref=e286]
+              - button "Archive" [ref=e288]:
+                - img [ref=e289]
+              - link "Open link in new tab" [ref=e292]:
+                - /url: https://example.com/test-quickstart
+                - img [ref=e293]
+          - listitem [ref=e297] [cursor=pointer]:
+            - generic [ref=e300]: G
+            - generic [ref=e301]:
+              - generic [ref=e302]:
+                - heading "github.com" [level=3] [ref=e303]
+                - img [ref=e304]
+              - generic [ref=e306]:
+                - generic [ref=e307]: github.com
+                - time [ref=e309]: about 22 hours ago
+            - generic [ref=e310]:
+              - button "Remove from favorites" [ref=e311]:
+                - img [ref=e312]
+              - button "Archive" [ref=e314]:
+                - img [ref=e315]
+              - link "Open link in new tab" [ref=e318]:
+                - /url: https://github.com/adiazcan/recall-core
+                - img [ref=e319]
+          - listitem [ref=e323] [cursor=pointer]:
+            - generic [ref=e326]: C
+            - generic [ref=e327]:
+              - heading "www.compartimoss.com" [level=3] [ref=e329]
+              - generic [ref=e330]:
+                - generic [ref=e331]: compartimoss.com
+                - time [ref=e333]: about 22 hours ago
+            - generic [ref=e334]:
+              - button "Add to favorites" [ref=e335]:
+                - img [ref=e336]
+              - button "Archive" [ref=e338]:
+                - img [ref=e339]
+              - link "Open link in new tab" [ref=e342]:
+                - /url: https://www.compartimoss.com/
+                - img [ref=e343]
+  - region "Notifications alt+T"
+```

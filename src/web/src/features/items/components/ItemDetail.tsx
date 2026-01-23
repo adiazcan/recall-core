@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { X, ExternalLink, Star, Archive, Trash2, Calendar, Plus } from 'lucide-react';
+import { X, ExternalLink, Star, Archive, Trash2, Calendar, Plus, Check, ChevronsUpDown } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { Textarea } from '../../../components/ui/textarea';
 import {
@@ -10,9 +10,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../components/ui/select';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from '../../../components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '../../../components/ui/popover';
 import { Input } from '../../../components/ui/input';
 import { useItemsStore } from '../store';
 import { useCollectionsStore } from '../../collections/store';
+import { useTagsStore } from '../../tags/store';
 import { useToastStore } from '../../../stores/toast-store';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { TagChip } from '../../tags/components/TagChip';
@@ -41,21 +54,25 @@ export function ItemDetail() {
   const updateItem = useItemsStore((state) => state.updateItem);
   const collections = useCollectionsStore((state) => state.collections);
   const fetchCollections = useCollectionsStore((state) => state.fetchCollections);
+  const tags = useTagsStore((state) => state.tags);
+  const fetchTags = useTagsStore((state) => state.fetchTags);
   const success = useToastStore((state) => state.success);
   const error = useToastStore((state) => state.error);
   const [notes, setNotes] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [newTagInput, setNewTagInput] = useState('');
   const [isAddingTag, setIsAddingTag] = useState(false);
+  const [comboboxOpen, setComboboxOpen] = useState(false);
 
   const item = items.find((i) => i.id === selectedItemId);
 
-  // Fetch collections when panel opens
+  // Fetch collections and tags when panel opens
   useEffect(() => {
     if (selectedItemId) {
       fetchCollections();
+      fetchTags();
     }
-  }, [selectedItemId, fetchCollections]);
+  }, [selectedItemId, fetchCollections, fetchTags]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -121,6 +138,7 @@ export function ItemDetail() {
     if (!item || !newTagInput.trim()) return;
 
     const tagName = newTagInput.trim();
+    setComboboxOpen(false);
     
     // Security: Validate tag name format to prevent XSS/injection
     if (!isValidTagName(tagName)) {
@@ -312,26 +330,76 @@ export function ItemDetail() {
                 
                 {isAddingTag ? (
                   <div className="flex items-center gap-2">
-                    <Input
-                      type="text"
-                      placeholder="Tag name"
-                      value={newTagInput}
-                      onChange={(e) => setNewTagInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleAddTag();
-                        } else if (e.key === 'Escape') {
-                          setIsAddingTag(false);
-                          setNewTagInput('');
-                        }
-                      }}
-                      className="h-8 w-32 text-sm"
-                      autoFocus
-                    />
+                    <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={comboboxOpen}
+                          aria-label="Select or create tag"
+                          className="h-8 w-[200px] justify-between text-sm"
+                        >
+                          {newTagInput || "Select or type tag..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[200px] p-0" align="start">
+                        <Command
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && newTagInput.trim()) {
+                              e.preventDefault();
+                              handleAddTag();
+                            }
+                          }}
+                        >
+                          <CommandInput 
+                            placeholder="Search or type tag..." 
+                            value={newTagInput}
+                            onValueChange={setNewTagInput}
+                          />
+                          <CommandEmpty>
+                            {newTagInput && isValidTagName(newTagInput) ? (
+                              <div className="py-2 text-sm text-neutral-600">
+                                Press Enter to create "{newTagInput}"
+                              </div>
+                            ) : (
+                              <div className="py-2 text-sm text-neutral-500">
+                                {newTagInput ? 'Invalid tag name format' : 'No tags found'}
+                              </div>
+                            )}
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {tags
+                              .filter((tag) => !item?.tags.includes(tag.name))
+                              .map((tag) => (
+                                <CommandItem
+                                  key={tag.name}
+                                  value={tag.name}
+                                  onSelect={(currentValue) => {
+                                    setNewTagInput(currentValue);
+                                    // Immediately add the selected tag
+                                    setTimeout(() => handleAddTag(), 0);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      newTagInput === tag.name ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  #{tag.name}
+                                  <span className="ml-auto text-xs text-neutral-400">{tag.count}</span>
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={handleAddTag}
+                      disabled={!newTagInput.trim()}
                       className="h-8 px-2"
                     >
                       Add
@@ -342,6 +410,7 @@ export function ItemDetail() {
                       onClick={() => {
                         setIsAddingTag(false);
                         setNewTagInput('');
+                        setComboboxOpen(false);
                       }}
                       className="h-8 px-2"
                     >

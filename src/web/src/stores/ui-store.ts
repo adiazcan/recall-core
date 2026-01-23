@@ -19,8 +19,8 @@ export const useUiStore = create<UIState>((set) => ({
   viewState: DEFAULT_VIEWS.inbox,
   setViewState: (view) =>
     set((state) => {
-      // Only update if the view type is different to prevent unnecessary re-renders
-      if (state.viewState.type === view.type) {
+      // Only update if the view type or ID is different to prevent unnecessary re-renders
+      if (state.viewState.type === view.type && state.viewState.id === view.id) {
         return state;
       }
       return { viewState: view };

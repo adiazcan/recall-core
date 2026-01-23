@@ -18,6 +18,21 @@ import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { TagChip } from '../../tags/components/TagChip';
 import { cn } from '../../../lib/utils';
 
+// Security: Validate URL protocol to prevent javascript: or data: URIs
+function isValidHttpUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+// Security: Sanitize tag names to prevent XSS/injection
+function isValidTagName(tag: string): boolean {
+  return /^[a-zA-Z0-9-_]+$/.test(tag);
+}
+
 export function ItemDetail() {
   const selectedItemId = useItemsStore((state) => state.selectedItemId);
   const items = useItemsStore((state) => state.items);
@@ -106,6 +121,12 @@ export function ItemDetail() {
     if (!item || !newTagInput.trim()) return;
 
     const tagName = newTagInput.trim();
+    
+    // Security: Validate tag name format to prevent XSS/injection
+    if (!isValidTagName(tagName)) {
+      error('Tag name can only contain letters, numbers, hyphens, and underscores');
+      return;
+    }
     
     // Check if tag already exists
     if (item.tags.includes(tagName)) {
@@ -235,15 +256,23 @@ export function ItemDetail() {
               </h1>
               
               {/* URL */}
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                <ExternalLink className="h-4 w-4" />
-                <span className="truncate">{item.url}</span>
-              </a>
+              {isValidHttpUrl(item.url) ? (
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  <span className="truncate">{item.url}</span>
+                </a>
+              ) : (
+                <div className="inline-flex items-center gap-2 text-sm text-neutral-500">
+                  <ExternalLink className="h-4 w-4" />
+                  <span className="truncate">{item.url}</span>
+                  <span className="text-xs text-red-600">(Invalid URL protocol)</span>
+                </div>
+              )}
             </div>
 
             {/* Collection */}

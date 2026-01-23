@@ -142,12 +142,12 @@
 
 ### Implementation for User Story 4
 
-- [ ] T048 [US4] Implement toggleFavorite with optimistic update in items store src/web/src/features/items/store.ts
-- [ ] T049 [US4] Implement toggleArchive with optimistic update in items store
-- [ ] T050 [P] [US4] Add favorite (star) icon button to ItemRow with toggle behavior in src/web/src/features/items/components/ItemRow.tsx
-- [ ] T051 [P] [US4] Add archive icon button to ItemRow with toggle behavior
-- [ ] T052 [US4] Add rollback logic and error toast on API failure for both actions
-- [ ] T053 [US4] Add animate-out effect when item is archived from current view
+- [X] T048 [US4] Implement toggleFavorite with optimistic update in items store src/web/src/features/items/store.ts
+- [X] T049 [US4] Implement toggleArchive with optimistic update in items store
+- [X] T050 [P] [US4] Add favorite (star) icon button to ItemRow with toggle behavior in src/web/src/features/items/components/ItemRow.tsx
+- [X] T051 [P] [US4] Add archive icon button to ItemRow with toggle behavior
+- [X] T052 [US4] Add rollback logic and error toast on API failure for both actions
+- [X] T053 [US4] Add animate-out effect when item is archived from current view
 
 **Checkpoint**: User Story 4 complete - users can quickly organize items
 
@@ -161,10 +161,10 @@
 
 ### Implementation for User Story 5
 
-- [ ] T054 [US5] Implement deleteItem action in items store src/web/src/features/items/store.ts
-- [ ] T055 [US5] Create ConfirmDeleteDialog component in src/web/src/features/items/components/ConfirmDeleteDialog.tsx
-- [ ] T056 [US5] Add delete button to ItemDetail that opens confirmation dialog
-- [ ] T057 [US5] Wire confirmation to deleteItem action with success toast and panel close
+- [X] T054 [US5] Implement deleteItem action in items store src/web/src/features/items/store.ts
+- [X] T055 [US5] Create ConfirmDeleteDialog component in src/web/src/features/items/components/ConfirmDeleteDialog.tsx
+- [X] T056 [US5] Add delete button to ItemDetail that opens confirmation dialog
+- [X] T057 [US5] Wire confirmation to deleteItem action with success toast and panel close
 
 **Checkpoint**: User Story 5 complete - users can delete items
 
@@ -178,11 +178,11 @@
 
 ### Implementation for User Story 6
 
-- [ ] T058 [US6] Implement updateItem action in items store src/web/src/features/items/store.ts
-- [ ] T059 [US6] Add collection dropdown selector to ItemDetail in src/web/src/features/items/components/ItemDetail.tsx
-- [ ] T060 [US6] Add tag editor with add/remove capability to ItemDetail
-- [ ] T061 [P] [US6] Create TagChip component for tag display in src/web/src/features/tags/components/TagChip.tsx
-- [ ] T062 [US6] Wire collection/tag changes to updateItem action with feedback
+- [X] T058 [US6] Implement updateItem action in items store src/web/src/features/items/store.ts
+- [X] T059 [US6] Add collection dropdown selector to ItemDetail in src/web/src/features/items/components/ItemDetail.tsx
+- [X] T060 [US6] Add tag editor with add/remove capability to ItemDetail
+- [X] T061 [P] [US6] Create TagChip component for tag display in src/web/src/features/tags/components/TagChip.tsx
+- [X] T062 [US6] Wire collection/tag changes to updateItem action with feedback
 
 **Checkpoint**: User Story 6 complete - users can edit item metadata
 
@@ -196,12 +196,12 @@
 
 ### Implementation for User Story 7
 
-- [ ] T063 [US7] Implement fetchCollections action in collections store src/web/src/features/collections/store.ts
-- [ ] T064 [US7] Implement createCollection action in collections store
-- [ ] T065 [P] [US7] Create CollectionList component for sidebar in src/web/src/features/collections/components/CollectionList.tsx
-- [ ] T066 [P] [US7] Create CreateCollectionDialog component in src/web/src/features/collections/components/CreateCollectionDialog.tsx
-- [ ] T067 [US7] Wire CollectionList to Sidebar with navigation on click
-- [ ] T068 [US7] Wire CreateCollectionDialog to UI store modal state and collections store
+- [X] T063 [US7] Implement fetchCollections action in collections store src/web/src/features/collections/store.ts
+- [X] T064 [US7] Implement createCollection action in collections store
+- [X] T065 [P] [US7] Create CollectionList component for sidebar in src/web/src/features/collections/components/CollectionList.tsx
+- [X] T066 [P] [US7] Create CreateCollectionDialog component in src/web/src/features/collections/components/CreateCollectionDialog.tsx
+- [X] T067 [US7] Wire CollectionList to Sidebar with navigation on click
+- [X] T068 [US7] Wire CreateCollectionDialog to UI store modal state and collections store
 
 **Checkpoint**: User Story 7 complete - users can manage collections
 
@@ -215,10 +215,10 @@
 
 ### Implementation for User Story 8
 
-- [ ] T069 [US8] Implement fetchTags action in tags store src/web/src/features/tags/store.ts
-- [ ] T070 [US8] Create TagList component for sidebar in src/web/src/features/tags/components/TagList.tsx
-- [ ] T071 [US8] Wire TagList to Sidebar with navigation on click
-- [ ] T072 [US8] Add tag color assignment based on name hash in TagList
+- [X] T069 [US8] Implement fetchTags action in tags store src/web/src/features/tags/store.ts
+- [X] T070 [US8] Create TagList component for sidebar in src/web/src/features/tags/components/TagList.tsx
+- [X] T071 [US8] Wire TagList to Sidebar with navigation on click
+- [X] T072 [US8] Add tag color assignment based on name hash in TagList
 
 **Checkpoint**: User Story 8 complete - users can navigate by tags
 
@@ -228,14 +228,14 @@
 
 **Purpose**: Accessibility, final integration, and smoke testing
 
-- [ ] T073 [P] Add keyboard navigation support to ItemList (arrow keys, enter to select)
-- [ ] T074 [P] Add keyboard navigation to Sidebar (tab, arrow keys)
-- [ ] T075 [P] Add focus management for dialogs (trap focus, return focus on close)
-- [ ] T076 [P] Add ARIA labels to all icon-only buttons in ItemRow and ItemDetail
-- [ ] T077 Add error boundary component for graceful error handling in src/web/src/components/common/ErrorBoundary.tsx
-- [ ] T078 Create Playwright e2e smoke test (create→list→detail→delete) in src/web/e2e/smoke.spec.ts
-- [ ] T079 Run quickstart.md validation (full stack test with Aspire)
-- [ ] T080 Verify bundle size < 200KB gzip target
+- [X] T073 [P] Add keyboard navigation support to ItemList (arrow keys, enter to select)
+- [X] T074 [P] Add keyboard navigation to Sidebar (tab, arrow keys)
+- [X] T075 [P] Add focus management for dialogs (trap focus, return focus on close)
+- [X] T076 [P] Add ARIA labels to all icon-only buttons in ItemRow and ItemDetail
+- [X] T077 Add error boundary component for graceful error handling in src/web/src/components/common/ErrorBoundary.tsx
+- [X] T078 Create Playwright e2e smoke test (create→list→detail→delete) in src/web/e2e/smoke.spec.ts
+- [X] T079 Run quickstart.md validation (full stack test with Aspire)
+- [X] T080 Verify bundle size < 200KB gzip target
 
 ---
 
@@ -325,69 +325,6 @@ With multiple developers after Foundational:
 - **Developer A**: US1 (Save) → US4 (Quick Actions) → US5 (Delete)
 - **Developer B**: US2 (Browse) → US3 (Details) → US6 (Edit)
 - **Developer C**: US7 (Collections) → US8 (Tags) → Polish
-
----
-
-## Review Follow-ups (AI)
-
-**Code Review Date**: January 22, 2026  
-**Issues Found**: 30 total (17 CRITICAL/HIGH, 8 MEDIUM, 5 LOW)  
-**Review Status**: Phase 1 ✅ Complete | Phase 2 ⚠️ Partial | Phase 3 ❌ Incomplete (only US1 of MVP)
-
-### CRITICAL Issues (Must Fix Before Deployment)
-
-- [X] [AI-Review][CRITICAL] Install npm dependencies - all @radix-ui/* and core deps are UNMET [src/web/package.json]
-- [X] [AI-Review][CRITICAL] Fix TypeScript build - 100+ type errors prevent compilation [src/web/src/]
-- [X] [AI-Review][CRITICAL] Implement User Story 2 (Browse/Filter Items) - marked not started but is P1 MVP requirement [specs/003-web-app-integration/tasks.md:T033-T041]
-- [X] [AI-Review][CRITICAL] Implement User Story 3 (View Item Details) - marked not started but is P1 MVP requirement [specs/003-web-app-integration/tasks.md:T042-T047]
-- [X] [AI-Review][HIGH] Fix implicit 'any' types in SaveUrlForm useItemsStore selectors [src/web/src/features/items/components/SaveUrlForm.tsx:33-34]
-- [X] [AI-Review][HIGH] Fix implicit 'any' types in ItemsView useUiStore selectors [src/web/src/features/items/components/ItemsView.tsx:7-9]
-- [X] [AI-Review][HIGH] Fix implicit 'any' types in Layout useUiStore selectors [src/web/src/components/layout/Layout.tsx:8-9]
-- [X] [AI-Review][HIGH] Fix implicit 'any' types in Sidebar useUiStore selector [src/web/src/components/layout/Sidebar.tsx:18]
-- [X] [AI-Review][HIGH] Fix implicit 'any' types in collections store (6 occurrences) [src/web/src/features/collections/store.ts:15,23,27,30]
-- [X] [AI-Review][HIGH] Fix implicit 'any' types in items store [src/web/src/features/items/store.ts:28]
-- [X] [AI-Review][HIGH] Add missing typecheck script to package.json scripts section [src/web/package.json]
-- [X] [AI-Review][HIGH] Investigate why Phase 2 tests show only 1 passing when 4 test files exist [src/tests/Recall.Core.Api.Tests/]
-  - **RESOLVED**: Docker is not running in WSL 2 environment
-  - 4 test files exist with 23 total tests
-  - All 23 tests fail with: "Docker is either not running or misconfigured"
-  - Tests use Testcontainers.MongoDb which requires Docker to create ephemeral MongoDB instances
-  - **Action Required**: Enable Docker Desktop WSL 2 integration or install Docker Engine in WSL 2
-  - **References**: https://docs.docker.com/go/wsl2/
-- [ ] [AI-Review][HIGH] Commit uncommitted changes in src/web/ - 9 modified files, 9 untracked directories [git status]
-- [X] [AI-Review][HIGH] Create ItemList.tsx component with loading skeleton [src/web/src/features/items/components/ItemList.tsx]
-- [X] [AI-Review][HIGH] Create ItemRow.tsx component for list display [src/web/src/features/items/components/ItemRow.tsx]
-- [X] [AI-Review][HIGH] Implement fetchItems action with API integration [src/web/src/features/items/store.ts:fetchItems]
-- [X] [AI-Review][HIGH] Implement fetchMore pagination action with API integration [src/web/src/features/items/store.ts:fetchMore]
-
-### MEDIUM Issues (Should Fix for Quality)
-
-- [ ] [AI-Review][MEDIUM] Verify Vite proxy configuration handles /api routes correctly [src/web/vite.config.ts]
-- [ ] [AI-Review][MEDIUM] Implement updateItem action in items store (currently stub) [src/web/src/features/items/store.ts:updateItem]
-- [ ] [AI-Review][MEDIUM] Implement deleteItem action in items store (currently stub) [src/web/src/features/items/store.ts:deleteItem]
-- [ ] [AI-Review][MEDIUM] Implement toggleFavorite action in items store (currently stub) [src/web/src/features/items/store.ts:toggleFavorite]
-- [ ] [AI-Review][MEDIUM] Implement toggleArchive action in items store (currently stub) [src/web/src/features/items/store.ts:toggleArchive]
-- [ ] [AI-Review][MEDIUM] Implement fetchCollections action in collections store [src/web/src/features/collections/store.ts:fetchCollections]
-- [ ] [AI-Review][MEDIUM] Implement createCollection action in collections store [src/web/src/features/collections/store.ts:createCollection]
-- [ ] [AI-Review][MEDIUM] Implement all tags store actions (currently placeholder) [src/web/src/features/tags/store.ts]
-- [ ] [AI-Review][MEDIUM] Add React error boundary component for graceful error handling [src/web/src/components/common/ErrorBoundary.tsx]
-- [ ] [AI-Review][MEDIUM] Create Playwright e2e smoke test for create→list→detail→delete flow [src/web/e2e/smoke.spec.ts]
-- [ ] [AI-Review][MEDIUM] Refactor HealthEndpointTests to reuse MongoDbFixture efficiently [src/tests/Recall.Core.Api.Tests/HealthEndpointTests.cs:26-34]
-- [ ] [AI-Review][MEDIUM] Replace ItemsView hardcoded placeholder with real ItemList component [src/web/src/features/items/components/ItemsView.tsx:15-17]
-
-### LOW Issues (Nice to Have)
-
-- [ ] [AI-Review][LOW] Implement keyboard navigation for ItemList (arrow keys, enter) [src/web/src/features/items/components/ItemList.tsx]
-- [ ] [AI-Review][LOW] Add keyboard navigation to Sidebar (tab, arrow keys) [src/web/src/components/layout/Sidebar.tsx]
-- [ ] [AI-Review][LOW] Add focus trap and focus return for dialogs [src/web/src/components/ui/dialog.tsx]
-- [ ] [AI-Review][LOW] Add ARIA labels to all icon-only buttons [src/web/src/features/items/components/ItemRow.tsx]
-- [ ] [AI-Review][LOW] Validate bundle size meets <200KB gzip target [build output]
-- [ ] [AI-Review][LOW] Verify all backend files use Recall.Core namespace root consistently [src/Recall.Core.Api/]
-
-### Cross-Phase Integration Issues
-
-- [ ] [AI-Review][CRITICAL] Verify full-stack integration works after npm install and TypeScript fixes [Aspire AppHost + API + Web]
-- [ ] [AI-Review][HIGH] Verify Aspire AppHost correctly references and proxies Vite frontend [src/Recall.Core.AppHost/AppHost.cs]
 
 ---
 

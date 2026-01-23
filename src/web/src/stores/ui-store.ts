@@ -17,7 +17,14 @@ export interface UIState {
 
 export const useUiStore = create<UIState>((set) => ({
   viewState: DEFAULT_VIEWS.inbox,
-  setViewState: (view) => set({ viewState: view }),
+  setViewState: (view) =>
+    set((state) => {
+      // Only update if the view type is different to prevent unnecessary re-renders
+      if (state.viewState.type === view.type) {
+        return state;
+      }
+      return { viewState: view };
+    }),
   isSidebarOpen: true,
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
   setSidebarOpen: (open) => set({ isSidebarOpen: open }),

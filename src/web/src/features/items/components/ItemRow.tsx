@@ -1,34 +1,63 @@
 import { formatDistanceToNow } from 'date-fns';
 import { Star, ExternalLink, Archive } from 'lucide-react';
+import { useState, forwardRef } from 'react';
 import type { Item } from '../../../types/entities';
 import { cn } from '../../../lib/utils';
+import { useItemsStore } from '../store';
+import { useToastStore } from '../../../stores/toast-store';
 
 interface ItemRowProps {
   item: Item;
   isSelected?: boolean;
+  isFocused?: boolean;
   onClick?: (item: Item) => void;
+  onFocus?: () => void;
 }
 
-export function ItemRow({ item, isSelected = false, onClick }: ItemRowProps) {
+export const ItemRow = forwardRef<HTMLDivElement, ItemRowProps>(
+  ({ item, isSelected = false, isFocused = false, onClick, onFocus }, ref) => {
+  const toggleFavorite = useItemsStore((state) => state.toggleFavorite);
+  const toggleArchive = useItemsStore((state) => state.toggleArchive);
+  const { success, error } = useToastStore();
+  const [isArchiving, setIsArchiving] = useState(false);
+
   const handleClick = () => {
     onClick?.(item);
   };
 
-  const handleStarClick = (e: React.MouseEvent) => {
+  const handleStarClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    // TODO: Wire to toggleFavorite in Phase 6 (US4)
+    try {
+      await toggleFavorite(item.id);
+      success(item.isFavorite ? 'Removed from favorites' : 'Added to favorites');
+    } catch {
+      error('Failed to update favorite status');
+    }
   };
 
-  const handleArchiveClick = (e: React.MouseEvent) => {
+  const handleArchiveClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    // TODO: Wire to toggleArchive in Phase 6 (US4)
+    
+    if (!item.isArchived) {
+      setIsArchiving(true);
+    }
+    
+    try {
+      await toggleArchive(item.id);
+      success(item.isArchived ? 'Unarchived' : 'Archived');
+    } catch {
+      error('Failed to update archive status');
+      setIsArchiving(false);
+    }
   };
 
   return (
     <div
-      role="button"
-      tabIndex={0}
+      ref={ref}
+      role="listitem"
+      tabIndex={isFocused ? 0 : -1}
       onClick={handleClick}
+      onFocus={onFocus}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -36,9 +65,11 @@ export function ItemRow({ item, isSelected = false, onClick }: ItemRowProps) {
         }
       }}
       className={cn(
-        'group relative flex items-start gap-4 px-4 py-4 border-b border-neutral-100 cursor-pointer transition-colors duration-200',
-        'hover:bg-neutral-50 focus:bg-neutral-50 focus:outline-none',
+        'group relative flex items-start gap-4 px-4 py-4 border-b border-neutral-100 cursor-pointer transition-all duration-300',
+        'hover:bg-neutral-50 focus:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset',
         isSelected && 'bg-indigo-50/60',
+        isFocused && 'ring-2 ring-indigo-500 ring-inset',
+        isArchiving && 'opacity-0 -translate-x-4',
       )}
     >
       {/* Favicon / Image Thumbnail */}
@@ -145,4 +176,6 @@ export function ItemRow({ item, isSelected = false, onClick }: ItemRowProps) {
       </div>
     </div>
   );
-}
+});
+
+ItemRow.displayName = 'ItemRow';

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { ApiError } from '../../lib/api/client';
 import { itemsApi } from '../../lib/api/items';
 import { mapItemDtoToItem, type UpdateItemRequest } from '../../lib/api/types';
-import type { Item } from '../../types/entities';
+import type { Item, ItemStatus } from '../../types/entities';
 import type { ItemFilterParams } from '../../types/views';
 
 export interface ItemsState {
@@ -106,17 +106,128 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
       set({ isSaving: false });
     }
   },
-  updateItem: async (_id, _data) => {
-    set({ error: null });
+  updateItem: async (id, data) => {
+    const { items } = get();
+    const item = items.find((i) => i.id === id);
+    if (!item) {
+      set({ error: 'Item not found.' });
+      return;
+    }
+
+    const previousItems = [...items];
+
+    // Optimistic update - create a properly typed updated item
+    set((state) => ({
+      items: state.items.map((i) => {
+        if (i.id !== id) return i;
+
+        const updated: Item = { ...i };
+
+        if (data.title !== undefined) updated.title = data.title;
+        if (data.excerpt !== undefined) updated.excerpt = data.excerpt;
+        if (data.status !== undefined && data.status !== null) {
+          updated.status = data.status;
+          updated.isArchived = data.status === 'archived';
+        }
+        if (data.isFavorite !== undefined && data.isFavorite !== null) {
+          updated.isFavorite = data.isFavorite;
+        }
+        if (data.collectionId !== undefined) updated.collectionId = data.collectionId;
+        if (data.tags !== undefined && data.tags !== null) updated.tags = data.tags;
+
+        return updated;
+      }),
+      error: null,
+    }));
+
+    try {
+      await itemsApi.update(id, data);
+    } catch (error) {
+      // Rollback on error
+      set({ items: previousItems });
+      const message = error instanceof ApiError ? error.message : 'Unable to update item.';
+      set({ error: message });
+      throw error;
+    }
   },
-  deleteItem: async (_id) => {
-    set({ error: null });
+  deleteItem: async (id) => {
+    const { items, selectedItemId } = get();
+    const previousItems = [...items];
+    const wasSelected = selectedItemId === id;
+
+    // Optimistically remove from UI
+    set({
+      items: items.filter((i) => i.id !== id),
+      selectedItemId: wasSelected ? null : selectedItemId,
+      error: null,
+    });
+
+    try {
+      await itemsApi.delete(id);
+    } catch (error) {
+      // Rollback on error
+      set({ items: previousItems, selectedItemId: wasSelected ? id : selectedItemId });
+      const message = error instanceof ApiError ? error.message : 'Unable to delete item.';
+      set({ error: message });
+      throw error;
+    }
   },
-  toggleFavorite: async (_id) => {
-    set({ error: null });
+  toggleFavorite: async (id) => {
+    const { items } = get();
+    const item = items.find((i) => i.id === id);
+    if (!item) return;
+
+    const newFavoriteState = !item.isFavorite;
+    const previousItems = [...items];
+
+    // Optimistic update
+    set((state) => ({
+      items: state.items.map((i) => (i.id === id ? { ...i, isFavorite: newFavoriteState } : i)),
+    }));
+
+    try {
+      await itemsApi.update(id, { isFavorite: newFavoriteState });
+    } catch (error) {
+      // Rollback on error
+      set({ items: previousItems });
+      const message = error instanceof ApiError ? error.message : 'Unable to update favorite status.';
+      set({ error: message });
+      throw error;
+    }
   },
-  toggleArchive: async (_id) => {
-    set({ error: null });
+  toggleArchive: async (id) => {
+    const { items } = get();
+    const item = items.find((i) => i.id === id);
+    if (!item) return;
+
+    const newStatus: ItemStatus = item.status === 'archived' ? 'unread' : 'archived';
+    const previousItems = [...items];
+
+    // Optimistic update
+    set((state) => ({
+      items: state.items.map((i) =>
+        i.id === id ? { ...i, status: newStatus, isArchived: newStatus === 'archived' } : i,
+      ),
+    }));
+
+    try {
+      await itemsApi.update(id, { status: newStatus });
+      
+      // Remove from list after successful archive (will be animated in UI)
+      if (newStatus === 'archived') {
+        setTimeout(() => {
+          set((state) => ({
+            items: state.items.filter((i) => i.id !== id),
+          }));
+        }, 300); // Wait for animation to complete
+      }
+    } catch (error) {
+      // Rollback on error
+      set({ items: previousItems });
+      const message = error instanceof ApiError ? error.message : 'Unable to update archive status.';
+      set({ error: message });
+      throw error;
+    }
   },
   selectItem: (id) => set({ selectedItemId: id }),
   clearError: () => set({ error: null }),

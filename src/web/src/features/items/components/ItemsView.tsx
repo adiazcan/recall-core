@@ -41,7 +41,8 @@ export function ItemsView() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden relative">
+        <SaveUrlDialog open={isSaveUrlOpen} onOpenChange={(open) => (open ? openSaveUrl() : closeSaveUrl())} />
         {!isLoading && items.length === 0 ? (
           <div className="p-6">
             <EmptyState
@@ -65,8 +66,6 @@ export function ItemsView() {
           />
         )}
       </div>
-
-      <SaveUrlDialog open={isSaveUrlOpen} onOpenChange={(open) => (open ? openSaveUrl() : closeSaveUrl())} />
     </div>
   );
 }

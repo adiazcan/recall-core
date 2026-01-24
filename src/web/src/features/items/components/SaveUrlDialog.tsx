@@ -1,4 +1,3 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
 import { SaveUrlForm } from './SaveUrlForm';
 
 interface SaveUrlDialogProps {
@@ -7,14 +6,13 @@ interface SaveUrlDialogProps {
 }
 
 export function SaveUrlDialog({ open, onOpenChange }: SaveUrlDialogProps) {
+  if (!open) {
+    return null;
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-950 text-slate-100">
-        <DialogHeader>
-          <DialogTitle>Save a URL</DialogTitle>
-        </DialogHeader>
-        <SaveUrlForm onSaved={() => onOpenChange(false)} onCancel={() => onOpenChange(false)} />
-      </DialogContent>
-    </Dialog>
+    <div className="absolute top-4 left-4 right-4 md:left-6 md:right-6 z-20 bg-white shadow-xl border border-neutral-200 rounded-xl p-4">
+      <SaveUrlForm variant="inline" onSaved={() => onOpenChange(false)} onCancel={() => onOpenChange(false)} />
+    </div>
   );
 }

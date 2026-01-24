@@ -1,7 +1,7 @@
 import { InteractionRequiredAuthError } from '@azure/msal-browser';
 import { useAccount, useIsAuthenticated, useMsal } from '@azure/msal-react';
 import { useCallback, useEffect, useRef } from 'react';
-import { apiRequest, loginRequest } from '../lib/authConfig';
+import { loginRequest } from '../lib/authConfig';
 import { logAuthEvent } from '../lib/telemetry';
 
 export function useAuth() {
@@ -52,7 +52,7 @@ export function useAuth() {
 
     try {
       const response = await instance.acquireTokenSilent({
-        ...apiRequest,
+        ...loginRequest,
         account: tokenAccount,
       });
 
@@ -63,6 +63,7 @@ export function useAuth() {
           ...loginRequest,
           account: tokenAccount,
         });
+        return null;
       }
 
       throw error;

@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useRef, useEffect } from 'react';
 import { cn } from '../../lib/utils';
 import { useUiStore } from '../../stores/ui-store';
-import { DEFAULT_VIEWS } from '../../types/views';
+import { DEFAULT_VIEWS, type ViewState } from '../../types/views';
 import { CollectionList } from '../../features/collections/components/CollectionList';
 import { TagList } from '../../features/tags/components/TagList';
 
@@ -25,6 +25,10 @@ export function Sidebar() {
       setViewState(matchedNav.view);
     }
   }, [location.pathname, setViewState]);
+
+  const handleNavClick = (view: ViewState) => {
+    setViewState(view);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -90,6 +94,7 @@ export function Sidebar() {
             <NavLink
               key={to}
               to={to}
+              onClick={() => handleNavClick(view)}
               className={({ isActive }) =>
                 cn(
                   'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset',

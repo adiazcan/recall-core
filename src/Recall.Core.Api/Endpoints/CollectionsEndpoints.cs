@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Recall.Core.Api.Auth;
 using Recall.Core.Api.Models;
 using Recall.Core.Api.Services;
 
@@ -9,16 +10,21 @@ public static class CollectionsEndpoints
 {
     public static IEndpointRouteBuilder MapCollectionsEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapPost("/api/v1/collections", async Task<Results<Created<CollectionDto>, BadRequest<ErrorResponse>, Conflict<ErrorResponse>>>
+        var group = endpoints.MapGroup("/api/v1/collections")
+            .RequireAuthorization("ApiScope")
+            .WithTags("Collections");
+
+        group.MapPost("", async Task<Results<Created<CollectionDto>, BadRequest<ErrorResponse>, Conflict<ErrorResponse>>>
             (
                 CreateCollectionRequest request,
+                IUserContext userContext,
                 ICollectionService service,
                 CancellationToken cancellationToken)
                 =>
                 {
                     try
                     {
-                        var dto = await service.CreateCollectionAsync(request, cancellationToken);
+                        var dto = await service.CreateCollectionAsync(userContext.UserId, request, cancellationToken);
                         return TypedResults.Created($"/api/v1/collections/{dto.Id}", dto);
                     }
                     catch (RequestValidationException ex)
@@ -34,7 +40,6 @@ public static class CollectionsEndpoints
             .Produces<Created<CollectionDto>>(StatusCodes.Status201Created)
             .Produces<BadRequest<ErrorResponse>>(StatusCodes.Status400BadRequest)
             .Produces<Conflict<ErrorResponse>>(StatusCodes.Status409Conflict)
-            .WithTags("Collections")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Create a collection";
@@ -42,17 +47,17 @@ public static class CollectionsEndpoints
                 return Task.CompletedTask;
             });
 
-        endpoints.MapGet("/api/v1/collections", async Task<Ok<CollectionListResponse>>
+        group.MapGet("", async Task<Ok<CollectionListResponse>>
             (
+                IUserContext userContext,
                 ICollectionService service,
                 CancellationToken cancellationToken)
                 =>
                 {
-                    var collections = await service.ListCollectionsAsync(cancellationToken);
+                    var collections = await service.ListCollectionsAsync(userContext.UserId, cancellationToken);
                     return TypedResults.Ok(new CollectionListResponse { Collections = collections });
                 })
             .Produces<Ok<CollectionListResponse>>(StatusCodes.Status200OK)
-            .WithTags("Collections")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "List collections";
@@ -60,16 +65,17 @@ public static class CollectionsEndpoints
                 return Task.CompletedTask;
             });
 
-        endpoints.MapGet("/api/v1/collections/{id}", async Task<Results<Ok<CollectionDto>, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
+        group.MapGet("{id}", async Task<Results<Ok<CollectionDto>, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
             (
                 string id,
+                IUserContext userContext,
                 ICollectionService service,
                 CancellationToken cancellationToken)
                 =>
                 {
                     try
                     {
-                        var collection = await service.GetCollectionAsync(id, cancellationToken);
+                        var collection = await service.GetCollectionAsync(userContext.UserId, id, cancellationToken);
                         return collection is null
                             ? TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Collection not found.")))
                             : TypedResults.Ok(collection);
@@ -82,7 +88,6 @@ public static class CollectionsEndpoints
             .Produces<Ok<CollectionDto>>(StatusCodes.Status200OK)
             .Produces<BadRequest<ErrorResponse>>(StatusCodes.Status400BadRequest)
             .Produces<NotFound<ErrorResponse>>(StatusCodes.Status404NotFound)
-            .WithTags("Collections")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Get collection details";
@@ -90,17 +95,18 @@ public static class CollectionsEndpoints
                 return Task.CompletedTask;
             });
 
-        endpoints.MapPatch("/api/v1/collections/{id}", async Task<Results<Ok<CollectionDto>, NotFound<ErrorResponse>, BadRequest<ErrorResponse>, Conflict<ErrorResponse>>>
+        group.MapPatch("{id}", async Task<Results<Ok<CollectionDto>, NotFound<ErrorResponse>, BadRequest<ErrorResponse>, Conflict<ErrorResponse>>>
             (
                 string id,
                 UpdateCollectionRequest request,
+                IUserContext userContext,
                 ICollectionService service,
                 CancellationToken cancellationToken)
                 =>
                 {
                     try
                     {
-                        var collection = await service.UpdateCollectionAsync(id, request, cancellationToken);
+                        var collection = await service.UpdateCollectionAsync(userContext.UserId, id, request, cancellationToken);
                         if (collection is null)
                         {
                             return TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Collection not found.")));
@@ -122,7 +128,6 @@ public static class CollectionsEndpoints
             .Produces<BadRequest<ErrorResponse>>(StatusCodes.Status400BadRequest)
             .Produces<NotFound<ErrorResponse>>(StatusCodes.Status404NotFound)
             .Produces<Conflict<ErrorResponse>>(StatusCodes.Status409Conflict)
-            .WithTags("Collections")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Update a collection";
@@ -130,17 +135,18 @@ public static class CollectionsEndpoints
                 return Task.CompletedTask;
             });
 
-        endpoints.MapDelete("/api/v1/collections/{id}", async Task<Results<NoContent, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
+        group.MapDelete("{id}", async Task<Results<NoContent, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
             (
                 string id,
                 string? mode,
+                IUserContext userContext,
                 ICollectionService service,
                 CancellationToken cancellationToken)
                 =>
                 {
                     try
                     {
-                        var deleted = await service.DeleteCollectionAsync(id, mode, cancellationToken);
+                        var deleted = await service.DeleteCollectionAsync(userContext.UserId, id, mode, cancellationToken);
                         if (!deleted)
                         {
                             return TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Collection not found.")));
@@ -156,7 +162,6 @@ public static class CollectionsEndpoints
             .Produces<NoContent>(StatusCodes.Status204NoContent)
             .Produces<BadRequest<ErrorResponse>>(StatusCodes.Status400BadRequest)
             .Produces<NotFound<ErrorResponse>>(StatusCodes.Status404NotFound)
-            .WithTags("Collections")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Delete a collection";

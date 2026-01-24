@@ -23,12 +23,12 @@
 
 **Purpose**: Install dependencies and create configuration structure (no secrets committed)
 
-- [ ] T001 Add Microsoft.Identity.Web package to src/Recall.Core.Api/Recall.Core.Api.csproj
-- [ ] T002 [P] Add @azure/msal-browser and @azure/msal-react packages to src/web/package.json
-- [ ] T003 [P] Create AzureAd configuration section structure in src/Recall.Core.Api/appsettings.json (placeholders only)
-- [ ] T004 [P] Create .env.example with MSAL environment variables in src/web/.env.example
-- [ ] T005 [P] Add src/web/.env.local to .gitignore if not already present
-- [ ] T006 Create docs/auth/ directory structure for documentation
+- [X] T001 Add Microsoft.Identity.Web package to src/Recall.Core.Api/Recall.Core.Api.csproj
+- [X] T002 [P] Add @azure/msal-browser and @azure/msal-react packages to src/web/package.json
+- [X] T003 [P] Create AzureAd configuration section structure in src/Recall.Core.Api/appsettings.json (placeholders only)
+- [X] T004 [P] Create .env.example with MSAL environment variables in src/web/.env.example
+- [X] T005 [P] Add src/web/.env.local to .gitignore if not already present
+- [X] T006 Create docs/auth/ directory structure for documentation
 
 ---
 
@@ -40,25 +40,25 @@
 
 ### Backend Authentication Middleware
 
-- [ ] T007 Configure JWT Bearer authentication with Microsoft.Identity.Web in src/Recall.Core.Api/Program.cs
-- [ ] T008 Add authorization policy "ApiScope" requiring "access_as_user" scope in src/Recall.Core.Api/Program.cs
-- [ ] T009 [P] Create test authentication bypass handler for development/CI in src/Recall.Core.Api/Auth/TestAuthHandler.cs
-- [ ] T010 Configure test bypass conditional registration in src/Recall.Core.Api/Program.cs
+- [X] T007 Configure JWT Bearer authentication with Microsoft.Identity.Web in src/Recall.Core.Api/Program.cs
+- [X] T008 Add authorization policy "ApiScope" requiring "access_as_user" scope in src/Recall.Core.Api/Program.cs
+- [X] T009 [P] Create test authentication bypass handler for development/CI in src/Recall.Core.Api/Auth/TestAuthHandler.cs
+- [X] T010 Configure test bypass conditional registration in src/Recall.Core.Api/Program.cs
 
 ### User Context Infrastructure
 
-- [ ] T011 [P] Create IUserContext interface in src/Recall.Core.Api/Auth/IUserContext.cs
-- [ ] T012 [P] Implement HttpUserContext extracting userId from ClaimsPrincipal in src/Recall.Core.Api/Auth/HttpUserContext.cs
-- [ ] T013 Register IUserContext as scoped service in src/Recall.Core.Api/Program.cs
+- [X] T011 [P] Create IUserContext interface in src/Recall.Core.Api/Auth/IUserContext.cs
+- [X] T012 [P] Implement HttpUserContext extracting userId from ClaimsPrincipal in src/Recall.Core.Api/Auth/HttpUserContext.cs
+- [X] T013 Register IUserContext as scoped service in src/Recall.Core.Api/Program.cs
 
 ### Entity Changes (Data Model)
 
-- [ ] T014 [P] Add UserId property with BsonElement attribute to Item entity in src/Recall.Core.Api/Entities/Item.cs
-- [ ] T015 [P] Add UserId property with BsonElement attribute to Collection entity in src/Recall.Core.Api/Entities/Collection.cs
+- [X] T014 [P] Add UserId property with BsonElement attribute to Item entity in src/Recall.Core.Api/Entities/Item.cs
+- [X] T015 [P] Add UserId property with BsonElement attribute to Collection entity in src/Recall.Core.Api/Entities/Collection.cs
 
 ### Response Models
 
-- [ ] T016 Create UserInfoResponse record in src/Recall.Core.Api/Models/UserInfoResponse.cs
+- [X] T016 Create UserInfoResponse record in src/Recall.Core.Api/Models/UserInfoResponse.cs
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -72,31 +72,31 @@
 
 ### Repository Layer Updates (Data Isolation)
 
-- [ ] T017 [US5] Update IItemRepository interface to require userId parameter in src/Recall.Core.Api/Repositories/IItemRepository.cs
-- [ ] T018 [US5] Update ItemRepository to filter all queries by userId in src/Recall.Core.Api/Repositories/ItemRepository.cs
-- [ ] T019 [P] [US5] Update ICollectionRepository interface to require userId parameter in src/Recall.Core.Api/Repositories/ICollectionRepository.cs
-- [ ] T020 [P] [US5] Update CollectionRepository to filter all queries by userId in src/Recall.Core.Api/Repositories/CollectionRepository.cs
+- [X] T017 [US5] Update IItemRepository interface to require userId parameter in src/Recall.Core.Api/Repositories/IItemRepository.cs
+- [X] T018 [US5] Update ItemRepository to filter all queries by userId in src/Recall.Core.Api/Repositories/ItemRepository.cs
+- [X] T019 [P] [US5] Update ICollectionRepository interface to require userId parameter in src/Recall.Core.Api/Repositories/ICollectionRepository.cs
+- [X] T020 [P] [US5] Update CollectionRepository to filter all queries by userId in src/Recall.Core.Api/Repositories/CollectionRepository.cs
 
 ### Service Layer Updates (Data Isolation)
 
-- [ ] T021 [US5] Update IItemService interface to accept userId from IUserContext in src/Recall.Core.Api/Services/IItemService.cs
-- [ ] T022 [US5] Update ItemService to inject IUserContext and pass userId to repository in src/Recall.Core.Api/Services/ItemService.cs
-- [ ] T023 [P] [US5] Update ICollectionService interface to accept userId from IUserContext in src/Recall.Core.Api/Services/ICollectionService.cs
-- [ ] T024 [P] [US5] Update CollectionService to inject IUserContext and pass userId to repository in src/Recall.Core.Api/Services/CollectionService.cs
+- [X] T021 [US5] Update IItemService interface to accept userId from IUserContext in src/Recall.Core.Api/Services/IItemService.cs
+- [X] T022 [US5] Update ItemService to inject IUserContext and pass userId to repository in src/Recall.Core.Api/Services/ItemService.cs
+- [X] T023 [P] [US5] Update ICollectionService interface to accept userId from IUserContext in src/Recall.Core.Api/Services/ICollectionService.cs
+- [X] T024 [P] [US5] Update CollectionService to inject IUserContext and pass userId to repository in src/Recall.Core.Api/Services/CollectionService.cs
 
 **Note**: Tags are embedded in Items (no separate TagService). Tag operations use IItemRepository which is updated in T017-T018.
 
 ### Endpoint Authorization (API Protection)
 
-- [ ] T027 [US3] Apply RequireAuthorization("ApiScope") to Items endpoint group in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
-- [ ] T028 [P] [US3] Apply RequireAuthorization("ApiScope") to Collections endpoint group in src/Recall.Core.Api/Endpoints/CollectionsEndpoints.cs
-- [ ] T029 [P] [US3] Apply RequireAuthorization("ApiScope") to Tags endpoint group in src/Recall.Core.Api/Endpoints/TagsEndpoints.cs
+- [X] T027 [US3] Apply RequireAuthorization("ApiScope") to Items endpoint group in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+- [X] T028 [P] [US3] Apply RequireAuthorization("ApiScope") to Collections endpoint group in src/Recall.Core.Api/Endpoints/CollectionsEndpoints.cs
+- [X] T029 [P] [US3] Apply RequireAuthorization("ApiScope") to Tags endpoint group in src/Recall.Core.Api/Endpoints/TagsEndpoints.cs
 
 ### Backend Tests
 
-- [ ] T030 [US3] Add integration test for 401 response without token in src/tests/Recall.Core.Api.Tests/Auth/UnauthorizedTests.cs
-- [ ] T031 [P] [US3] Add integration test for 403 response with token missing scope in src/tests/Recall.Core.Api.Tests/Auth/ForbiddenTests.cs
-- [ ] T032 [P] [US5] Add integration test for data isolation between users in src/tests/Recall.Core.Api.Tests/Auth/DataIsolationTests.cs
+- [X] T030 [US3] Add integration test for 401 response without token in src/tests/Recall.Core.Api.Tests/Auth/UnauthorizedTests.cs
+- [X] T031 [P] [US3] Add integration test for 403 response with token missing scope in src/tests/Recall.Core.Api.Tests/Auth/ForbiddenTests.cs
+- [X] T032 [P] [US5] Add integration test for data isolation between users in src/tests/Recall.Core.Api.Tests/Auth/DataIsolationTests.cs
 
 **Checkpoint**: Backend API is now protected and data isolated - US3 and US5 complete
 
@@ -332,3 +332,34 @@ T046 (SignInButton test) ║ T047 (AuthGuard test)
 - Phase 3 backend changes are prerequisites for Phase 5 frontend
 - Commit after each logical group of tasks
 - Verify build passes after each phase completion
+
+---
+
+## Status
+
+- in-progress
+
+---
+
+## Dev Agent Record
+
+### File List
+
+- .gitignore
+- src/web/.env.example
+- src/Recall.Core.Api/Program.cs
+- src/tests/Recall.Core.Api.Tests/Auth/UnauthorizedTests.cs
+- src/tests/Recall.Core.Api.Tests/Auth/DataIsolationTests.cs
+- specs/004-entra-external-auth/tasks.md
+
+---
+
+## Senior Developer Review (AI)
+
+- 2026-01-24: Fixed scope validation for space-delimited `scp` claims, added invalid-token 401 test, expanded data isolation tests to collections/tags, and ensured `.env.example` is tracked with aligned variable names.
+
+---
+
+## Change Log
+
+- 2026-01-24: Review fixes applied (scope policy, auth tests, data isolation coverage, `.env.example` tracking and content).

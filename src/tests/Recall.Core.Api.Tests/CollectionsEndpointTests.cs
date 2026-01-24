@@ -13,6 +13,7 @@ namespace Recall.Core.Api.Tests;
 public class CollectionsEndpointTests : IClassFixture<MongoDbFixture>
 {
     private readonly MongoDbFixture _mongo;
+    private const string TestUserId = "test-user-123";
 
     public CollectionsEndpointTests(MongoDbFixture mongo)
     {
@@ -216,9 +217,11 @@ public class CollectionsEndpointTests : IClassFixture<MongoDbFixture>
             .WithWebHostBuilder(builder =>
             {
                 builder.UseSetting("ConnectionStrings:recalldb", connectionString);
+                builder.UseSetting("Authentication:TestMode", "true");
             });
 
         var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Test-UserId", TestUserId);
         database = new MongoClient(connectionString).GetDatabase(databaseName);
         return new TestClientWrapper(factory, client);
     }
@@ -254,6 +257,7 @@ public class CollectionsEndpointTests : IClassFixture<MongoDbFixture>
             IsFavorite = false,
             CollectionId = ObjectId.Parse(collectionId),
             Tags = [],
+            UserId = TestUserId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

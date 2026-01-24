@@ -1,4 +1,8 @@
 using Aspire.MongoDB.Driver;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web;
+using Recall.Core.Api.Auth;
 using Recall.Core.Api.Endpoints;
 using Recall.Core.Api.Models;
 using Recall.Core.Api.Repositories;
@@ -14,6 +18,39 @@ builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<ICollectionRepository, CollectionRepository>();
 builder.Services.AddScoped<ICollectionService, CollectionService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserContext, HttpUserContext>();
+var useTestAuth = !builder.Environment.IsProduction()
+    && builder.Configuration.GetValue<bool>("Authentication:TestMode");
+
+if (useTestAuth)
+{
+    builder.Services.AddAuthentication(TestAuthHandler.SchemeName)
+        .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
+}
+else
+{
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+}
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("ApiScope", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireAssertion(context =>
+        {
+            var scopeClaim = context.User.FindFirst("scp")?.Value;
+            if (string.IsNullOrWhiteSpace(scopeClaim))
+            {
+                return false;
+            }
+
+            return scopeClaim
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Contains("access_as_user", StringComparer.Ordinal);
+        });
+    });
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddOpenApi();
@@ -67,6 +104,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok(new HealthResponse("ok")))
     .WithName("GetHealth")

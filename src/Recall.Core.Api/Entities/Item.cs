@@ -33,6 +33,9 @@ public class Item
     [BsonElement("tags")]
     public List<string> Tags { get; set; } = [];
 
+    [BsonElement("userId")]
+    public string? UserId { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

@@ -8,29 +8,30 @@ public sealed class ItemRepository(IMongoDatabase database) : IItemRepository
 {
     private readonly IMongoCollection<Item> _items = database.GetCollection<Item>("items");
 
-    public async Task<Item?> FindByNormalizedUrlAsync(string normalizedUrl, CancellationToken cancellationToken = default)
+    public async Task<Item?> FindByNormalizedUrlAsync(string userId, string normalizedUrl, CancellationToken cancellationToken = default)
     {
         return await _items
-            .Find(item => item.NormalizedUrl == normalizedUrl)
+            .Find(item => item.UserId == userId && item.NormalizedUrl == normalizedUrl)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<Item?> GetByIdAsync(ObjectId id, CancellationToken cancellationToken = default)
+    public async Task<Item?> GetByIdAsync(string userId, ObjectId id, CancellationToken cancellationToken = default)
     {
         return await _items
-            .Find(item => item.Id == id)
+            .Find(item => item.Id == id && item.UserId == userId)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<Item> InsertAsync(Item item, CancellationToken cancellationToken = default)
+    public async Task<Item> InsertAsync(string userId, Item item, CancellationToken cancellationToken = default)
     {
+        item.UserId = userId;
         await _items.InsertOneAsync(item, cancellationToken: cancellationToken);
         return item;
     }
 
     public async Task<IReadOnlyList<Item>> ListAsync(ItemListQuery query, CancellationToken cancellationToken = default)
     {
-        var filter = Builders<Item>.Filter.Empty;
+        var filter = Builders<Item>.Filter.Eq(item => item.UserId, query.UserId);
 
         if (!string.IsNullOrWhiteSpace(query.Status))
         {
@@ -72,7 +73,7 @@ public sealed class ItemRepository(IMongoDatabase database) : IItemRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Item?> UpdateAsync(ObjectId id, UpdateDefinition<Item> update, CancellationToken cancellationToken = default)
+    public async Task<Item?> UpdateAsync(string userId, ObjectId id, UpdateDefinition<Item> update, CancellationToken cancellationToken = default)
     {
         var options = new FindOneAndUpdateOptions<Item, Item>
         {
@@ -81,22 +82,23 @@ public sealed class ItemRepository(IMongoDatabase database) : IItemRepository
         };
 
         return await _items.FindOneAndUpdateAsync<Item, Item>(
-            item => item.Id == id,
+            item => item.Id == id && item.UserId == userId,
             update,
             options,
             cancellationToken);
     }
 
-    public async Task<long> DeleteAsync(ObjectId id, CancellationToken cancellationToken = default)
+    public async Task<long> DeleteAsync(string userId, ObjectId id, CancellationToken cancellationToken = default)
     {
-        var result = await _items.DeleteOneAsync(item => item.Id == id, cancellationToken);
+        var result = await _items.DeleteOneAsync(item => item.Id == id && item.UserId == userId, cancellationToken);
         return result.DeletedCount;
     }
 
-    public async Task<IReadOnlyList<TagCount>> GetAllTagsWithCountsAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TagCount>> GetAllTagsWithCountsAsync(string userId, CancellationToken cancellationToken = default)
     {
         var pipeline = new[]
         {
+            new BsonDocument("$match", new BsonDocument("userId", userId)),
             new BsonDocument("$unwind", "$tags"),
             new BsonDocument("$group", new BsonDocument
             {
@@ -116,9 +118,10 @@ public sealed class ItemRepository(IMongoDatabase database) : IItemRepository
             .ToList();
     }
 
-    public async Task<long> RenameTagAsync(string oldTag, string newTag, CancellationToken cancellationToken = default)
+    public async Task<long> RenameTagAsync(string userId, string oldTag, string newTag, CancellationToken cancellationToken = default)
     {
-        var filter = Builders<Item>.Filter.AnyEq(item => item.Tags, oldTag);
+        var filter = Builders<Item>.Filter.Eq(item => item.UserId, userId)
+                     & Builders<Item>.Filter.AnyEq(item => item.Tags, oldTag);
         var update = Builders<Item>.Update.Set("tags.$[tag]", newTag);
         var options = new UpdateOptions
         {
@@ -132,9 +135,10 @@ public sealed class ItemRepository(IMongoDatabase database) : IItemRepository
         return result.MatchedCount;
     }
 
-    public async Task<long> DeleteTagAsync(string tag, CancellationToken cancellationToken = default)
+    public async Task<long> DeleteTagAsync(string userId, string tag, CancellationToken cancellationToken = default)
     {
-        var filter = Builders<Item>.Filter.AnyEq(item => item.Tags, tag);
+        var filter = Builders<Item>.Filter.Eq(item => item.UserId, userId)
+                     & Builders<Item>.Filter.AnyEq(item => item.Tags, tag);
         var update = Builders<Item>.Update.Pull(item => item.Tags, tag);
         var result = await _items.UpdateManyAsync(filter, update, cancellationToken: cancellationToken);
         return result.MatchedCount;

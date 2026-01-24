@@ -18,6 +18,9 @@ public class Collection
     [BsonElement("parentId")]
     public ObjectId? ParentId { get; set; }
 
+    [BsonElement("userId")]
+    public string? UserId { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

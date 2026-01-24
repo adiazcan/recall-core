@@ -114,6 +114,7 @@ public class DataIsolationTests : IClassFixture<MongoDbFixture>
                 builder.UseSetting("Authentication:TestMode", "true");
             });
 
+        // Factory ownership is transferred to TestServer which will dispose it
         return new TestServer(factory);
     }
 

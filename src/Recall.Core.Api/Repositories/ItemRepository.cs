@@ -22,8 +22,9 @@ public sealed class ItemRepository(IMongoDatabase database) : IItemRepository
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<Item> InsertAsync(Item item, CancellationToken cancellationToken = default)
+    public async Task<Item> InsertAsync(string userId, Item item, CancellationToken cancellationToken = default)
     {
+        item.UserId = userId;
         await _items.InsertOneAsync(item, cancellationToken: cancellationToken);
         return item;
     }

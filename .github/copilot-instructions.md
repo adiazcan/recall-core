@@ -66,7 +66,7 @@ When context files are insufficient:
 - Item and Collection entities have `UserId` property (string, BsonElement `userId`).
 - Tags are embedded as `List<string>` in Item; no separate Tag entity.
 - All queries must filter by `userId` first for efficient index usage.
-- Compound indexes: `{ userId: 1, normalizedUrl: 1 }` unique, `{ userId: 1, createdAt: -1, _id: -1 }`.
+- Planned compound indexes (to be created in `IndexInitializer.cs`): `{ userId: 1, normalizedUrl: 1 }` unique, `{ userId: 1, createdAt: -1, _id: -1 }`.
 - Uniqueness constraints (normalizedUrl, collection name) are scoped per user.
 - Pre-existing records without userId are orphaned (inaccessible until migrated).
 
@@ -121,7 +121,7 @@ When context files are insufficient:
 - Maintain the /health contract for frontend and test compatibility.
 - When adding services, update AppHost with references and wait-for dependencies.
 - All protected endpoints require JWT Bearer token with `access_as_user` scope.
-- The /api/v1/me endpoint returns authenticated user info (sub, displayName, email, tenantId).
+- Planned Phase 4 (US4): The /api/v1/me endpoint will return authenticated user info (sub, displayName, email, tenantId); do not assume it exists in current phases.
 
 ## General Best Practices
 - Preserve existing code style and formatting.

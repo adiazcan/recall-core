@@ -3,11 +3,42 @@ import { ApiError } from '../../lib/api/client';
 import { itemsApi } from '../../lib/api/items';
 import { mapItemDtoToItem, type UpdateItemRequest } from '../../lib/api/types';
 import type { Item, ItemStatus } from '../../types/entities';
-import type { ItemFilterParams } from '../../types/views';
+import type { ItemFilterParams, ViewState } from '../../types/views';
+import { useUiStore } from '../../stores/ui-store';
+import { useCollectionsStore } from '../collections/store';
+import { useTagsStore } from '../tags/store';
+
+const refreshCollections = () => {
+  void useCollectionsStore.getState().fetchCollections();
+};
+
+const refreshTags = () => {
+  void useTagsStore.getState().fetchTags();
+};
+
+const normalizeTagList = (tags: string[]) => [...tags].sort().join('|');
+
+const matchesViewState = (item: Item, viewState: ViewState): boolean => {
+  switch (viewState.type) {
+    case 'collection':
+      return viewState.id ? item.collectionId === viewState.id : true;
+    case 'tag':
+      return viewState.id ? item.tags.includes(viewState.id) : true;
+    case 'favorites':
+      return item.isFavorite;
+    case 'archive':
+      return item.status === 'archived';
+    case 'inbox':
+      return item.status === 'unread';
+    default:
+      return true;
+  }
+};
 
 export interface ItemsState {
   items: Item[];
   selectedItemId: string | null;
+  selectedItemSnapshot: Item | null;
   nextCursor: string | null;
   hasMore: boolean;
   isLoading: boolean;
@@ -28,6 +59,7 @@ export interface ItemsState {
 export const useItemsStore = create<ItemsState>((set, get) => ({
   items: [],
   selectedItemId: null,
+  selectedItemSnapshot: null,
   nextCursor: null,
   hasMore: false,
   isLoading: false,
@@ -97,6 +129,9 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
         return { items: [item, ...state.items] };
       });
 
+      if (response.created && tags && tags.length > 0) {
+        refreshTags();
+      }
       return { item, created: response.created };
     } catch (error) {
       const message = error instanceof ApiError ? error.message : 'Unable to save URL.';
@@ -115,10 +150,35 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
     }
 
     const previousItems = [...items];
+    const previousCollectionId = item.collectionId;
+    const previousTags = item.tags;
+    const normalizedRequest: UpdateItemRequest =
+      data.collectionId === null ? { ...data, collectionId: '' } : data;
+    const nextCollectionId =
+      data.collectionId === undefined ? previousCollectionId : data.collectionId === '' ? null : data.collectionId;
+    const shouldRefreshCollections =
+      data.collectionId !== undefined && nextCollectionId !== previousCollectionId;
+    const shouldRefreshTags =
+      data.tags !== undefined && normalizeTagList(data.tags) !== normalizeTagList(previousTags);
+    const viewState = useUiStore.getState().viewState;
+    const nextStatus = data.status ?? item.status;
+    const nextFavorite = data.isFavorite ?? item.isFavorite;
+    const nextTags = data.tags ?? item.tags;
+    const shouldRemoveFromView = !matchesViewState(
+      {
+        ...item,
+        collectionId: nextCollectionId,
+        status: nextStatus,
+        isArchived: nextStatus === 'archived',
+        isFavorite: nextFavorite,
+        tags: nextTags,
+      },
+      viewState,
+    );
 
     // Optimistic update - create a properly typed updated item
-    set((state) => ({
-      items: state.items.map((i) => {
+    set((state) => {
+      const nextItems = state.items.map((i) => {
         if (i.id !== id) return i;
 
         const updated: Item = { ...i };
@@ -132,16 +192,34 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
         if (data.isFavorite !== undefined && data.isFavorite !== null) {
           updated.isFavorite = data.isFavorite;
         }
-        if (data.collectionId !== undefined) updated.collectionId = data.collectionId;
+        if (data.collectionId !== undefined) {
+          updated.collectionId = data.collectionId === '' ? null : data.collectionId;
+        }
         if (data.tags !== undefined && data.tags !== null) updated.tags = data.tags;
 
         return updated;
-      }),
-      error: null,
-    }));
+      });
+
+      const updatedSnapshot =
+        state.selectedItemId === id
+          ? (nextItems.find((i) => i.id === id) ?? null)
+          : state.selectedItemSnapshot;
+
+      return {
+        items: shouldRemoveFromView ? nextItems.filter((i) => i.id !== id) : nextItems,
+        selectedItemSnapshot: updatedSnapshot,
+        error: null,
+      };
+    });
 
     try {
-      await itemsApi.update(id, data);
+      await itemsApi.update(id, normalizedRequest);
+      if (shouldRefreshCollections) {
+        refreshCollections();
+      }
+      if (shouldRefreshTags) {
+        refreshTags();
+      }
     } catch (error) {
       // Rollback on error
       set({ items: previousItems });
@@ -154,6 +232,9 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
     const { items, selectedItemId } = get();
     const previousItems = [...items];
     const wasSelected = selectedItemId === id;
+    const target = items.find((i) => i.id === id);
+    const hadCollection = Boolean(target?.collectionId);
+    const hadTags = (target?.tags?.length ?? 0) > 0;
 
     // Optimistically remove from UI
     set({
@@ -164,6 +245,12 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
 
     try {
       await itemsApi.delete(id);
+      if (hadCollection) {
+        refreshCollections();
+      }
+      if (hadTags) {
+        refreshTags();
+      }
     } catch (error) {
       // Rollback on error
       set({ items: previousItems, selectedItemId: wasSelected ? id : selectedItemId });
@@ -179,11 +266,30 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
 
     const newFavoriteState = !item.isFavorite;
     const previousItems = [...items];
+    const viewState = useUiStore.getState().viewState;
+    const shouldRemoveFromView = !matchesViewState(
+      {
+        ...item,
+        isFavorite: newFavoriteState,
+      },
+      viewState,
+    );
 
     // Optimistic update
-    set((state) => ({
-      items: state.items.map((i) => (i.id === id ? { ...i, isFavorite: newFavoriteState } : i)),
-    }));
+    set((state) => {
+      const nextItems = state.items.map((i) =>
+        i.id === id ? { ...i, isFavorite: newFavoriteState } : i,
+      );
+      const updatedSnapshot =
+        state.selectedItemId === id
+          ? (nextItems.find((i) => i.id === id) ?? null)
+          : state.selectedItemSnapshot;
+
+      return {
+        items: shouldRemoveFromView ? nextItems.filter((i) => i.id !== id) : nextItems,
+        selectedItemSnapshot: updatedSnapshot,
+      };
+    });
 
     try {
       await itemsApi.update(id, { isFavorite: newFavoriteState });
@@ -202,26 +308,44 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
 
     const newStatus: ItemStatus = item.status === 'archived' ? 'unread' : 'archived';
     const previousItems = [...items];
+    const viewState = useUiStore.getState().viewState;
+    const shouldRemoveFromView = !matchesViewState(
+      {
+        ...item,
+        status: newStatus,
+        isArchived: newStatus === 'archived',
+      },
+      viewState,
+    );
 
     // Optimistic update
     set((state) => ({
       items: state.items.map((i) =>
         i.id === id ? { ...i, status: newStatus, isArchived: newStatus === 'archived' } : i,
       ),
+      selectedItemSnapshot:
+        state.selectedItemId === id
+          ? ({ ...item, status: newStatus, isArchived: newStatus === 'archived' } as Item)
+          : state.selectedItemSnapshot,
     }));
 
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     try {
       await itemsApi.update(id, { status: newStatus });
-      
-      // Remove from list after successful archive (will be animated in UI)
-      if (newStatus === 'archived') {
-        timeoutId = setTimeout(() => {
+      // Remove from list after successful archive/unarchive when it no longer matches view
+      if (shouldRemoveFromView) {
+        if (newStatus === 'archived') {
+          timeoutId = setTimeout(() => {
+            set((state) => ({
+              items: state.items.filter((i) => i.id !== id),
+            }));
+          }, 300); // Wait for animation to complete
+        } else {
           set((state) => ({
             items: state.items.filter((i) => i.id !== id),
           }));
-        }, 300); // Wait for animation to complete
+        }
       }
     } catch (error) {
       // Cancel pending removal and rollback on error
@@ -234,6 +358,10 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
       throw error;
     }
   },
-  selectItem: (id) => set({ selectedItemId: id }),
+  selectItem: (id) =>
+    set((state) => ({
+      selectedItemId: id,
+      selectedItemSnapshot: id ? state.items.find((item) => item.id === id) ?? null : null,
+    })),
   clearError: () => set({ error: null }),
 }));

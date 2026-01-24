@@ -49,6 +49,7 @@ function isValidTagName(tag: string): boolean {
 
 export function ItemDetail() {
   const selectedItemId = useItemsStore((state) => state.selectedItemId);
+  const selectedItemSnapshot = useItemsStore((state) => state.selectedItemSnapshot);
   const items = useItemsStore((state) => state.items);
   const selectItem = useItemsStore((state) => state.selectItem);
   const deleteItem = useItemsStore((state) => state.deleteItem);
@@ -69,7 +70,7 @@ export function ItemDetail() {
   const [comboboxOpen, setComboboxOpen] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  const item = items.find((i) => i.id === selectedItemId);
+  const item = selectedItemSnapshot ?? items.find((i) => i.id === selectedItemId);
 
   // Fetch collections and tags when panel opens
   useEffect(() => {
@@ -102,25 +103,6 @@ export function ItemDetail() {
     return () => cancelAnimationFrame(focusTimer);
   }, [selectedItemId]);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('[data-item-detail]')) {
-        return;
-      }
-      if (selectedItemId && target.closest('[role="button"]')) {
-        return;
-      }
-      if (selectedItemId) {
-        selectItem(null);
-      }
-    };
-
-    if (selectedItemId) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [selectedItemId, selectItem]);
 
   const focusShards = useMemo(() => {
     if (!selectedItemId || typeof document === 'undefined') {
@@ -129,6 +111,23 @@ export function ItemDetail() {
 
     return Array.from(document.querySelectorAll('[data-radix-portal]')) as HTMLElement[];
   }, [selectedItemId, comboboxOpen]);
+
+  const selectedCollectionLabel = useMemo(() => {
+    if (!item) {
+      return 'Select a collection';
+    }
+
+    if (!item.collectionId) {
+      return 'None';
+    }
+
+    const matched = collections.find((collection) => collection.id === item.collectionId);
+    if (matched) {
+      return matched.name;
+    }
+
+    return collectionsLoading ? 'Loading...' : 'Unknown collection';
+  }, [collections, collectionsLoading, item]);
 
   if (!item) {
     return null;
@@ -243,6 +242,11 @@ export function ItemDetail() {
           selectedItemId ? 'opacity-100' : 'opacity-0 pointer-events-none',
         )}
         aria-hidden="true"
+        onClick={() => {
+          if (selectedItemId) {
+            selectItem(null);
+          }
+        }}
       />
 
       {/* Side panel */}
@@ -363,7 +367,15 @@ export function ItemDetail() {
                 onValueChange={handleCollectionChange}
               >
                 <SelectTrigger className="w-full" aria-busy={collectionsLoading}>
-                  <SelectValue placeholder="Select a collection" />
+                  <span
+                    className={cn(
+                      'truncate',
+                      item.collectionId ? 'text-neutral-900' : 'text-neutral-500',
+                    )}
+                  >
+                    {selectedCollectionLabel}
+                  </span>
+                  <SelectValue className="sr-only" placeholder="Select a collection" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>

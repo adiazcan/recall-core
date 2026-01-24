@@ -41,7 +41,8 @@ builder.Services.AddAuthorizationBuilder()
         policy.RequireAuthenticatedUser();
         policy.RequireAssertion(context =>
         {
-            var scopeClaim = context.User.FindFirst("scp")?.Value;
+            var scopeClaim = context.User.FindFirst("scp")?.Value
+                ?? context.User.FindFirst("http://schemas.microsoft.com/identity/claims/scope")?.Value;
             if (string.IsNullOrWhiteSpace(scopeClaim))
             {
                 return false;

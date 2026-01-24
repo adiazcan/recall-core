@@ -31,7 +31,19 @@ This guide lists common issues encountered with Microsoft Entra External ID inte
 **Fix**:
 - Ensure the access token is attached as `Authorization: Bearer <token>`.
 - Verify the API `AzureAd` settings match the External ID tenant and API client ID.
-- Confirm the token is for the correct tenant and audience.
+- Confirm the token is for the correct tenant and audience (`aud`).
+- Ensure `AzureAd:Audience` is set to the API client ID value (matches the token `aud`).
+
+---
+
+### IDX10214: Audience validation failed
+
+**Symptoms**: API logs include `IDX10214: Audience validation failed` and authentication fails.
+
+**Fix**:
+- Verify the access token `aud` claim matches the API app registration.
+- Set `AzureAd:Audience` to the API client ID in `appsettings.Development.json` or user secrets.
+- Ensure the SPA is requesting the API scope `api://<api-client-id>/access_as_user`.
 
 ---
 

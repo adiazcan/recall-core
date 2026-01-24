@@ -167,6 +167,7 @@ Add the following to `src/Recall.Core.Api/appsettings.Development.json`:
     "Instance": "https://<tenant-name>.ciamlogin.com/",
     "TenantId": "<external-tenant-id>",
     "ClientId": "<api-client-id>",
+    "Audience": "<api-client-id>",
     "Scopes": "access_as_user"
   }
 }
@@ -184,6 +185,7 @@ Replace:
     "Instance": "https://recallcoredev.ciamlogin.com/",
     "TenantId": "11112222-3333-4444-5555-666677778888",
     "ClientId": "aaaabbbb-cccc-dddd-eeee-ffffffffffff",
+    "Audience": "aaaabbbb-cccc-dddd-eeee-ffffffffffff",
     "Scopes": "access_as_user"
   }
 }
@@ -227,6 +229,7 @@ dotnet user-secrets init
 dotnet user-secrets set "AzureAd:Instance" "https://recallcoredev.ciamlogin.com/"
 dotnet user-secrets set "AzureAd:TenantId" "<external-tenant-id>"
 dotnet user-secrets set "AzureAd:ClientId" "<api-client-id>"
+dotnet user-secrets set "AzureAd:Audience" "<api-client-id>"
 dotnet user-secrets set "AzureAd:Scopes" "access_as_user"
 ```
 

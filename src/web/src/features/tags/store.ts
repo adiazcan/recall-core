@@ -5,6 +5,7 @@ import { mapTagDtoToTag } from '../../lib/api/types';
 
 export interface TagsState {
   tags: Tag[];
+  hasLoaded: boolean;
   isLoading: boolean;
   error: string | null;
   fetchTags: () => Promise<void>;
@@ -14,6 +15,7 @@ export interface TagsState {
 
 export const useTagsStore = create<TagsState>((set, get) => ({
   tags: [],
+  hasLoaded: false,
   isLoading: false,
   error: null,
   fetchTags: async () => {
@@ -27,12 +29,13 @@ export const useTagsStore = create<TagsState>((set, get) => ({
     try {
       const response = await tagsApi.list();
       const tags = response.tags.map(mapTagDtoToTag);
-      set({ tags, isLoading: false });
+      set({ tags, isLoading: false, hasLoaded: true });
     } catch (error) {
       console.error('Failed to fetch tags:', error);
       set({ 
         error: error instanceof Error ? error.message : 'Failed to load tags',
-        isLoading: false 
+        isLoading: false,
+        hasLoaded: true,
       });
     }
   },

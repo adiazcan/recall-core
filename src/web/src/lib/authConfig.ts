@@ -1,4 +1,4 @@
-import type { Configuration, RedirectRequest, SilentRequest } from '@azure/msal-browser';
+import type { Configuration, RedirectRequest } from '@azure/msal-browser';
 
 const tenantId = import.meta.env.VITE_TENANT_ID;
 const clientId = import.meta.env.VITE_CLIENT_ID;
@@ -24,9 +24,5 @@ export const msalConfig: Configuration = {
 };
 
 export const loginRequest: RedirectRequest = {
-  scopes: [apiScope],
-};
-
-export const apiRequest: SilentRequest = {
   scopes: [apiScope],
 };

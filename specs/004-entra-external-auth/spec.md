@@ -161,7 +161,7 @@ When API calls fail due to authentication or authorization issues, the frontend 
 
 - **FR-016**: Items entity MUST include a `userId` field (string) to store the owning user's identifier.
 - **FR-017**: Collections entity MUST include a `userId` field (string) to store the owning user's identifier.
-- **FR-018**: Tags entity MUST include a `userId` field (string) to store the owning user's identifier.
+- **FR-018**: Tags are embedded as string arrays within Item documents; data isolation is automatically enforced via Item's `userId` field.
 - **FR-019**: The `userId` MUST be derived from a stable token claim; the `sub` (subject) claim is the preferred source.
 - **FR-020**: All read operations MUST filter results by the authenticated user's `userId`.
 - **FR-021**: All create operations MUST assign the authenticated user's `userId` to new records.
@@ -193,9 +193,8 @@ When API calls fail due to authentication or authorization issues, the frontend 
 ### Key Entities
 
 - **User Identity**: Represents the authenticated user; identified by the `sub` claim from the token. Key attributes: subject identifier (sub), display name, email (optional), tenant ID.
-- **Item**: A user-owned content item; extended with `userId` to scope ownership.
+- **Item**: A user-owned content item; extended with `userId` to scope ownership. Tags are embedded as string arrays within Item documents.
 - **Collection**: A user-owned grouping of items; extended with `userId` to scope ownership.
-- **Tag**: A user-owned label; extended with `userId` to scope ownership.
 
 ## Success Criteria *(mandatory)*
 

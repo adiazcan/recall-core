@@ -30,14 +30,13 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
             IsFavorite = false,
             CollectionId = null,
             Tags = tags,
-            UserId = userId,
             CreatedAt = now,
             UpdatedAt = now
         };
 
         try
         {
-            await repository.InsertAsync(item, cancellationToken);
+            await repository.InsertAsync(userId, item, cancellationToken);
             return new SaveItemResult(item, true);
         }
         catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)

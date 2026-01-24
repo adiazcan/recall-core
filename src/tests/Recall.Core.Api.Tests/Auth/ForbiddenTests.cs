@@ -54,6 +54,7 @@ public class ForbiddenTests : IClassFixture<MongoDbFixture>
 
         var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add("X-Test-UserId", TestUserId);
+        // Factory ownership is transferred to TestClientWrapper which will dispose it
         return new TestClientWrapper(factory, client);
     }
 

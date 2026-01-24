@@ -8,7 +8,7 @@ public interface IItemRepository
 {
     Task<Item?> FindByNormalizedUrlAsync(string userId, string normalizedUrl, CancellationToken cancellationToken = default);
     Task<Item?> GetByIdAsync(string userId, ObjectId id, CancellationToken cancellationToken = default);
-    Task<Item> InsertAsync(Item item, CancellationToken cancellationToken = default);
+    Task<Item> InsertAsync(string userId, Item item, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Item>> ListAsync(ItemListQuery query, CancellationToken cancellationToken = default);
     Task<Item?> UpdateAsync(string userId, ObjectId id, UpdateDefinition<Item> update, CancellationToken cancellationToken = default);
     Task<long> DeleteAsync(string userId, ObjectId id, CancellationToken cancellationToken = default);

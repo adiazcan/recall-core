@@ -49,6 +49,7 @@ public class UnauthorizedTests : IClassFixture<MongoDbFixture>
                 builder.UseSetting("Authentication:TestMode", "true");
             });
 
+        // Factory ownership is transferred to TestClientWrapper which will dispose it
         return new TestClientWrapper(factory, factory.CreateClient());
     }
 
@@ -76,6 +77,7 @@ public class UnauthorizedTests : IClassFixture<MongoDbFixture>
                 });
             });
 
+        // Factory ownership is transferred to TestClientWrapper which will dispose it
         return new TestClientWrapper(factory, factory.CreateClient());
     }
 

@@ -1,6 +1,7 @@
 using Aspire.MongoDB.Driver;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Identity.Web;
 using Recall.Core.Api.Auth;
 using Recall.Core.Api.Endpoints;
@@ -106,6 +107,20 @@ if (app.Environment.IsDevelopment())
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+app.Use(async (context, next) =>
+{
+    await next();
+
+    if (context.Response.StatusCode is StatusCodes.Status401Unauthorized or StatusCodes.Status403Forbidden)
+    {
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogWarning(
+            "Auth failure {StatusCode} for {Method} {Path}",
+            context.Response.StatusCode,
+            context.Request.Method,
+            context.Request.Path.Value);
+    }
+});
 
 app.MapGet("/health", () => Results.Ok(new HealthResponse("ok")))
     .WithName("GetHealth")

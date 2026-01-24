@@ -5,6 +5,16 @@ type ApiRequestOptions = RequestInit & {
   timeoutMs?: number;
 };
 
+export type AuthErrorStatus = 401 | 403;
+
+type AuthErrorHandler = (status: AuthErrorStatus) => void;
+
+let authErrorHandler: AuthErrorHandler | null = null;
+
+export function setAuthErrorHandler(handler: AuthErrorHandler | null) {
+  authErrorHandler = handler;
+}
+
 export class ApiError extends Error {
   readonly status: number;
   readonly details?: unknown;
@@ -113,6 +123,9 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     const body = await parseResponseBody(response);
 
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        authErrorHandler?.(response.status as AuthErrorStatus);
+      }
       throw new ApiError(response.status, mapApiError(response.status, body), body ?? undefined);
     }
 
@@ -168,6 +181,9 @@ export async function apiRequestWithResponse<T>(
     const body = await parseResponseBody(response);
 
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        authErrorHandler?.(response.status as AuthErrorStatus);
+      }
       throw new ApiError(response.status, mapApiError(response.status, body), body ?? undefined);
     }
 

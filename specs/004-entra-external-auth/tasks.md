@@ -179,10 +179,10 @@
 
 ### Implementation
 
-- [ ] T051 [US7] Create useAuthErrorHandler hook for intercepting 401/403 in src/web/src/hooks/useAuthErrorHandler.ts
-- [ ] T052 [US7] Update API client to use error handler hook in src/web/src/lib/api.ts
-- [ ] T053 [P] [US7] Create AuthErrorBoundary component for displaying auth errors in src/web/src/components/auth/AuthErrorBoundary.tsx
-- [ ] T054 [US7] Add unit test for auth error handling in src/web/src/hooks/useAuthErrorHandler.test.ts
+- [X] T051 [US7] Create useAuthErrorHandler hook for intercepting 401/403 in src/web/src/hooks/useAuthErrorHandler.ts
+- [X] T052 [US7] Update API client to use error handler hook in src/web/src/lib/api.ts
+- [X] T053 [P] [US7] Create AuthErrorBoundary component for displaying auth errors in src/web/src/components/auth/AuthErrorBoundary.tsx
+- [X] T054 [US7] Add unit test for auth error handling in src/web/src/hooks/useAuthErrorHandler.test.ts
 
 **Checkpoint**: Auth errors handled gracefully - US7 complete
 
@@ -194,20 +194,20 @@
 
 ### Documentation
 
-- [ ] T055 [P] Create External ID setup guide at docs/auth/external-id-setup.md (copy from quickstart.md with production additions)
-- [ ] T056 [P] Create troubleshooting guide at docs/auth/troubleshooting.md
+- [X] T055 [P] Create External ID setup guide at docs/auth/external-id-setup.md (copy from quickstart.md with production additions)
+- [X] T056 [P] Create troubleshooting guide at docs/auth/troubleshooting.md
 
 ### Observability
 
-- [ ] T057 Add authentication failure logging (401/403) with OpenTelemetry in src/Recall.Core.Api/Program.cs
-- [ ] T058 [P] Add sign-in/sign-out event logging in frontend in src/web/src/hooks/useAuth.ts
+- [X] T057 Add authentication failure logging (401/403) with OpenTelemetry in src/Recall.Core.Api/Program.cs
+- [X] T058 [P] Add sign-in/sign-out event logging in frontend in src/web/src/hooks/useAuth.ts
 
 ### Final Verification
 
-- [ ] T059 Run all backend tests and verify pass
-- [ ] T060 [P] Run all frontend tests and verify pass
+- [X] T059 Run all backend tests and verify pass
+- [X] T060 [P] Run all frontend tests and verify pass
 - [ ] T061 Run quickstart.md validation (manual end-to-end flow)
-- [ ] T062 Verify no secrets committed to source control
+- [X] T062 Verify no secrets committed to source control
 
 ---
 

@@ -1,6 +1,6 @@
 import { InteractionRequiredAuthError } from '@azure/msal-browser';
 import { useAccount, useIsAuthenticated, useMsal } from '@azure/msal-react';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { apiRequest, loginRequest } from '../lib/authConfig';
 
 export function useAuth() {
@@ -8,6 +8,7 @@ export function useAuth() {
   const isAuthenticated = useIsAuthenticated();
   const activeAccount = instance.getActiveAccount() ?? accounts[0] ?? null;
   const account = useAccount(activeAccount);
+  const authStateRef = useRef(isAuthenticated);
 
   useEffect(() => {
     if (!instance.getActiveAccount() && accounts.length > 0) {
@@ -15,12 +16,26 @@ export function useAuth() {
     }
   }, [accounts, instance]);
 
+  useEffect(() => {
+    if (!authStateRef.current && isAuthenticated) {
+      console.info('Auth: sign-in completed');
+    }
+
+    if (authStateRef.current && !isAuthenticated) {
+      console.info('Auth: sign-out completed');
+    }
+
+    authStateRef.current = isAuthenticated;
+  }, [isAuthenticated]);
+
   const signIn = useCallback(() => {
+    console.info('Auth: sign-in requested');
     return instance.loginRedirect(loginRequest);
   }, [instance]);
 
   const signOut = useCallback(() => {
     const tokenAccount = instance.getActiveAccount() ?? accounts[0];
+    console.info('Auth: sign-out requested');
 
     return instance.logoutRedirect({
       account: tokenAccount ?? undefined,

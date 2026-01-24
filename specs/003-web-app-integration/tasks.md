@@ -366,7 +366,7 @@ With multiple developers after Foundational:
 
 ### 🟡 Medium Issues
 
-- [ ] [AI-Review][MEDIUM] Wire or remove disabled Favorite/Archive buttons in ItemDetail header [src/web/src/features/items/components/ItemDetail.tsx:167-181]
+ - [X] [AI-Review][MEDIUM] Wire or remove disabled Favorite/Archive buttons in ItemDetail header [src/web/src/features/items/components/ItemDetail.tsx:167-181]
 - [ ] [AI-Review][MEDIUM] Code-split routes and use dynamic imports to reduce 511KB bundle (target <400KB) [src/web/vite.config.ts]
 - [ ] [AI-Review][MEDIUM] Implement proper focus trap for ItemDetail modal using react-focus-lock or similar [src/web/src/features/items/components/ItemDetail.tsx:56-90]
 - [ ] [AI-Review][MEDIUM] Add toast deduplication or rate limiting to prevent duplicate error stacks [src/web/src/stores/toast-store.ts]

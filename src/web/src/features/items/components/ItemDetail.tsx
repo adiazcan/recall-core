@@ -52,6 +52,8 @@ export function ItemDetail() {
   const selectItem = useItemsStore((state) => state.selectItem);
   const deleteItem = useItemsStore((state) => state.deleteItem);
   const updateItem = useItemsStore((state) => state.updateItem);
+  const toggleFavorite = useItemsStore((state) => state.toggleFavorite);
+  const toggleArchive = useItemsStore((state) => state.toggleArchive);
   const collections = useCollectionsStore((state) => state.collections);
   const fetchCollections = useCollectionsStore((state) => state.fetchCollections);
   const tags = useTagsStore((state) => state.tags);
@@ -131,6 +133,28 @@ export function ItemDetail() {
       success('Collection updated');
     } catch (err) {
       error('Failed to update collection');
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!item) return;
+
+    try {
+      await toggleFavorite(item.id);
+      success(item.isFavorite ? 'Removed from favorites' : 'Added to favorites');
+    } catch (err) {
+      error('Failed to update favorite status');
+    }
+  };
+
+  const handleToggleArchive = async () => {
+    if (!item) return;
+
+    try {
+      await toggleArchive(item.id);
+      success(item.isArchived ? 'Unarchived' : 'Archived');
+    } catch (err) {
+      error('Failed to update archive status');
     }
   };
 
@@ -228,16 +252,16 @@ export function ItemDetail() {
               size="icon"
               aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
               className="h-8 w-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
-              disabled
+              onClick={handleToggleFavorite}
             >
               <Star className={cn('h-5 w-5', item.isFavorite && 'fill-yellow-400 text-yellow-400')} />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              aria-label="Archive"
+              aria-label={item.isArchived ? 'Unarchive' : 'Archive'}
               className="h-8 w-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
-              disabled
+              onClick={handleToggleArchive}
             >
               <Archive className="h-5 w-5" />
             </Button>

@@ -1,4 +1,4 @@
-import { Archive, Inbox, Star, Settings } from 'lucide-react';
+import { Archive, Inbox, Star, Settings, Plus } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useRef, useEffect } from 'react';
 import { cn } from '../../lib/utils';
@@ -6,6 +6,7 @@ import { useUiStore } from '../../stores/ui-store';
 import { DEFAULT_VIEWS, type ViewState } from '../../types/views';
 import { CollectionList } from '../../features/collections/components/CollectionList';
 import { TagList } from '../../features/tags/components/TagList';
+import { Button } from '../ui/button';
 
 const navItems = [
   { view: DEFAULT_VIEWS.inbox, to: '/inbox', icon: Inbox },
@@ -15,6 +16,7 @@ const navItems = [
 
 export function Sidebar() {
   const setViewState = useUiStore((state) => state.setViewState);
+  const openCreateCollection = useUiStore((state) => state.openCreateCollection);
   const location = useLocation();
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -117,9 +119,21 @@ export function Sidebar() {
 
         {/* Collections */}
         <div>
-          <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-3 mb-2">
-            Collections
-          </h3>
+          <div className="flex items-center justify-between px-3 mb-2">
+            <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+              Collections
+            </h3>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-neutral-500 hover:text-neutral-900"
+              onClick={openCreateCollection}
+              aria-label="Create new collection"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
           <CollectionList />
         </div>
 

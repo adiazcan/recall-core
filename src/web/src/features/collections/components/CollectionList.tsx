@@ -1,17 +1,15 @@
 import { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Folder, Plus } from 'lucide-react';
+import { Folder } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { useCollectionsStore } from '../store';
 import { useUiStore } from '../../../stores/ui-store';
-import { Button } from '../../../components/ui/button';
 import type { ViewState } from '../../../types/views';
 
 export function CollectionList() {
   const collections = useCollectionsStore((state) => state.collections);
   const isLoading = useCollectionsStore((state) => state.isLoading);
   const fetchCollections = useCollectionsStore((state) => state.fetchCollections);
-  const openCreateCollection = useUiStore((state) => state.openCreateCollection);
   const setViewState = useUiStore((state) => state.setViewState);
 
   useEffect(() => {
@@ -62,15 +60,6 @@ export function CollectionList() {
           )}
         </NavLink>
       ))}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="w-full justify-start gap-3 text-neutral-600 hover:text-neutral-900 font-medium"
-        onClick={openCreateCollection}
-      >
-        <Plus className="h-4 w-4" />
-        <span>New Collection</span>
-      </Button>
     </div>
   );
 }

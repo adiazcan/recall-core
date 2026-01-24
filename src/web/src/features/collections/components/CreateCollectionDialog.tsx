@@ -1,9 +1,8 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../../components/ui/dialog';
+import { useEffect, useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../../components/ui/dialog';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
-import { Textarea } from '../../../components/ui/textarea';
 import { useCollectionsStore } from '../store';
 import { toast } from 'sonner';
 
@@ -14,9 +13,15 @@ interface CreateCollectionDialogProps {
 
 export function CreateCollectionDialog({ open, onOpenChange }: CreateCollectionDialogProps) {
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const createCollection = useCollectionsStore((state) => state.createCollection);
+
+  useEffect(() => {
+    if (!open) {
+      setName('');
+      setIsSubmitting(false);
+    }
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,11 +29,10 @@ export function CreateCollectionDialog({ open, onOpenChange }: CreateCollectionD
 
     setIsSubmitting(true);
     try {
-      const collection = await createCollection(name.trim(), description.trim() || undefined);
+      const collection = await createCollection(name.trim(), undefined);
       if (collection) {
         toast.success('Collection created');
         setName('');
-        setDescription('');
         onOpenChange(false);
       } else {
         toast.error('Failed to create collection');
@@ -42,49 +46,54 @@ export function CreateCollectionDialog({ open, onOpenChange }: CreateCollectionD
 
   const handleCancel = () => {
     setName('');
-    setDescription('');
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-950 text-slate-100">
-        <DialogHeader>
-          <DialogTitle>Create Collection</DialogTitle>
+      <DialogContent className="bg-white text-neutral-900 border-neutral-200 shadow-xl rounded-2xl">
+        <DialogHeader className="space-y-1 text-left">
+          <DialogTitle className="text-lg font-semibold">Create New Collection</DialogTitle>
+          <DialogDescription className="text-sm text-neutral-500">
+            Create a new collection to organize your saved items.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label
+                htmlFor="name"
+                className="text-xs font-semibold text-neutral-400 uppercase tracking-wider"
+              >
+                Collection Name
+              </Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Work, Travel, Recipes..."
+                placeholder="e.g., Must Read, Research, Inspiration"
                 autoFocus
                 required
                 disabled={isSubmitting}
-                className="bg-slate-900 border-slate-800"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description (optional)</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Add a description..."
-                rows={3}
-                disabled={isSubmitting}
-                className="bg-slate-900 border-slate-800"
+                className="h-10 rounded-lg border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 shadow-sm focus-visible:ring-indigo-500/30"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={handleCancel} disabled={isSubmitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+              className="border-neutral-200 text-neutral-700 hover:bg-neutral-50"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting || !name.trim()}>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !name.trim()}
+              className="bg-neutral-600 text-white hover:bg-neutral-700"
+            >
               {isSubmitting ? 'Creating...' : 'Create Collection'}
             </Button>
           </DialogFooter>

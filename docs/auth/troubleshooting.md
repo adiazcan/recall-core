@@ -11,7 +11,7 @@ This guide lists common issues encountered with Microsoft Entra External ID inte
 **Fix**:
 - Ensure the **SPA registration** includes the exact redirect URI used by the app.
 - Verify protocol, hostname, port, and trailing slash.
-- Confirm `VITE_ENTRA_REDIRECT_URI` matches the registered URI.
+- The redirect URI is set to `window.location.origin` in the code (matches the app's current origin).
 
 ---
 
@@ -65,7 +65,7 @@ This guide lists common issues encountered with Microsoft Entra External ID inte
 **Fix**:
 - Clear session storage to remove stale MSAL cache.
 - Confirm the authority uses the External ID tenant: `https://<tenant>.ciamlogin.com`.
-- Ensure `VITE_ENTRA_CLIENT_ID` is the SPA client ID (not API client ID).
+- Ensure `VITE_CLIENT_ID` is the SPA client ID (not API client ID).
 
 ---
 

@@ -142,6 +142,7 @@ export const ItemRow = forwardRef<HTMLDivElement, ItemRowProps>(
         <button
           onClick={handleStarClick}
           aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          title={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           className={cn(
             'p-1.5 rounded-md transition-colors',
             item.isFavorite
@@ -154,6 +155,7 @@ export const ItemRow = forwardRef<HTMLDivElement, ItemRowProps>(
         <button
           onClick={handleArchiveClick}
           aria-label={item.isArchived ? 'Unarchive' : 'Archive'}
+          title={item.isArchived ? 'Unarchive' : 'Archive'}
           className={cn(
             'p-1.5 rounded-md transition-colors',
             item.isArchived
@@ -169,6 +171,7 @@ export const ItemRow = forwardRef<HTMLDivElement, ItemRowProps>(
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
           aria-label="Open link in new tab"
+          title="Open link in new tab"
           className="p-1.5 rounded-md text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
         >
           <ExternalLink className="h-4 w-4" />

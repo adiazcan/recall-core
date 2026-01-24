@@ -11,20 +11,27 @@ public sealed class IndexInitializer(IMongoDatabase database, ILogger<IndexIniti
         var itemIndexes = new List<CreateIndexModel<Item>>
         {
             new(
-                Builders<Item>.IndexKeys.Ascending(item => item.NormalizedUrl),
-                new CreateIndexOptions { Unique = true, Name = "ux_items_normalizedUrl" }),
+                Builders<Item>.IndexKeys.Ascending(item => item.UserId).Ascending(item => item.NormalizedUrl),
+                new CreateIndexOptions { Unique = true, Name = "ux_items_userId_normalizedUrl" }),
             new(
-                Builders<Item>.IndexKeys.Descending(item => item.CreatedAt).Descending(item => item.Id),
-                new CreateIndexOptions { Name = "ix_items_createdAt_id" }),
+                Builders<Item>.IndexKeys.Ascending(item => item.UserId)
+                    .Descending(item => item.CreatedAt)
+                    .Descending(item => item.Id),
+                new CreateIndexOptions { Name = "ix_items_userId_createdAt_id" }),
             new(
-                Builders<Item>.IndexKeys.Ascending(item => item.Status).Descending(item => item.CreatedAt),
-                new CreateIndexOptions { Name = "ix_items_status_createdAt" }),
+                Builders<Item>.IndexKeys.Ascending(item => item.UserId)
+                    .Ascending(item => item.Status)
+                    .Descending(item => item.CreatedAt),
+                new CreateIndexOptions { Name = "ix_items_userId_status_createdAt" }),
             new(
-                Builders<Item>.IndexKeys.Ascending(item => item.CollectionId).Descending(item => item.CreatedAt),
-                new CreateIndexOptions { Name = "ix_items_collection_createdAt" }),
+                Builders<Item>.IndexKeys.Ascending(item => item.UserId)
+                    .Ascending(item => item.CollectionId)
+                    .Descending(item => item.CreatedAt),
+                new CreateIndexOptions { Name = "ix_items_userId_collection_createdAt" }),
             new(
-                Builders<Item>.IndexKeys.Ascending(item => item.Tags),
-                new CreateIndexOptions { Name = "ix_items_tags" })
+                Builders<Item>.IndexKeys.Ascending(item => item.UserId)
+                    .Ascending(item => item.Tags),
+                new CreateIndexOptions { Name = "ix_items_userId_tags" })
         };
 
         await items.Indexes.CreateManyAsync(itemIndexes, cancellationToken);
@@ -33,11 +40,13 @@ public sealed class IndexInitializer(IMongoDatabase database, ILogger<IndexIniti
         var collectionIndexes = new List<CreateIndexModel<Collection>>
         {
             new(
-                Builders<Collection>.IndexKeys.Ascending(collection => collection.Name),
-                new CreateIndexOptions { Unique = true, Name = "ux_collections_name" }),
+                Builders<Collection>.IndexKeys.Ascending(collection => collection.UserId)
+                    .Ascending(collection => collection.Name),
+                new CreateIndexOptions { Unique = true, Name = "ux_collections_userId_name" }),
             new(
-                Builders<Collection>.IndexKeys.Ascending(collection => collection.ParentId),
-                new CreateIndexOptions { Name = "ix_collections_parentId" })
+                Builders<Collection>.IndexKeys.Ascending(collection => collection.UserId)
+                    .Ascending(collection => collection.ParentId),
+                new CreateIndexOptions { Name = "ix_collections_userId_parentId" })
         };
 
         await collections.Indexes.CreateManyAsync(collectionIndexes, cancellationToken);

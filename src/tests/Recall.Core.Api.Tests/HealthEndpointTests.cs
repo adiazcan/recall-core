@@ -41,6 +41,7 @@ public class HealthEndpointTests : IClassFixture<MongoDbFixture>
             .WithWebHostBuilder(builder =>
             {
                 builder.UseSetting("ConnectionStrings:recalldb", connectionString);
+                builder.UseSetting("Authentication:TestMode", "true");
             });
     }
 }

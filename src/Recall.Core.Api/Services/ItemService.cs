@@ -8,12 +8,12 @@ namespace Recall.Core.Api.Services;
 
 public sealed class ItemService(IItemRepository repository, ICollectionRepository collections) : IItemService
 {
-    public async Task<SaveItemResult> SaveItemAsync(CreateItemRequest request, CancellationToken cancellationToken = default)
+    public async Task<SaveItemResult> SaveItemAsync(string userId, CreateItemRequest request, CancellationToken cancellationToken = default)
     {
         var (url, title, tags) = NormalizeRequest(request);
         var normalizedUrl = UrlNormalizer.Normalize(url);
 
-        var existing = await repository.FindByNormalizedUrlAsync(normalizedUrl, cancellationToken);
+        var existing = await repository.FindByNormalizedUrlAsync(userId, normalizedUrl, cancellationToken);
         if (existing is not null)
         {
             return new SaveItemResult(existing, false);
@@ -30,6 +30,7 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
             IsFavorite = false,
             CollectionId = null,
             Tags = tags,
+            UserId = userId,
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -41,7 +42,7 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
         }
         catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
         {
-            var duplicate = await repository.FindByNormalizedUrlAsync(normalizedUrl, cancellationToken);
+            var duplicate = await repository.FindByNormalizedUrlAsync(userId, normalizedUrl, cancellationToken);
             if (duplicate is not null)
             {
                 return new SaveItemResult(duplicate, false);
@@ -51,13 +52,14 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
         }
     }
 
-    public async Task<Item?> GetItemByIdAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<Item?> GetItemByIdAsync(string userId, string id, CancellationToken cancellationToken = default)
     {
         var objectId = ParseObjectId(id, "ItemId must be a valid ObjectId.");
-        return await repository.GetByIdAsync(objectId, cancellationToken);
+        return await repository.GetByIdAsync(userId, objectId, cancellationToken);
     }
 
     public async Task<ItemListResponse> ListItemsAsync(
+        string userId,
         string? status,
         string? collectionId,
         string? tag,
@@ -73,6 +75,7 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
         var pageSize = NormalizeLimit(limit);
 
         var query = new ItemListQuery(
+            userId,
             normalizedStatus,
             collectionObjectId,
             inboxOnly,
@@ -98,7 +101,7 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
         };
     }
 
-    public async Task<Item?> UpdateItemAsync(string id, UpdateItemRequest request, CancellationToken cancellationToken = default)
+    public async Task<Item?> UpdateItemAsync(string userId, string id, UpdateItemRequest request, CancellationToken cancellationToken = default)
     {
         var objectId = ParseObjectId(id, "ItemId must be a valid ObjectId.");
 
@@ -129,7 +132,7 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
 
         if (request.CollectionId is not null)
         {
-            var collectionId = await NormalizeCollectionAssignmentAsync(request.CollectionId, cancellationToken);
+            var collectionId = await NormalizeCollectionAssignmentAsync(userId, request.CollectionId, cancellationToken);
             updates.Add(Builders<Item>.Update.Set(item => item.CollectionId, collectionId));
         }
 
@@ -146,13 +149,13 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
 
         updates.Add(Builders<Item>.Update.Set(item => item.UpdatedAt, DateTime.UtcNow));
         var update = Builders<Item>.Update.Combine(updates);
-        return await repository.UpdateAsync(objectId, update, cancellationToken);
+        return await repository.UpdateAsync(userId, objectId, update, cancellationToken);
     }
 
-    public async Task<bool> DeleteItemAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteItemAsync(string userId, string id, CancellationToken cancellationToken = default)
     {
         var objectId = ParseObjectId(id, "ItemId must be a valid ObjectId.");
-        var deleted = await repository.DeleteAsync(objectId, cancellationToken);
+        var deleted = await repository.DeleteAsync(userId, objectId, cancellationToken);
         return deleted > 0;
     }
 
@@ -291,7 +294,7 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
         return normalizedTags.Distinct(StringComparer.Ordinal).ToList();
     }
 
-    private async Task<ObjectId?> NormalizeCollectionAssignmentAsync(string collectionId, CancellationToken cancellationToken)
+    private async Task<ObjectId?> NormalizeCollectionAssignmentAsync(string userId, string collectionId, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(collectionId) || string.Equals(collectionId, "inbox", StringComparison.OrdinalIgnoreCase))
         {
@@ -303,7 +306,7 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
             throw new RequestValidationException("validation_error", "CollectionId must be a valid ObjectId.");
         }
 
-        var collection = await collections.GetByIdAsync(objectId, cancellationToken);
+        var collection = await collections.GetByIdAsync(userId, objectId, cancellationToken);
         if (collection is null)
         {
             throw new RequestValidationException("validation_error", "Collection not found.");

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Recall.Core.Api.Auth;
 using Recall.Core.Api.Models;
 using Recall.Core.Api.Services;
 
@@ -9,13 +10,17 @@ public static class ItemsEndpoints
 {
     public static IEndpointRouteBuilder MapItemsEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapPost("/api/v1/items", async Task<Results<Created<ItemDto>, Ok<ItemDto>, BadRequest<ErrorResponse>>>
-            (CreateItemRequest request, IItemService service, CancellationToken cancellationToken)
+        var group = endpoints.MapGroup("/api/v1/items")
+            .RequireAuthorization("ApiScope")
+            .WithTags("Items");
+
+        group.MapPost("", async Task<Results<Created<ItemDto>, Ok<ItemDto>, BadRequest<ErrorResponse>>>
+            (CreateItemRequest request, IUserContext userContext, IItemService service, CancellationToken cancellationToken)
                 =>
                 {
                     try
                     {
-                        var result = await service.SaveItemAsync(request, cancellationToken);
+                        var result = await service.SaveItemAsync(userContext.UserId, request, cancellationToken);
                         var dto = ItemDto.FromEntity(result.Item);
                         return result.Created
                             ? TypedResults.Created($"/api/v1/items/{dto.Id}", dto)
@@ -33,7 +38,6 @@ public static class ItemsEndpoints
             .Produces<Created<ItemDto>>(StatusCodes.Status201Created)
             .Produces<Ok<ItemDto>>(StatusCodes.Status200OK)
             .Produces<BadRequest<ErrorResponse>>(StatusCodes.Status400BadRequest)
-            .WithTags("Items")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Save a URL";
@@ -41,8 +45,8 @@ public static class ItemsEndpoints
                 return Task.CompletedTask;
             });
 
-        endpoints.MapGet(
-            "/api/v1/items",
+        group.MapGet(
+            "",
             async Task<Results<Ok<ItemListResponse>, BadRequest<ErrorResponse>>>
             (
                     string? status,
@@ -51,6 +55,7 @@ public static class ItemsEndpoints
                     bool? isFavorite,
                     string? cursor,
                     int? limit,
+                    IUserContext userContext,
                     IItemService service,
                     CancellationToken cancellationToken)
                     =>
@@ -58,6 +63,7 @@ public static class ItemsEndpoints
                         try
                         {
                             var response = await service.ListItemsAsync(
+                                userContext.UserId,
                                 status,
                                 collectionId,
                                 tag,
@@ -74,7 +80,6 @@ public static class ItemsEndpoints
                     })
             .Produces<Ok<ItemListResponse>>(StatusCodes.Status200OK)
             .Produces<BadRequest<ErrorResponse>>(StatusCodes.Status400BadRequest)
-            .WithTags("Items")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "List saved items";
@@ -82,18 +87,19 @@ public static class ItemsEndpoints
                 return Task.CompletedTask;
             });
 
-        endpoints.MapGet(
-            "/api/v1/items/{id}",
+        group.MapGet(
+            "{id}",
             async Task<Results<Ok<ItemDto>, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
             (
                     string id,
+                    IUserContext userContext,
                     IItemService service,
                     CancellationToken cancellationToken)
                     =>
                     {
                         try
                         {
-                            var item = await service.GetItemByIdAsync(id, cancellationToken);
+                            var item = await service.GetItemByIdAsync(userContext.UserId, id, cancellationToken);
                             if (item is null)
                             {
                                 return TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Item not found")));
@@ -109,7 +115,6 @@ public static class ItemsEndpoints
             .Produces<Ok<ItemDto>>(StatusCodes.Status200OK)
             .Produces<BadRequest<ErrorResponse>>(StatusCodes.Status400BadRequest)
             .Produces<NotFound<ErrorResponse>>(StatusCodes.Status404NotFound)
-            .WithTags("Items")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Get item details";
@@ -117,19 +122,20 @@ public static class ItemsEndpoints
                 return Task.CompletedTask;
             });
 
-        endpoints.MapPatch(
-            "/api/v1/items/{id}",
+        group.MapPatch(
+            "{id}",
             async Task<Results<Ok<ItemDto>, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
             (
                     string id,
                     UpdateItemRequest request,
+                    IUserContext userContext,
                     IItemService service,
                     CancellationToken cancellationToken)
                     =>
                     {
                         try
                         {
-                            var updated = await service.UpdateItemAsync(id, request, cancellationToken);
+                            var updated = await service.UpdateItemAsync(userContext.UserId, id, request, cancellationToken);
                             if (updated is null)
                             {
                                 return TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Item not found")));
@@ -145,7 +151,6 @@ public static class ItemsEndpoints
             .Produces<Ok<ItemDto>>(StatusCodes.Status200OK)
             .Produces<BadRequest<ErrorResponse>>(StatusCodes.Status400BadRequest)
             .Produces<NotFound<ErrorResponse>>(StatusCodes.Status404NotFound)
-            .WithTags("Items")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Update item metadata";
@@ -153,18 +158,19 @@ public static class ItemsEndpoints
                 return Task.CompletedTask;
             });
 
-        endpoints.MapDelete(
-            "/api/v1/items/{id}",
+        group.MapDelete(
+            "{id}",
             async Task<Results<NoContent, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
             (
                     string id,
+                    IUserContext userContext,
                     IItemService service,
                     CancellationToken cancellationToken)
                     =>
                     {
                         try
                         {
-                            var deleted = await service.DeleteItemAsync(id, cancellationToken);
+                            var deleted = await service.DeleteItemAsync(userContext.UserId, id, cancellationToken);
                             if (!deleted)
                             {
                                 return TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Item not found")));
@@ -180,7 +186,6 @@ public static class ItemsEndpoints
             .Produces<NoContent>(StatusCodes.Status204NoContent)
             .Produces<BadRequest<ErrorResponse>>(StatusCodes.Status400BadRequest)
             .Produces<NotFound<ErrorResponse>>(StatusCodes.Status404NotFound)
-            .WithTags("Items")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Delete an item";

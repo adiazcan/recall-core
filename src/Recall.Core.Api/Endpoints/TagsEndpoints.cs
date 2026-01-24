@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Recall.Core.Api.Auth;
 using Recall.Core.Api.Models;
 using Recall.Core.Api.Repositories;
 using Recall.Core.Api.Services;
@@ -10,11 +11,15 @@ public static class TagsEndpoints
 {
     public static IEndpointRouteBuilder MapTagsEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/api/v1/tags", async Task<Ok<TagListResponse>>
-            (IItemRepository repository, CancellationToken cancellationToken)
+        var group = endpoints.MapGroup("/api/v1/tags")
+            .RequireAuthorization("ApiScope")
+            .WithTags("Tags");
+
+        group.MapGet("", async Task<Ok<TagListResponse>>
+            (IItemRepository repository, IUserContext userContext, CancellationToken cancellationToken)
                 =>
                 {
-                    var tags = await repository.GetAllTagsWithCountsAsync(cancellationToken);
+                    var tags = await repository.GetAllTagsWithCountsAsync(userContext.UserId, cancellationToken);
                     var response = new TagListResponse
                     {
                         Tags = tags.Select(tag => new TagDto
@@ -27,7 +32,6 @@ public static class TagsEndpoints
                     return TypedResults.Ok(response);
                 })
             .Produces<Ok<TagListResponse>>(StatusCodes.Status200OK)
-            .WithTags("Tags")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "List all tags with counts";
@@ -35,11 +39,12 @@ public static class TagsEndpoints
                 return Task.CompletedTask;
             });
 
-        endpoints.MapPatch("/api/v1/tags/{name}", async Task<Results<Ok<TagOperationResponse>, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
+        group.MapPatch("{name}", async Task<Results<Ok<TagOperationResponse>, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
             (
                 string name,
                 RenameTagRequest request,
                 IItemRepository repository,
+                IUserContext userContext,
                 CancellationToken cancellationToken)
                 =>
                 {
@@ -48,7 +53,7 @@ public static class TagsEndpoints
                         var oldName = NormalizeTagName(name, "Tag name is required.");
                         var newName = NormalizeTagName(request.NewName, "New tag name is required.");
 
-                        var itemsUpdated = await repository.RenameTagAsync(oldName, newName, cancellationToken);
+                        var itemsUpdated = await repository.RenameTagAsync(userContext.UserId, oldName, newName, cancellationToken);
                         if (itemsUpdated == 0)
                         {
                             return TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Tag not found.")));
@@ -69,7 +74,6 @@ public static class TagsEndpoints
             .Produces<Ok<TagOperationResponse>>(StatusCodes.Status200OK)
             .Produces<BadRequest<ErrorResponse>>(StatusCodes.Status400BadRequest)
             .Produces<NotFound<ErrorResponse>>(StatusCodes.Status404NotFound)
-            .WithTags("Tags")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Rename a tag globally";
@@ -77,17 +81,18 @@ public static class TagsEndpoints
                 return Task.CompletedTask;
             });
 
-        endpoints.MapDelete("/api/v1/tags/{name}", async Task<Results<Ok<TagOperationResponse>, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
+        group.MapDelete("{name}", async Task<Results<Ok<TagOperationResponse>, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
             (
                 string name,
                 IItemRepository repository,
+                IUserContext userContext,
                 CancellationToken cancellationToken)
                 =>
                 {
                     try
                     {
                         var tagName = NormalizeTagName(name, "Tag name is required.");
-                        var itemsUpdated = await repository.DeleteTagAsync(tagName, cancellationToken);
+                        var itemsUpdated = await repository.DeleteTagAsync(userContext.UserId, tagName, cancellationToken);
                         if (itemsUpdated == 0)
                         {
                             return TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Tag not found.")));
@@ -108,7 +113,6 @@ public static class TagsEndpoints
             .Produces<Ok<TagOperationResponse>>(StatusCodes.Status200OK)
             .Produces<BadRequest<ErrorResponse>>(StatusCodes.Status400BadRequest)
             .Produces<NotFound<ErrorResponse>>(StatusCodes.Status404NotFound)
-            .WithTags("Tags")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Delete a tag";

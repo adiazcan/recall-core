@@ -9,12 +9,13 @@ namespace Recall.Core.Api.Services;
 public sealed class CollectionService(ICollectionRepository repository) : ICollectionService
 {
     public async Task<CollectionDto> CreateCollectionAsync(
+        string userId,
         CreateCollectionRequest request,
         CancellationToken cancellationToken = default)
     {
         var name = NormalizeName(request.Name);
         var description = NormalizeDescription(request.Description, allowNull: true);
-        var parentId = await NormalizeParentIdAsync(request.ParentId, cancellationToken);
+        var parentId = await NormalizeParentIdAsync(userId, request.ParentId, cancellationToken);
 
         var now = DateTime.UtcNow;
         var collection = new Collection
@@ -22,13 +23,14 @@ public sealed class CollectionService(ICollectionRepository repository) : IColle
             Name = name,
             Description = description,
             ParentId = parentId,
+            UserId = userId,
             CreatedAt = now,
             UpdatedAt = now
         };
 
         try
         {
-            await repository.InsertAsync(collection, cancellationToken);
+            await repository.InsertAsync(userId, collection, cancellationToken);
             return CollectionDto.FromEntity(collection, 0);
         }
         catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
@@ -37,28 +39,29 @@ public sealed class CollectionService(ICollectionRepository repository) : IColle
         }
     }
 
-    public async Task<IReadOnlyList<CollectionDto>> ListCollectionsAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<CollectionDto>> ListCollectionsAsync(string userId, CancellationToken cancellationToken = default)
     {
-        var collections = await repository.ListWithCountsAsync(cancellationToken);
+        var collections = await repository.ListWithCountsAsync(userId, cancellationToken);
         return collections
             .Select(result => CollectionDto.FromEntity(result.Collection, result.ItemCount))
             .ToList();
     }
 
-    public async Task<CollectionDto?> GetCollectionAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<CollectionDto?> GetCollectionAsync(string userId, string id, CancellationToken cancellationToken = default)
     {
         var objectId = ParseObjectId(id, "CollectionId must be a valid ObjectId.");
-        var result = await repository.GetWithCountAsync(objectId, cancellationToken);
+        var result = await repository.GetWithCountAsync(userId, objectId, cancellationToken);
         return result is null ? null : CollectionDto.FromEntity(result.Collection, result.ItemCount);
     }
 
     public async Task<CollectionDto?> UpdateCollectionAsync(
+        string userId,
         string id,
         UpdateCollectionRequest request,
         CancellationToken cancellationToken = default)
     {
         var objectId = ParseObjectId(id, "CollectionId must be a valid ObjectId.");
-        var collection = await repository.GetByIdAsync(objectId, cancellationToken);
+        var collection = await repository.GetByIdAsync(userId, objectId, cancellationToken);
         if (collection is null)
         {
             return null;
@@ -88,7 +91,7 @@ public sealed class CollectionService(ICollectionRepository repository) : IColle
 
         if (request.ParentId is not null)
         {
-            var parentId = await NormalizeParentIdAsync(request.ParentId, cancellationToken);
+            var parentId = await NormalizeParentIdAsync(userId, request.ParentId, cancellationToken);
             if (parentId.HasValue && parentId.Value == collection.Id)
             {
                 throw new RequestValidationException("validation_error", "Collection cannot be its own parent.");
@@ -106,7 +109,7 @@ public sealed class CollectionService(ICollectionRepository repository) : IColle
             collection.UpdatedAt = DateTime.UtcNow;
             try
             {
-                var saved = await repository.ReplaceAsync(collection, cancellationToken);
+                var saved = await repository.ReplaceAsync(userId, collection, cancellationToken);
                 if (!saved)
                 {
                     return null;
@@ -118,14 +121,14 @@ public sealed class CollectionService(ICollectionRepository repository) : IColle
             }
         }
 
-        var result = await repository.GetWithCountAsync(objectId, cancellationToken);
+        var result = await repository.GetWithCountAsync(userId, objectId, cancellationToken);
         return result is null ? null : CollectionDto.FromEntity(result.Collection, result.ItemCount);
     }
 
-    public async Task<bool> DeleteCollectionAsync(string id, string? mode, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteCollectionAsync(string userId, string id, string? mode, CancellationToken cancellationToken = default)
     {
         var objectId = ParseObjectId(id, "CollectionId must be a valid ObjectId.");
-        var collection = await repository.GetByIdAsync(objectId, cancellationToken);
+        var collection = await repository.GetByIdAsync(userId, objectId, cancellationToken);
         if (collection is null)
         {
             return false;
@@ -134,14 +137,14 @@ public sealed class CollectionService(ICollectionRepository repository) : IColle
         var deleteMode = NormalizeDeleteMode(mode);
         if (string.Equals(deleteMode, "cascade", StringComparison.Ordinal))
         {
-            await repository.DeleteItemsAsync(objectId, cancellationToken);
+            await repository.DeleteItemsAsync(userId, objectId, cancellationToken);
         }
         else
         {
-            await repository.OrphanItemsAsync(objectId, cancellationToken);
+            await repository.OrphanItemsAsync(userId, objectId, cancellationToken);
         }
 
-        await repository.DeleteAsync(objectId, cancellationToken);
+        await repository.DeleteAsync(userId, objectId, cancellationToken);
         return true;
     }
 
@@ -181,7 +184,7 @@ public sealed class CollectionService(ICollectionRepository repository) : IColle
         return string.IsNullOrEmpty(trimmed) ? null : trimmed;
     }
 
-    private async Task<ObjectId?> NormalizeParentIdAsync(string? parentId, CancellationToken cancellationToken)
+    private async Task<ObjectId?> NormalizeParentIdAsync(string userId, string? parentId, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(parentId))
         {
@@ -193,7 +196,7 @@ public sealed class CollectionService(ICollectionRepository repository) : IColle
             throw new RequestValidationException("validation_error", "ParentId must be a valid ObjectId.");
         }
 
-        var parent = await repository.GetByIdAsync(objectId, cancellationToken);
+        var parent = await repository.GetByIdAsync(userId, objectId, cancellationToken);
         if (parent is null)
         {
             throw new RequestValidationException("validation_error", "Parent collection not found.");

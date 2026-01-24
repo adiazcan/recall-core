@@ -219,6 +219,7 @@
 - [X] T070 [US8] Create TagList component for sidebar in src/web/src/features/tags/components/TagList.tsx
 - [X] T071 [US8] Wire TagList to Sidebar with navigation on click
 - [X] T072 [US8] Add tag color assignment based on name hash in TagList
+- [X] T081 [US8] Remove create tag UI from sidebar
 
 **Checkpoint**: User Story 8 complete - users can navigate by tags
 

@@ -1,15 +1,13 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { RootLayout } from './pages/RootLayout';
-import { HomePage } from './pages/HomePage';
-
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <RootLayout />,
-    children: [{ index: true, element: <HomePage /> }],
-  },
-]);
+import { RouterProvider } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { router } from './routes';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 export default function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <ErrorBoundary>
+      <RouterProvider router={router} />
+      <Toaster richColors />
+    </ErrorBoundary>
+  );
 }

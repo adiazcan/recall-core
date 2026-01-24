@@ -1,0 +1,384 @@
+````markdown
+# Tasks: Web App Integration
+
+**Input**: Design documents from `/specs/003-web-app-integration/`
+**Prerequisites**: plan.md ✓, spec.md ✓, research.md ✓, data-model.md ✓, quickstart.md ✓
+
+**Tests**: Not explicitly requested - test tasks excluded (add Playwright e2e smoke test in Polish phase per constitution)
+
+**Organization**: Tasks grouped by user story to enable independent implementation and testing
+
+## Format: `[ID] [P?] [Story] Description`
+
+- **[P]**: Can run in parallel (different files, no dependencies)
+- **[Story]**: Which user story this task belongs to (US1-US8)
+- All paths relative to `/src/web/`
+
+---
+
+## Phase 1: Setup (Project Configuration)
+
+**Purpose**: Configure web app infrastructure and migrate /design components
+
+- [X] T001 Add Zustand, immer, sonner dependencies to src/web/package.json
+- [X] T002 [P] Copy shadcn/ui primitives from /design/src/app/components/ui/ to src/web/src/components/ui/
+- [X] T003 [P] Merge styles from /design/src/styles/ into src/web/src/styles/
+- [X] T004 [P] Configure Vite proxy for /api routes in src/web/vite.config.ts
+- [X] T005 [P] Create lib/utils.ts with cn() helper and extractDomain utility
+- [X] T006 [P] Create lib/constants.ts with API base URL and pagination defaults
+
+---
+
+## Phase 2: Foundational (Core Infrastructure)
+
+**Purpose**: API client, type system, stores, and routing that ALL user stories depend on
+
+**⚠️ CRITICAL**: No user story work can begin until this phase is complete
+
+### API Client Layer
+
+- [X] T007 Create API request/response types in src/web/src/lib/api/types.ts (ItemDto, CollectionDto, TagDto, requests, responses)
+- [X] T008 Create base fetch wrapper with error handling in src/web/src/lib/api/client.ts
+- [X] T009 [P] Create items API module in src/web/src/lib/api/items.ts
+- [X] T010 [P] Create collections API module in src/web/src/lib/api/collections.ts
+- [X] T011 [P] Create tags API module in src/web/src/lib/api/tags.ts
+
+### Type System
+
+- [X] T012 [P] Create frontend entity types (Item, Collection, Tag) in src/web/src/types/entities.ts
+- [X] T013 [P] Create view state types (ViewState, FilterParams) in src/web/src/types/views.ts
+
+### Global Stores
+
+- [X] T014 Create UI store (viewState, sidebar, modals) in src/web/src/stores/ui-store.ts
+- [X] T015 [P] Create toast store with sonner integration in src/web/src/stores/toast-store.ts
+
+### Feature Stores (Empty Shells)
+
+- [X] T016 [P] Create items store shell with state types in src/web/src/features/items/store.ts
+- [X] T017 [P] Create collections store shell in src/web/src/features/collections/store.ts
+- [X] T018 [P] Create tags store shell in src/web/src/features/tags/store.ts
+
+### Routing & Layout
+
+- [X] T019 Create React Router configuration in src/web/src/routes.tsx
+- [X] T020 Create root App component with providers in src/web/src/App.tsx
+- [X] T021 Update main.tsx entry point with router setup
+- [X] T022 [P] Create Layout shell component in src/web/src/components/layout/Layout.tsx
+- [X] T023 [P] Create Sidebar component shell in src/web/src/components/layout/Sidebar.tsx
+- [X] T024 [P] Create common LoadingState component in src/web/src/components/common/LoadingState.tsx
+- [X] T025 [P] Create common ErrorState component in src/web/src/components/common/ErrorState.tsx
+- [X] T026 [P] Create common EmptyState component in src/web/src/components/common/EmptyState.tsx
+
+**Checkpoint**: Foundation ready - user story implementation can now begin
+
+---
+
+## Phase 3: User Story 1 - Save a URL for Later (Priority: P1) 🎯 MVP
+
+**Goal**: Users can save URLs via the web app with validation, deduplication, and feedback
+
+**Independent Test**: Open app → click "Save URL" → enter valid URL → verify item appears in list with success toast
+
+### Implementation for User Story 1
+
+- [X] T027 [US1] Implement createItem action in items store with API call in src/web/src/features/items/store.ts
+- [X] T028 [P] [US1] Create SaveUrlForm component with URL validation in src/web/src/features/items/components/SaveUrlForm.tsx
+- [X] T029 [US1] Create SaveUrlDialog modal component in src/web/src/features/items/components/SaveUrlDialog.tsx
+- [X] T030 [US1] Wire SaveUrlDialog to UI store modal state and items store createItem
+- [X] T031 [US1] Add duplicate URL detection handling (200 response → "duplicate" toast) in SaveUrlForm
+- [X] T032 [US1] Add inline validation errors for invalid URL input in SaveUrlForm
+
+**Checkpoint**: User Story 1 complete - users can save URLs with full feedback
+
+---
+
+## Phase 4: User Story 2 - Browse and Filter Saved Items (Priority: P1) 🎯 MVP
+
+**Goal**: Users can view items filtered by inbox/favorites/archive/collection/tag with loading states and pagination
+
+**Independent Test**: Open app → items load from API → click sidebar filters → verify correct filtering
+
+### Implementation for User Story 2
+
+- [X] T033 [US2] Implement fetchItems action with filter params in items store src/web/src/features/items/store.ts
+- [X] T034 [US2] Implement fetchMore (pagination) action in items store
+- [X] T035 [P] [US2] Create ItemList component with loading skeleton in src/web/src/features/items/components/ItemList.tsx
+- [X] T036 [P] [US2] Create ItemRow component for list display in src/web/src/features/items/components/ItemRow.tsx
+- [X] T037 [US2] Create ItemsView container component in src/web/src/features/items/components/ItemsView.tsx
+- [X] T038 [US2] Implement Sidebar navigation with view state updates in src/web/src/components/layout/Sidebar.tsx
+- [X] T039 [US2] Wire viewState changes to items store fetchItems with correct filters
+- [X] T040 [US2] Add "Load more" button with fetchMore integration in ItemList
+- [X] T041 [US2] Add EmptyState display when no items match filter in ItemsView
+
+**Checkpoint**: User Story 2 complete - users can browse and filter items
+
+---
+
+## Phase 5: User Story 3 - View Item Details (Priority: P1) 🎯 MVP
+
+**Goal**: Users can click an item to see full details in a slide-out panel
+
+**Independent Test**: Click item in list → detail panel slides in with title, URL, tags, collection, dates
+
+### Implementation for User Story 3
+
+- [X] T042 [US3] Add selectItem action and selectedItemId state to items store
+- [X] T043 [US3] Create ItemDetail panel component in src/web/src/features/items/components/ItemDetail.tsx
+- [X] T044 [US3] Wire ItemRow click to selectItem action
+- [X] T045 [US3] Add external link button to open URL in new tab in ItemDetail
+- [X] T046 [US3] Add close button and click-outside handling for ItemDetail panel
+- [X] T047 [US3] Add slide-in animation for ItemDetail panel using motion
+
+**Checkpoint**: User Story 3 complete - users can view item details
+
+---
+
+## Phase 6: User Story 4 - Quick Actions: Favorite and Archive (Priority: P2)
+
+**Goal**: Users can quickly favorite/archive items with optimistic updates and rollback
+
+**Independent Test**: Hover item → click star → verify instant UI update → verify API call → test rollback on error
+
+### Implementation for User Story 4
+
+- [X] T048 [US4] Implement toggleFavorite with optimistic update in items store src/web/src/features/items/store.ts
+- [X] T049 [US4] Implement toggleArchive with optimistic update in items store
+- [X] T050 [P] [US4] Add favorite (star) icon button to ItemRow with toggle behavior in src/web/src/features/items/components/ItemRow.tsx
+- [X] T051 [P] [US4] Add archive icon button to ItemRow with toggle behavior
+- [X] T052 [US4] Add rollback logic and error toast on API failure for both actions
+- [X] T053 [US4] Add animate-out effect when item is archived from current view
+
+**Checkpoint**: User Story 4 complete - users can quickly organize items
+
+---
+
+## Phase 7: User Story 5 - Delete an Item (Priority: P2)
+
+**Goal**: Users can permanently delete items with confirmation dialog
+
+**Independent Test**: Open item detail → click delete → confirm dialog → verify item removed from list
+
+### Implementation for User Story 5
+
+- [X] T054 [US5] Implement deleteItem action in items store src/web/src/features/items/store.ts
+- [X] T055 [US5] Create ConfirmDeleteDialog component in src/web/src/features/items/components/ConfirmDeleteDialog.tsx
+- [X] T056 [US5] Add delete button to ItemDetail that opens confirmation dialog
+- [X] T057 [US5] Wire confirmation to deleteItem action with success toast and panel close
+
+**Checkpoint**: User Story 5 complete - users can delete items
+
+---
+
+## Phase 8: User Story 6 - Edit Item Metadata (Priority: P2)
+
+**Goal**: Users can edit item title, collection, and tags from detail panel
+
+**Independent Test**: Open item detail → change collection dropdown → verify PATCH call → verify UI update
+
+### Implementation for User Story 6
+
+- [X] T058 [US6] Implement updateItem action in items store src/web/src/features/items/store.ts
+- [X] T059 [US6] Add collection dropdown selector to ItemDetail in src/web/src/features/items/components/ItemDetail.tsx
+- [X] T060 [US6] Add tag editor with add/remove capability to ItemDetail
+- [X] T061 [P] [US6] Create TagChip component for tag display in src/web/src/features/tags/components/TagChip.tsx
+- [X] T062 [US6] Wire collection/tag changes to updateItem action with feedback
+
+**Checkpoint**: User Story 6 complete - users can edit item metadata
+
+---
+
+## Phase 9: User Story 7 - View and Navigate Collections (Priority: P2)
+
+**Goal**: Users can see collections in sidebar with counts and create new collections
+
+**Independent Test**: Load app → verify collections appear in sidebar → click collection → items filter → create new collection
+
+### Implementation for User Story 7
+
+- [X] T063 [US7] Implement fetchCollections action in collections store src/web/src/features/collections/store.ts
+- [X] T064 [US7] Implement createCollection action in collections store
+- [X] T065 [P] [US7] Create CollectionList component for sidebar in src/web/src/features/collections/components/CollectionList.tsx
+- [X] T066 [P] [US7] Create CreateCollectionDialog component in src/web/src/features/collections/components/CreateCollectionDialog.tsx
+- [X] T067 [US7] Wire CollectionList to Sidebar with navigation on click
+- [X] T068 [US7] Wire CreateCollectionDialog to UI store modal state and collections store
+
+**Checkpoint**: User Story 7 complete - users can manage collections
+
+---
+
+## Phase 10: User Story 8 - View and Navigate Tags (Priority: P2)
+
+**Goal**: Users can see all tags in sidebar with counts and filter items by tag
+
+**Independent Test**: Load app → verify tags appear in sidebar → click tag → items filter to that tag
+
+### Implementation for User Story 8
+
+- [X] T069 [US8] Implement fetchTags action in tags store src/web/src/features/tags/store.ts
+- [X] T070 [US8] Create TagList component for sidebar in src/web/src/features/tags/components/TagList.tsx
+- [X] T071 [US8] Wire TagList to Sidebar with navigation on click
+- [X] T072 [US8] Add tag color assignment based on name hash in TagList
+- [X] T081 [US8] Remove create tag UI from sidebar
+
+**Checkpoint**: User Story 8 complete - users can navigate by tags
+
+---
+
+## Phase 11: Polish & Cross-Cutting Concerns
+
+**Purpose**: Accessibility, final integration, and smoke testing
+
+- [X] T073 [P] Add keyboard navigation support to ItemList (arrow keys, enter to select)
+- [X] T074 [P] Add keyboard navigation to Sidebar (tab, arrow keys)
+- [X] T075 [P] Add focus management for dialogs (trap focus, return focus on close)
+- [X] T076 [P] Add ARIA labels to all icon-only buttons in ItemRow and ItemDetail
+- [X] T077 Add error boundary component for graceful error handling in src/web/src/components/common/ErrorBoundary.tsx
+- [X] T078 Create Playwright e2e smoke test (create→list→detail→delete) in src/web/e2e/smoke.spec.ts
+- [X] T079 Run quickstart.md validation (full stack test with Aspire) ✓ VALIDATED
+- [X] T080 Verify bundle size < 200KB gzip target
+
+---
+
+## Dependencies & Execution Order
+
+### Phase Dependencies
+
+- **Setup (Phase 1)**: No dependencies - start immediately
+- **Foundational (Phase 2)**: Depends on Setup - BLOCKS all user stories
+- **User Stories (Phases 3-10)**: All depend on Foundational completion
+  - P1 stories (US1-3) are MVP-critical
+  - P2 stories (US4-8) can proceed after Foundational
+- **Polish (Phase 11)**: Depends on desired user stories being complete
+
+### User Story Dependencies
+
+| Story | Priority | Dependencies | Notes |
+|-------|----------|--------------|-------|
+| US1: Save URL | P1 | Foundational | Core MVP functionality |
+| US2: Browse/Filter | P1 | Foundational | Core MVP functionality |
+| US3: View Details | P1 | Foundational, benefits from US2 ItemRow | Core MVP functionality |
+| US4: Quick Actions | P2 | US2 (ItemRow exists) | Enhances browsing experience |
+| US5: Delete Item | P2 | US3 (ItemDetail exists) | Extends detail panel |
+| US6: Edit Metadata | P2 | US3 (ItemDetail exists), US7 (collections), US8 (tags) | Full editing requires collections/tags loaded |
+| US7: Collections | P2 | Foundational | Can start after Foundational |
+| US8: Tags | P2 | Foundational | Can start after Foundational |
+
+### Parallel Opportunities per Phase
+
+**Phase 1 (Setup)**: T002, T003, T004, T005, T006 all parallel
+
+**Phase 2 (Foundational)**:
+- T009, T010, T011 parallel (API modules)
+- T012, T013 parallel (types)
+- T016, T017, T018 parallel (store shells)
+- T022, T023, T024, T025, T026 parallel (components)
+
+**User Stories**: US7 and US8 can run in parallel with US4-6
+
+---
+
+## Parallel Example: Foundational Phase
+
+```bash
+# After T007, T008 complete, launch API modules together:
+Task: "Create items API module in src/web/src/lib/api/items.ts"
+Task: "Create collections API module in src/web/src/lib/api/collections.ts"
+Task: "Create tags API module in src/web/src/lib/api/tags.ts"
+
+# Launch types together:
+Task: "Create frontend entity types in src/web/src/types/entities.ts"
+Task: "Create view state types in src/web/src/types/views.ts"
+
+# Launch store shells together:
+Task: "Create items store shell in src/web/src/features/items/store.ts"
+Task: "Create collections store shell in src/web/src/features/collections/store.ts"
+Task: "Create tags store shell in src/web/src/features/tags/store.ts"
+```
+
+---
+
+## Implementation Strategy
+
+### MVP First (User Stories 1-3)
+
+1. Complete Phase 1: Setup
+2. Complete Phase 2: Foundational
+3. Complete Phase 3: US1 - Save URL ✅
+4. Complete Phase 4: US2 - Browse/Filter ✅
+5. Complete Phase 5: US3 - View Details ✅
+6. **STOP and VALIDATE**: Test all P1 stories - this is a deployable MVP
+7. Deploy/demo if ready
+
+### Incremental Delivery
+
+1. Setup + Foundational → Foundation ready
+2. Add US1-3 → **MVP Complete** (save, browse, view)
+3. Add US4 → Quick actions enhance browsing
+4. Add US5-6 → Full item management
+5. Add US7-8 → Full organization features
+6. Polish → Accessibility, testing, optimization
+
+### Parallel Team Strategy
+
+With multiple developers after Foundational:
+
+- **Developer A**: US1 (Save) → US4 (Quick Actions) → US5 (Delete)
+- **Developer B**: US2 (Browse) → US3 (Details) → US6 (Edit)
+- **Developer C**: US7 (Collections) → US8 (Tags) → Polish
+
+---
+
+## Notes
+
+- [P] tasks = different files, no dependencies
+- [Story] label maps task to specific user story for traceability
+- All paths relative to `/src/web/` unless otherwise specified
+- shadcn/ui components copied from /design provide accessible primitives
+- API client uses Vite proxy - no CORS configuration needed in dev
+- Zustand stores enable optimistic updates with simple rollback pattern
+- Commit after each task or logical group
+- Run `pnpm typecheck` after type changes
+- Run `pnpm dev` to validate changes in browser
+
+````
+
+---
+
+## Review Follow-ups (AI)
+
+**Code Review Date:** January 23, 2026  
+**Reviewer:** AI Code Reviewer (Adversarial)  
+**Status:** 23 issues found (11 High, 8 Medium, 4 Low)
+
+### 🔴 Critical Issues (HIGH)
+
+- [X] [AI-Review][HIGH] US2 AC7: Implement auto-scroll pagination with Intersection Observer instead of "Load More" button [src/web/src/features/items/components/ItemList.tsx:121-130]
+- [X] [AI-Review][HIGH] Fix 3 failing e2e tests: CRUD flow timeout, empty state text mismatch, API error handling [src/web/e2e/smoke.spec.ts:12-126] ✓ FIXED: Dynamic port support, correct selectors, realistic API error test. NOTE: Tests require backend running (via Aspire or standalone)
+- [X] [AI-Review][HIGH] US4 AC5: Fix archive rollback race condition - setTimeout executes even after rollback [src/web/src/features/items/store.ts:202-207]
+- [X] [AI-Review][HIGH] Security: Validate URL protocol is http/https before rendering in ItemDetail href [src/web/src/features/items/components/ItemDetail.tsx:221-226]
+- [X] [AI-Review][HIGH] Input Validation: Sanitize tag names with regex ^[a-zA-Z0-9-_]+$ to prevent XSS/injection [src/web/src/features/items/components/ItemDetail.tsx:101-123]
+- [X] [AI-Review][HIGH] US7 AC2: Replace PlaceholderView with ItemsView for /collections/:id route [src/web/src/routes.tsx:20]
+- [X] [AI-Review][HIGH] US8 AC2: Replace PlaceholderView with ItemsView for /tags/:name route [src/web/src/routes.tsx:21]
+- [X] [AI-Review][HIGH] US6 AC2: Add Combobox with tag suggestions for selecting existing tags, not just text input [src/web/src/features/items/components/ItemDetail.tsx:318-341]
+- [X] [AI-Review][HIGH] Performance: Add guard condition to prevent excessive tag refetches in TagList useEffect [src/web/src/features/tags/components/TagList.tsx:13-15]
+- [X] [AI-Review][HIGH] Error Handling: Increase API timeout from 10s to 30s minimum for slow connections [src/web/src/lib/api/client.ts:72]
+- [X] [AI-Review][HIGH] Task T079: Actually run and pass quickstart.md full-stack Aspire integration test [tasks.md:T079] ✓ ALL TESTS PASSED
+
+### 🟡 Medium Issues
+
+ - [X] [AI-Review][MEDIUM] Wire or remove disabled Favorite/Archive buttons in ItemDetail header [src/web/src/features/items/components/ItemDetail.tsx:167-181]
+- [X] [AI-Review][MEDIUM] Code-split routes and use dynamic imports to reduce 511KB bundle (target <400KB) [src/web/vite.config.ts]
+- [X] [AI-Review][MEDIUM] Implement proper focus trap for ItemDetail modal using react-focus-lock or similar [src/web/src/features/items/components/ItemDetail.tsx:56-90]
+- [X] [AI-Review][MEDIUM] Add toast deduplication or rate limiting to prevent duplicate error stacks [src/web/src/stores/toast-store.ts]
+- [X] [AI-Review][MEDIUM] Implement or throw NotImplementedError for updateCollection/deleteCollection stubs [src/web/src/features/collections/store.ts:39-45]
+- [X] [AI-Review][MEDIUM] Add loading state to collection dropdown in ItemDetail [src/web/src/features/items/components/ItemDetail.tsx:254-268]
+- [ ] [AI-Review][MEDIUM] Wrap ItemRow in React.memo with custom comparison to prevent unnecessary re-renders [src/web/src/features/items/components/ItemRow.tsx]
+- [ ] [AI-Review][MEDIUM] Fix EmptyState text pattern to match e2e test expectations [src/web/src/components/common/EmptyState.tsx]
+
+### 🟢 Low Priority
+
+- [ ] [AI-Review][LOW] Standardize error logging: remove console.error or add to all stores consistently [src/web/src/features/tags/store.ts]
+- [ ] [AI-Review][LOW] Improve SaveUrlForm error messages to differentiate error types [src/web/src/features/items/components/SaveUrlForm.tsx:95-99]
+- [ ] [AI-Review][LOW] Add JSDoc documentation for apiRequest and apiRequestWithResponse functions [src/web/src/lib/api/client.ts]
+- [ ] [AI-Review][LOW] Replace hardcoded waitForTimeout(500) with proper wait conditions in e2e tests [src/web/e2e/smoke.spec.ts:33]

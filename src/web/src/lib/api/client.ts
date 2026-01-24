@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../constants';
+import { acquireAccessToken } from '../msalInstance';
 
 type ApiRequestOptions = RequestInit & {
   timeoutMs?: number;
@@ -84,6 +85,14 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     headers.set('Content-Type', 'application/json');
   }
 
+  const isProtectedApiRequest = path.includes('/api/v1');
+  if (isProtectedApiRequest && !headers.has('Authorization')) {
+    const token = await acquireAccessToken();
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+  }
+
   const signal = fetchOptions.signal ?? controller.signal;
   const timeoutId = fetchOptions.signal
     ? null
@@ -129,6 +138,14 @@ export async function apiRequestWithResponse<T>(
 
   if (fetchOptions.body && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
+  }
+
+  const isProtectedApiRequest = path.includes('/api/v1');
+  if (isProtectedApiRequest && !headers.has('Authorization')) {
+    const token = await acquireAccessToken();
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
   }
 
   const signal = fetchOptions.signal ?? controller.signal;

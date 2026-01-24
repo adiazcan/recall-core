@@ -1,12 +1,15 @@
 import { Archive, Inbox, Star, Settings, Plus } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useRef, useEffect } from 'react';
+import { useIsAuthenticated } from '@azure/msal-react';
 import { cn } from '../../lib/utils';
 import { useUiStore } from '../../stores/ui-store';
 import { DEFAULT_VIEWS, type ViewState } from '../../types/views';
 import { CollectionList } from '../../features/collections/components/CollectionList';
 import { TagList } from '../../features/tags/components/TagList';
 import { Button } from '../ui/button';
+import { SignInButton } from '../auth/SignInButton';
+import { UserDisplay } from '../auth/UserDisplay';
 
 const navItems = [
   { view: DEFAULT_VIEWS.inbox, to: '/inbox', icon: Inbox },
@@ -19,6 +22,7 @@ export function Sidebar() {
   const openCreateCollection = useUiStore((state) => state.openCreateCollection);
   const location = useLocation();
   const navRef = useRef<HTMLDivElement>(null);
+  const isAuthenticated = useIsAuthenticated();
 
   // Sync view state with current route on mount and navigation
   useEffect(() => {
@@ -146,16 +150,17 @@ export function Sidebar() {
 
       {/* User Profile */}
       <div className="p-4 border-t border-neutral-100 flex-shrink-0">
-        <button
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-neutral-600 hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset"
-          aria-label="User profile and settings"
-        >
-          <div className="w-6 h-6 rounded-full bg-neutral-200 flex items-center justify-center text-xs font-medium text-neutral-600">
-            JD
-          </div>
-          <span className="flex-1 text-left font-medium">John Doe</span>
-          <Settings className="w-4 h-4 text-neutral-400" />
-        </button>
+        {isAuthenticated ? (
+          <button
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-neutral-600 hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset"
+            aria-label="User profile and settings"
+          >
+            <UserDisplay />
+            <Settings className="w-4 h-4 text-neutral-400" />
+          </button>
+        ) : (
+          <SignInButton className="w-full" />
+        )}
       </div>
     </div>
   );

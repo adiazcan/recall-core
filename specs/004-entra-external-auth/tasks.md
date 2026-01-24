@@ -126,30 +126,30 @@
 
 ### MSAL Configuration
 
-- [ ] T036 [US1] Create authConfig.ts with MSAL configuration in src/web/src/lib/authConfig.ts
-- [ ] T037 [US1] Create msalInstance.ts with PublicClientApplication in src/web/src/lib/msalInstance.ts
-- [ ] T038 [P] [US1] Create loginRequest and apiRequest scope configurations in src/web/src/lib/authConfig.ts
+- [X] T036 [US1] Create authConfig.ts with MSAL configuration in src/web/src/lib/authConfig.ts
+- [X] T037 [US1] Create msalInstance.ts with PublicClientApplication in src/web/src/lib/msalInstance.ts
+- [X] T038 [P] [US1] Create loginRequest and apiRequest scope configurations in src/web/src/lib/authConfig.ts
 
 ### MSAL Provider Integration
 
-- [ ] T039 [US1] Wrap App with MsalProvider in src/web/src/main.tsx
-- [ ] T040 [US1] Create useAuth custom hook for token acquisition in src/web/src/hooks/useAuth.ts
+- [X] T039 [US1] Wrap App with MsalProvider in src/web/src/main.tsx
+- [X] T040 [US1] Create useAuth custom hook for token acquisition in src/web/src/hooks/useAuth.ts
 
 ### Auth Components
 
-- [ ] T041 [US1] Create SignInButton component with loginRedirect in src/web/src/components/auth/SignInButton.tsx
-- [ ] T042 [P] [US1] Create AuthGuard component for protected routes in src/web/src/components/auth/AuthGuard.tsx
-- [ ] T043 [P] [US2] Create UserDisplay component showing authenticated user info in src/web/src/components/auth/UserDisplay.tsx
+- [X] T041 [US1] Create SignInButton component with loginRedirect in src/web/src/components/auth/SignInButton.tsx
+- [X] T042 [P] [US1] Create AuthGuard component for protected routes in src/web/src/components/auth/AuthGuard.tsx
+- [X] T043 [P] [US2] Create UserDisplay component showing authenticated user info in src/web/src/components/auth/UserDisplay.tsx
 
 ### Route Protection
 
-- [ ] T044 [US1] Wrap protected routes with AuthGuard in src/web/src/App.tsx
-- [ ] T045 [US2] Update API client to attach Bearer token to all /api/v1 requests in src/web/src/lib/api.ts (or equivalent)
+- [X] T044 [US1] Wrap protected routes with AuthGuard in src/web/src/App.tsx
+- [X] T045 [US2] Update API client to attach Bearer token to all /api/v1 requests in src/web/src/lib/api.ts (or equivalent)
 
 ### Frontend Tests
 
-- [ ] T046 [US1] Add unit test for SignInButton component in src/web/src/components/auth/SignInButton.test.tsx
-- [ ] T047 [P] [US1] Add unit test for AuthGuard component in src/web/src/components/auth/AuthGuard.test.tsx
+- [X] T046 [US1] Add unit test for SignInButton component in src/web/src/components/auth/SignInButton.test.tsx
+- [X] T047 [P] [US1] Add unit test for AuthGuard component in src/web/src/components/auth/AuthGuard.test.tsx
 
 **Checkpoint**: Users can sign up and sign in via Microsoft Account - US1 and US2 complete
 

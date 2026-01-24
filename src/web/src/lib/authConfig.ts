@@ -1,0 +1,26 @@
+import type { Configuration, RedirectRequest, SilentRequest } from '@azure/msal-browser';
+
+const tenantId = import.meta.env.VITE_TENANT_ID;
+const clientId = import.meta.env.VITE_CLIENT_ID;
+const apiScope = import.meta.env.VITE_API_SCOPE;
+
+export const msalConfig: Configuration = {
+  auth: {
+    clientId,
+    authority: `https://${tenantId}.ciamlogin.com`,
+    redirectUri: window.location.origin,
+    postLogoutRedirectUri: window.location.origin,
+  },
+  cache: {
+    cacheLocation: 'sessionStorage',
+    storeAuthStateInCookie: false,
+  },
+};
+
+export const loginRequest: RedirectRequest = {
+  scopes: [apiScope],
+};
+
+export const apiRequest: SilentRequest = {
+  scopes: [apiScope],
+};

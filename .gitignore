@@ -429,3 +429,4 @@ Thumbs.db
 *.msix
 *.msm
 *.msp
+src/Recall.Core.Api/appsettings.local.json

@@ -1,8 +1,19 @@
 import { API_BASE_URL } from '../constants';
+import { acquireAccessToken } from '../msalInstance';
 
 type ApiRequestOptions = RequestInit & {
   timeoutMs?: number;
 };
+
+export type AuthErrorStatus = 401 | 403;
+
+type AuthErrorHandler = (status: AuthErrorStatus) => void;
+
+let authErrorHandler: AuthErrorHandler | null = null;
+
+export function setAuthErrorHandler(handler: AuthErrorHandler | null) {
+  authErrorHandler = handler;
+}
 
 export class ApiError extends Error {
   readonly status: number;
@@ -84,6 +95,15 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     headers.set('Content-Type', 'application/json');
   }
 
+  const isProtectedApiRequest =
+    !path.startsWith('http') && (path === '/api/v1' || path.startsWith('/api/v1/'));
+  if (isProtectedApiRequest && !headers.has('Authorization')) {
+    const token = await acquireAccessToken();
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+  }
+
   const signal = fetchOptions.signal ?? controller.signal;
   const timeoutId = fetchOptions.signal
     ? null
@@ -104,6 +124,9 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     const body = await parseResponseBody(response);
 
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        authErrorHandler?.(response.status as AuthErrorStatus);
+      }
       throw new ApiError(response.status, mapApiError(response.status, body), body ?? undefined);
     }
 
@@ -131,6 +154,15 @@ export async function apiRequestWithResponse<T>(
     headers.set('Content-Type', 'application/json');
   }
 
+  const isProtectedApiRequest =
+    !path.startsWith('http') && (path === '/api/v1' || path.startsWith('/api/v1/'));
+  if (isProtectedApiRequest && !headers.has('Authorization')) {
+    const token = await acquireAccessToken();
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+  }
+
   const signal = fetchOptions.signal ?? controller.signal;
   const timeoutId = fetchOptions.signal
     ? null
@@ -151,6 +183,9 @@ export async function apiRequestWithResponse<T>(
     const body = await parseResponseBody(response);
 
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        authErrorHandler?.(response.status as AuthErrorStatus);
+      }
       throw new ApiError(response.status, mapApiError(response.status, body), body ?? undefined);
     }
 

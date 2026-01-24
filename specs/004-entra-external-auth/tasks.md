@@ -110,9 +110,9 @@
 
 ### Implementation
 
-- [ ] T033 [US4] Create MeEndpoints class with GET /api/v1/me endpoint in src/Recall.Core.Api/Endpoints/MeEndpoints.cs
-- [ ] T034 [US4] Register MeEndpoints in src/Recall.Core.Api/Program.cs
-- [ ] T035 [US4] Add integration test for /me endpoint in src/tests/Recall.Core.Api.Tests/Endpoints/MeEndpointsTests.cs
+- [X] T033 [US4] Create MeEndpoints class with GET /api/v1/me endpoint in src/Recall.Core.Api/Endpoints/MeEndpoints.cs
+- [X] T034 [US4] Register MeEndpoints in src/Recall.Core.Api/Program.cs
+- [X] T035 [US4] Add integration test for /me endpoint in src/tests/Recall.Core.Api.Tests/Endpoints/MeEndpointsTests.cs
 
 **Checkpoint**: /me endpoint returns user identity - US4 complete
 
@@ -126,30 +126,30 @@
 
 ### MSAL Configuration
 
-- [ ] T036 [US1] Create authConfig.ts with MSAL configuration in src/web/src/lib/authConfig.ts
-- [ ] T037 [US1] Create msalInstance.ts with PublicClientApplication in src/web/src/lib/msalInstance.ts
-- [ ] T038 [P] [US1] Create loginRequest and apiRequest scope configurations in src/web/src/lib/authConfig.ts
+- [X] T036 [US1] Create authConfig.ts with MSAL configuration in src/web/src/lib/authConfig.ts
+- [X] T037 [US1] Create msalInstance.ts with PublicClientApplication in src/web/src/lib/msalInstance.ts
+- [X] T038 [P] [US1] Create loginRequest and apiRequest scope configurations in src/web/src/lib/authConfig.ts
 
 ### MSAL Provider Integration
 
-- [ ] T039 [US1] Wrap App with MsalProvider in src/web/src/main.tsx
-- [ ] T040 [US1] Create useAuth custom hook for token acquisition in src/web/src/hooks/useAuth.ts
+- [X] T039 [US1] Wrap App with MsalProvider in src/web/src/main.tsx
+- [X] T040 [US1] Create useAuth custom hook for token acquisition in src/web/src/hooks/useAuth.ts
 
 ### Auth Components
 
-- [ ] T041 [US1] Create SignInButton component with loginRedirect in src/web/src/components/auth/SignInButton.tsx
-- [ ] T042 [P] [US1] Create AuthGuard component for protected routes in src/web/src/components/auth/AuthGuard.tsx
-- [ ] T043 [P] [US2] Create UserDisplay component showing authenticated user info in src/web/src/components/auth/UserDisplay.tsx
+- [X] T041 [US1] Create SignInButton component with loginRedirect in src/web/src/components/auth/SignInButton.tsx
+- [X] T042 [P] [US1] Create AuthGuard component for protected routes in src/web/src/components/auth/AuthGuard.tsx
+- [X] T043 [P] [US2] Create UserDisplay component showing authenticated user info in src/web/src/components/auth/UserDisplay.tsx
 
 ### Route Protection
 
-- [ ] T044 [US1] Wrap protected routes with AuthGuard in src/web/src/App.tsx
-- [ ] T045 [US2] Update API client to attach Bearer token to all /api/v1 requests in src/web/src/lib/api.ts (or equivalent)
+- [X] T044 [US1] Wrap protected routes with AuthGuard in src/web/src/App.tsx
+- [X] T045 [US2] Update API client to attach Bearer token to all /api/v1 requests in src/web/src/lib/api.ts (or equivalent)
 
 ### Frontend Tests
 
-- [ ] T046 [US1] Add unit test for SignInButton component in src/web/src/components/auth/SignInButton.test.tsx
-- [ ] T047 [P] [US1] Add unit test for AuthGuard component in src/web/src/components/auth/AuthGuard.test.tsx
+- [X] T046 [US1] Add unit test for SignInButton component in src/web/src/components/auth/SignInButton.test.tsx
+- [X] T047 [P] [US1] Add unit test for AuthGuard component in src/web/src/components/auth/AuthGuard.test.tsx
 
 **Checkpoint**: Users can sign up and sign in via Microsoft Account - US1 and US2 complete
 
@@ -163,9 +163,9 @@
 
 ### Implementation
 
-- [ ] T048 [US6] Create SignOutButton component with logoutRedirect in src/web/src/components/auth/SignOutButton.tsx
-- [ ] T049 [US6] Add SignOutButton to user menu or header in src/web/src/components/layout/Header.tsx (or equivalent)
-- [ ] T050 [US6] Add unit test for SignOutButton component in src/web/src/components/auth/SignOutButton.test.tsx
+- [X] T048 [US6] Create SignOutButton component with logoutRedirect in src/web/src/components/auth/SignOutButton.tsx
+- [X] T049 [US6] Add SignOutButton to user menu or header in src/web/src/components/layout/Header.tsx (or equivalent)
+- [X] T050 [US6] Add unit test for SignOutButton component in src/web/src/components/auth/SignOutButton.test.tsx
 
 **Checkpoint**: Users can sign out - US6 complete
 
@@ -179,10 +179,10 @@
 
 ### Implementation
 
-- [ ] T051 [US7] Create useAuthErrorHandler hook for intercepting 401/403 in src/web/src/hooks/useAuthErrorHandler.ts
-- [ ] T052 [US7] Update API client to use error handler hook in src/web/src/lib/api.ts
-- [ ] T053 [P] [US7] Create AuthErrorBoundary component for displaying auth errors in src/web/src/components/auth/AuthErrorBoundary.tsx
-- [ ] T054 [US7] Add unit test for auth error handling in src/web/src/hooks/useAuthErrorHandler.test.ts
+- [X] T051 [US7] Create useAuthErrorHandler hook for intercepting 401/403 in src/web/src/hooks/useAuthErrorHandler.ts
+- [X] T052 [US7] Update API client to use error handler hook in src/web/src/lib/api.ts
+- [X] T053 [P] [US7] Create AuthErrorBoundary component for displaying auth errors in src/web/src/components/auth/AuthErrorBoundary.tsx
+- [X] T054 [US7] Add unit test for auth error handling in src/web/src/hooks/useAuthErrorHandler.test.ts
 
 **Checkpoint**: Auth errors handled gracefully - US7 complete
 
@@ -194,20 +194,20 @@
 
 ### Documentation
 
-- [ ] T055 [P] Create External ID setup guide at docs/auth/external-id-setup.md (copy from quickstart.md with production additions)
-- [ ] T056 [P] Create troubleshooting guide at docs/auth/troubleshooting.md
+- [X] T055 [P] Create External ID setup guide at docs/auth/external-id-setup.md (copy from quickstart.md with production additions)
+- [X] T056 [P] Create troubleshooting guide at docs/auth/troubleshooting.md
 
 ### Observability
 
-- [ ] T057 Add authentication failure logging (401/403) with OpenTelemetry in src/Recall.Core.Api/Program.cs
-- [ ] T058 [P] Add sign-in/sign-out event logging in frontend in src/web/src/hooks/useAuth.ts
+- [X] T057 Add authentication failure logging (401/403) with OpenTelemetry in src/Recall.Core.Api/Program.cs
+- [X] T058 [P] Add sign-in/sign-out event logging in frontend in src/web/src/hooks/useAuth.ts
 
 ### Final Verification
 
-- [ ] T059 Run all backend tests and verify pass
-- [ ] T060 [P] Run all frontend tests and verify pass
+- [X] T059 Run all backend tests and verify pass
+- [X] T060 [P] Run all frontend tests and verify pass
 - [ ] T061 Run quickstart.md validation (manual end-to-end flow)
-- [ ] T062 Verify no secrets committed to source control
+- [X] T062 Verify no secrets committed to source control
 
 ---
 
@@ -348,8 +348,13 @@ T046 (SignInButton test) ║ T047 (AuthGuard test)
 - .gitignore
 - src/web/.env.example
 - src/Recall.Core.Api/Program.cs
+- src/web/src/hooks/useAuth.ts
+- src/web/src/lib/telemetry.ts
 - src/tests/Recall.Core.Api.Tests/Auth/UnauthorizedTests.cs
 - src/tests/Recall.Core.Api.Tests/Auth/DataIsolationTests.cs
+- docs/auth/external-id-setup.md
+- docs/auth/troubleshooting.md
+- docs/auth/quickstart-validation.md
 - specs/004-entra-external-auth/tasks.md
 
 ---
@@ -357,9 +362,13 @@ T046 (SignInButton test) ║ T047 (AuthGuard test)
 ## Senior Developer Review (AI)
 
 - 2026-01-24: Fixed scope validation for space-delimited `scp` claims, added invalid-token 401 test, expanded data isolation tests to collections/tags, and ensured `.env.example` is tracked with aligned variable names.
+- 2026-01-24: Fixed auth-failure logging middleware order, aligned SPA env var names in docs with actual config, and updated file list for Phase 8 artifacts.
+- 2026-01-24: Centralized frontend auth event logging via telemetry helper.
 
 ---
 
 ## Change Log
 
 - 2026-01-24: Review fixes applied (scope policy, auth tests, data isolation coverage, `.env.example` tracking and content).
+- 2026-01-24: Fixed auth failure logging order and corrected SPA env var names in docs/checklist.
+- 2026-01-24: Added frontend telemetry helper for auth event logging.

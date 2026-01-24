@@ -8,16 +8,17 @@ import type { ViewState } from '../../../types/views';
 
 export function TagList() {
   const tags = useTagsStore((state) => state.tags);
+  const hasLoaded = useTagsStore((state) => state.hasLoaded);
   const isLoading = useTagsStore((state) => state.isLoading);
   const fetchTags = useTagsStore((state) => state.fetchTags);
   const setViewState = useUiStore((state) => state.setViewState);
 
   useEffect(() => {
-    // Only fetch if we don't have tags and aren't currently loading
-    if (tags.length === 0 && !isLoading) {
+    // Only fetch once if we don't have tags and aren't currently loading
+    if (!hasLoaded && tags.length === 0 && !isLoading) {
       fetchTags();
     }
-  }, [fetchTags, tags.length, isLoading]);
+  }, [fetchTags, hasLoaded, tags.length, isLoading]);
 
   const handleTagClick = (tagName: string) => {
     const newViewState: ViewState = {

@@ -1,0 +1,974 @@
+openapi: 3.0.3
+info:
+  title: Recall Core API
+  description: |
+    Personal bookmarking API with authentication via Microsoft Entra External ID.
+    All endpoints require a valid JWT Bearer token with the `access_as_user` scope.
+  version: 1.1.0
+  contact:
+    name: Recall Core Team
+
+servers:
+  - url: http://localhost:5080
+    description: Local development server
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the API. This endpoint is public and does not require authentication.
+      operationId: getHealth
+      tags:
+        - System
+      security: []
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/v1/me:
+    get:
+      summary: Get current user info
+      description: |
+        Returns identity information for the authenticated user.
+        Extracts claims from the validated JWT token.
+      operationId: getCurrentUser
+      tags:
+        - User
+      responses:
+        '200':
+          description: User information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfoResponse'
+              example:
+                sub: "aaaabbbb-cccc-dddd-1111-222233334444"
+                displayName: "John Doe"
+                email: "john.doe@outlook.com"
+                tenantId: "11112222-3333-4444-5555-666677778888"
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: "unauthorized"
+                  message: "Authentication required"
+
+  /api/v1/items:
+    get:
+      summary: List saved items
+      description: |
+        Retrieve a paginated list of saved items with optional filters.
+        Results are filtered to items owned by the authenticated user.
+      operationId: listItems
+      tags:
+        - Items
+      parameters:
+        - name: status
+          in: query
+          description: Filter by item status
+          schema:
+            type: string
+            enum: [unread, archived]
+        - name: collectionId
+          in: query
+          description: Filter by collection ID
+          schema:
+            type: string
+        - name: tag
+          in: query
+          description: Filter by tag
+          schema:
+            type: string
+        - name: isFavorite
+          in: query
+          description: Filter by favorite status
+          schema:
+            type: boolean
+        - name: cursor
+          in: query
+          description: Pagination cursor from previous response
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Maximum number of items to return (default 20, max 50)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: List of items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemListResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Valid token but missing required scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: "forbidden"
+                  message: "Missing required scope: access_as_user"
+
+    post:
+      summary: Save a URL
+      description: |
+        Save a new URL for later with optional title and tags.
+        The item is automatically associated with the authenticated user.
+        Returns 200 OK if the URL was already saved (idempotent).
+      operationId: saveItem
+      tags:
+        - Items
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateItemRequest'
+      responses:
+        '201':
+          description: Item created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDto'
+        '200':
+          description: Item already exists (URL was previously saved by this user)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDto'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Valid token but missing required scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/items/{id}:
+    get:
+      summary: Get item details
+      description: |
+        Retrieve a single saved item by ID.
+        Returns 404 if the item does not exist or is not owned by the authenticated user.
+      operationId: getItem
+      tags:
+        - Items
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Item ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Item details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDto'
+        '400':
+          description: Invalid item ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Valid token but missing required scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Item not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      summary: Update item metadata
+      description: |
+        Update item fields like status, favorite, collection, title, excerpt, or tags.
+        Returns 404 if the item does not exist or is not owned by the authenticated user.
+      operationId: updateItem
+      tags:
+        - Items
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Item ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItemRequest'
+      responses:
+        '200':
+          description: Item updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDto'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Valid token but missing required scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Item not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete an item
+      description: |
+        Permanently remove a saved item.
+        Returns 404 if the item does not exist or is not owned by the authenticated user.
+      operationId: deleteItem
+      tags:
+        - Items
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Item ID
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Item deleted successfully
+        '400':
+          description: Invalid item ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Valid token but missing required scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Item not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/tags:
+    get:
+      summary: List all tags with counts
+      description: |
+        Returns all unique tags used by the authenticated user with their item counts.
+      operationId: listTags
+      tags:
+        - Tags
+      responses:
+        '200':
+          description: List of tags with counts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TagDto'
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Valid token but missing required scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/tags/{name}:
+    put:
+      summary: Rename a tag
+      description: |
+        Rename a tag across all items owned by the authenticated user.
+      operationId: renameTag
+      tags:
+        - Tags
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Current tag name
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenameTagRequest'
+      responses:
+        '200':
+          description: Tag renamed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagDto'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Valid token but missing required scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Tag not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete a tag
+      description: |
+        Remove a tag from all items owned by the authenticated user.
+      operationId: deleteTag
+      tags:
+        - Tags
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Tag name to delete
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Tag deleted successfully
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Valid token but missing required scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Tag not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/collections:
+    get:
+      summary: List all collections
+      description: |
+        Returns all collections owned by the authenticated user.
+      operationId: listCollections
+      tags:
+        - Collections
+      responses:
+        '200':
+          description: List of collections
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionListResponse'
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Valid token but missing required scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create a collection
+      description: |
+        Create a new collection for organizing items.
+        The collection is automatically associated with the authenticated user.
+      operationId: createCollection
+      tags:
+        - Collections
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCollectionRequest'
+      responses:
+        '201':
+          description: Collection created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionDto'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Valid token but missing required scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Collection with this name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/collections/{id}:
+    get:
+      summary: Get collection details
+      description: |
+        Retrieve a single collection by ID.
+        Returns 404 if the collection does not exist or is not owned by the authenticated user.
+      operationId: getCollection
+      tags:
+        - Collections
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Collection ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Collection details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionDto'
+        '400':
+          description: Invalid collection ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Valid token but missing required scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Collection not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      summary: Update a collection
+      description: |
+        Update collection name, description, or parent.
+        Returns 404 if the collection does not exist or is not owned by the authenticated user.
+      operationId: updateCollection
+      tags:
+        - Collections
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Collection ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCollectionRequest'
+      responses:
+        '200':
+          description: Collection updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionDto'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Valid token but missing required scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Collection not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Collection with this name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete a collection
+      description: |
+        Permanently remove a collection.
+        Items in the collection are moved to inbox (collectionId set to null).
+        Returns 404 if the collection does not exist or is not owned by the authenticated user.
+      operationId: deleteCollection
+      tags:
+        - Collections
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Collection ID
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Collection deleted successfully
+        '400':
+          description: Invalid collection ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Valid token but missing required scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Collection not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT Bearer token from Microsoft Entra External ID.
+        Token must include the `access_as_user` scope in the `scp` claim.
+
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: "ok"
+
+    UserInfoResponse:
+      type: object
+      description: Authenticated user's identity information
+      required:
+        - sub
+        - tenantId
+      properties:
+        sub:
+          type: string
+          description: Subject identifier (unique user ID)
+          example: "aaaabbbb-cccc-dddd-1111-222233334444"
+        displayName:
+          type: string
+          nullable: true
+          description: User's display name
+          example: "John Doe"
+        email:
+          type: string
+          nullable: true
+          description: User's email address
+          example: "john.doe@outlook.com"
+        tenantId:
+          type: string
+          description: External tenant ID
+          example: "11112222-3333-4444-5555-666677778888"
+
+    ItemDto:
+      type: object
+      required:
+        - id
+        - url
+        - status
+        - isFavorite
+        - tags
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: Item ID
+        url:
+          type: string
+          description: Original URL
+        title:
+          type: string
+          nullable: true
+          description: Item title
+        excerpt:
+          type: string
+          nullable: true
+          description: Item excerpt/description
+        status:
+          type: string
+          enum: [unread, archived]
+          description: Item status
+        isFavorite:
+          type: boolean
+          description: Whether item is marked as favorite
+        collectionId:
+          type: string
+          nullable: true
+          description: Collection ID (null = inbox)
+        tags:
+          type: array
+          items:
+            type: string
+          description: List of tags
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    ItemListResponse:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemDto'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    PaginationInfo:
+      type: object
+      required:
+        - hasMore
+      properties:
+        hasMore:
+          type: boolean
+          description: Whether more items are available
+        nextCursor:
+          type: string
+          nullable: true
+          description: Cursor for next page (null if no more pages)
+
+    CreateItemRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          description: URL to save (max 2048 chars)
+          maxLength: 2048
+        title:
+          type: string
+          nullable: true
+          description: Optional title
+          maxLength: 500
+        tags:
+          type: array
+          items:
+            type: string
+          description: Optional tags
+
+    UpdateItemRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          nullable: true
+          maxLength: 500
+        excerpt:
+          type: string
+          nullable: true
+          maxLength: 1000
+        status:
+          type: string
+          enum: [unread, archived]
+        isFavorite:
+          type: boolean
+        collectionId:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+
+    TagDto:
+      type: object
+      required:
+        - name
+        - count
+      properties:
+        name:
+          type: string
+          description: Tag name (lowercase)
+        count:
+          type: integer
+          description: Number of items with this tag
+
+    RenameTagRequest:
+      type: object
+      required:
+        - newName
+      properties:
+        newName:
+          type: string
+          description: New tag name
+          maxLength: 50
+
+    CollectionDto:
+      type: object
+      required:
+        - id
+        - name
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: Collection ID
+        name:
+          type: string
+          description: Collection name
+        description:
+          type: string
+          nullable: true
+          description: Collection description
+        parentId:
+          type: string
+          nullable: true
+          description: Parent collection ID (null = root)
+        itemCount:
+          type: integer
+          description: Number of items in collection
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    CollectionListResponse:
+      type: object
+      required:
+        - collections
+      properties:
+        collections:
+          type: array
+          items:
+            $ref: '#/components/schemas/CollectionDto'
+
+    CreateCollectionRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Collection name (unique per user)
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+          maxLength: 500
+        parentId:
+          type: string
+          nullable: true
+          description: Parent collection ID
+
+    UpdateCollectionRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+          maxLength: 500
+        parentId:
+          type: string
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+
+    ErrorDetail:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code
+          example: "not_found"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Item not found"
+
+tags:
+  - name: System
+    description: System health and status endpoints
+  - name: User
+    description: User identity endpoints
+  - name: Items
+    description: Saved items management
+  - name: Tags
+    description: Tag management
+  - name: Collections
+    description: Collection management

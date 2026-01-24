@@ -106,7 +106,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors();
 app.UseAuthentication();
-app.UseAuthorization();
 app.Use(async (context, next) =>
 {
     await next();
@@ -121,6 +120,7 @@ app.Use(async (context, next) =>
             context.Request.Path.Value);
     }
 });
+app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok(new HealthResponse("ok")))
     .WithName("GetHealth")

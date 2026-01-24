@@ -348,8 +348,13 @@ T046 (SignInButton test) ║ T047 (AuthGuard test)
 - .gitignore
 - src/web/.env.example
 - src/Recall.Core.Api/Program.cs
+- src/web/src/hooks/useAuth.ts
+- src/web/src/lib/telemetry.ts
 - src/tests/Recall.Core.Api.Tests/Auth/UnauthorizedTests.cs
 - src/tests/Recall.Core.Api.Tests/Auth/DataIsolationTests.cs
+- docs/auth/external-id-setup.md
+- docs/auth/troubleshooting.md
+- docs/auth/quickstart-validation.md
 - specs/004-entra-external-auth/tasks.md
 
 ---
@@ -357,9 +362,13 @@ T046 (SignInButton test) ║ T047 (AuthGuard test)
 ## Senior Developer Review (AI)
 
 - 2026-01-24: Fixed scope validation for space-delimited `scp` claims, added invalid-token 401 test, expanded data isolation tests to collections/tags, and ensured `.env.example` is tracked with aligned variable names.
+- 2026-01-24: Fixed auth-failure logging middleware order, aligned SPA env var names in docs with actual config, and updated file list for Phase 8 artifacts.
+- 2026-01-24: Centralized frontend auth event logging via telemetry helper.
 
 ---
 
 ## Change Log
 
 - 2026-01-24: Review fixes applied (scope policy, auth tests, data isolation coverage, `.env.example` tracking and content).
+- 2026-01-24: Fixed auth failure logging order and corrected SPA env var names in docs/checklist.
+- 2026-01-24: Added frontend telemetry helper for auth event logging.

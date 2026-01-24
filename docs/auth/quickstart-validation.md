@@ -18,10 +18,9 @@ Use this checklist to validate the end-to-end External ID flow locally.
   - `AzureAd:ClientId` matches API client ID
   - `AzureAd:Scopes` includes `access_as_user`
 - [ ] SPA config set in `src/web/.env.local`
-  - `VITE_ENTRA_CLIENT_ID` (SPA client ID)
-  - `VITE_ENTRA_AUTHORITY` (ciamlogin.com authority)
-  - `VITE_ENTRA_REDIRECT_URI` (`http://localhost:5173`)
-  - `VITE_ENTRA_API_SCOPE` (`api://<api-client-id>/access_as_user`)
+  - `VITE_TENANT_ID` (External ID tenant ID)
+  - `VITE_CLIENT_ID` (SPA client ID)
+  - `VITE_API_SCOPE` (`api://<api-client-id>/access_as_user`)
   - `VITE_API_BASE_URL` (`http://localhost:5080`)
 - [ ] Start backend: `dotnet run --project src/Recall.Core.AppHost`
 - [ ] Start frontend: `pnpm dev` in `src/web`

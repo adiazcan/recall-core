@@ -121,10 +121,9 @@ Use `src/Recall.Core.Api/appsettings.Development.json` **or** user secrets. Exam
 Create `src/web/.env.local` (do not commit):
 
 ```bash
-VITE_ENTRA_CLIENT_ID=<spa-client-id>
-VITE_ENTRA_AUTHORITY=https://<tenant-name>.ciamlogin.com
-VITE_ENTRA_REDIRECT_URI=http://localhost:5173
-VITE_ENTRA_API_SCOPE=api://<api-client-id>/access_as_user
+VITE_TENANT_ID=<external-tenant-id>
+VITE_CLIENT_ID=<spa-client-id>
+VITE_API_SCOPE=api://<api-client-id>/access_as_user
 VITE_API_BASE_URL=http://localhost:5080
 ```
 
@@ -154,10 +153,9 @@ Provide environment variables via your hosting platform:
   - `AzureAd__Scopes`
 
 - SPA environment:
-  - `VITE_ENTRA_CLIENT_ID`
-  - `VITE_ENTRA_AUTHORITY`
-  - `VITE_ENTRA_REDIRECT_URI`
-  - `VITE_ENTRA_API_SCOPE`
+   - `VITE_TENANT_ID`
+   - `VITE_CLIENT_ID`
+   - `VITE_API_SCOPE`
   - `VITE_API_BASE_URL`
 
 > Store values in a secure secrets store (CI/CD secrets, platform vaults). Never commit them to Git.

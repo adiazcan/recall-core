@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { ApiError } from '../../lib/api/client';
 import type { Collection } from '../../types/entities';
 import type { UpdateCollectionRequest } from '../../lib/api/types';
 import { collectionsApi } from '../../lib/api/collections';
@@ -14,7 +15,7 @@ export interface CollectionsState {
   deleteCollection: (id: string, mode?: 'default' | 'cascade') => Promise<void>;
 }
 
-export const useCollectionsStore = create<CollectionsState>((set) => ({
+export const useCollectionsStore = create<CollectionsState>((set, get) => ({
   collections: [],
   isLoading: false,
   error: null,
@@ -40,10 +41,61 @@ export const useCollectionsStore = create<CollectionsState>((set) => ({
       return null;
     }
   },
-  updateCollection: async (_id, _data) => {
-    set({ error: null });
+  updateCollection: async (id, data) => {
+    const { collections } = get();
+    const target = collections.find((collection) => collection.id === id);
+    if (!target) {
+      set({ error: 'Collection not found.' });
+      return;
+    }
+
+    const previousCollections = [...collections];
+
+    set((state) => ({
+      collections: state.collections.map((collection) => {
+        if (collection.id !== id) return collection;
+
+        return {
+          ...collection,
+          name: data.name ?? collection.name,
+          description: data.description ?? collection.description,
+          parentId: data.parentId ?? collection.parentId,
+        };
+      }),
+      error: null,
+    }));
+
+    try {
+      const dto = await collectionsApi.update(id, data);
+      const updatedCollection = mapCollectionDtoToCollection(dto);
+      set((state) => ({
+        collections: state.collections.map((collection) =>
+          collection.id === id ? updatedCollection : collection,
+        ),
+      }));
+    } catch (error) {
+      set({ collections: previousCollections });
+      const message = error instanceof ApiError ? error.message : 'Failed to update collection.';
+      set({ error: message });
+      throw error;
+    }
   },
-  deleteCollection: async (_id, _mode) => {
-    set({ error: null });
+  deleteCollection: async (id, mode) => {
+    const { collections } = get();
+    const previousCollections = [...collections];
+
+    set({
+      collections: collections.filter((collection) => collection.id !== id),
+      error: null,
+    });
+
+    try {
+      await collectionsApi.delete(id, mode);
+    } catch (error) {
+      set({ collections: previousCollections });
+      const message = error instanceof ApiError ? error.message : 'Failed to delete collection.';
+      set({ error: message });
+      throw error;
+    }
   },
 }));

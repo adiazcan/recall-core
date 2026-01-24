@@ -1,10 +1,11 @@
 import { createBrowserRouter, Navigate, useParams } from 'react-router-dom';
-import { useEffect } from 'react';
-import { ItemsView } from './features/items/components/ItemsView';
-import { Layout } from './components/layout/Layout';
+import { lazy, Suspense, useEffect } from 'react';
 import { useUiStore } from './stores/ui-store';
 import { useCollectionsStore } from './features/collections/store';
-import { useTagsStore } from './features/tags/store';
+import { LoadingState } from './components/common/LoadingState';
+
+const Layout = lazy(() => import('./components/layout/Layout').then((m) => ({ default: m.Layout })));
+const ItemsView = lazy(() => import('./features/items/components/ItemsView').then((m) => ({ default: m.ItemsView })));
 
 function CollectionView() {
   const { id } = useParams<{ id: string }>();
@@ -41,14 +42,53 @@ function TagView() {
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout />,
+    element: (
+      <Suspense fallback={<LoadingState />}>
+        <Layout />
+      </Suspense>
+    ),
     children: [
       { index: true, element: <Navigate to="/inbox" replace /> },
-      { path: 'inbox', element: <ItemsView /> },
-      { path: 'favorites', element: <ItemsView /> },
-      { path: 'archive', element: <ItemsView /> },
-      { path: 'collections/:id', element: <CollectionView /> },
-      { path: 'tags/:name', element: <TagView /> },
+      {
+        path: 'inbox',
+        element: (
+          <Suspense fallback={<LoadingState />}>
+            <ItemsView />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'favorites',
+        element: (
+          <Suspense fallback={<LoadingState />}>
+            <ItemsView />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'archive',
+        element: (
+          <Suspense fallback={<LoadingState />}>
+            <ItemsView />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'collections/:id',
+        element: (
+          <Suspense fallback={<LoadingState />}>
+            <CollectionView />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'tags/:name',
+        element: (
+          <Suspense fallback={<LoadingState />}>
+            <TagView />
+          </Suspense>
+        ),
+      },
     ],
   },
 ]);

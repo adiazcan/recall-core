@@ -367,11 +367,11 @@ With multiple developers after Foundational:
 ### 🟡 Medium Issues
 
  - [X] [AI-Review][MEDIUM] Wire or remove disabled Favorite/Archive buttons in ItemDetail header [src/web/src/features/items/components/ItemDetail.tsx:167-181]
-- [ ] [AI-Review][MEDIUM] Code-split routes and use dynamic imports to reduce 511KB bundle (target <400KB) [src/web/vite.config.ts]
-- [ ] [AI-Review][MEDIUM] Implement proper focus trap for ItemDetail modal using react-focus-lock or similar [src/web/src/features/items/components/ItemDetail.tsx:56-90]
-- [ ] [AI-Review][MEDIUM] Add toast deduplication or rate limiting to prevent duplicate error stacks [src/web/src/stores/toast-store.ts]
-- [ ] [AI-Review][MEDIUM] Implement or throw NotImplementedError for updateCollection/deleteCollection stubs [src/web/src/features/collections/store.ts:39-45]
-- [ ] [AI-Review][MEDIUM] Add loading state to collection dropdown in ItemDetail [src/web/src/features/items/components/ItemDetail.tsx:254-268]
+- [X] [AI-Review][MEDIUM] Code-split routes and use dynamic imports to reduce 511KB bundle (target <400KB) [src/web/vite.config.ts]
+- [X] [AI-Review][MEDIUM] Implement proper focus trap for ItemDetail modal using react-focus-lock or similar [src/web/src/features/items/components/ItemDetail.tsx:56-90]
+- [X] [AI-Review][MEDIUM] Add toast deduplication or rate limiting to prevent duplicate error stacks [src/web/src/stores/toast-store.ts]
+- [X] [AI-Review][MEDIUM] Implement or throw NotImplementedError for updateCollection/deleteCollection stubs [src/web/src/features/collections/store.ts:39-45]
+- [X] [AI-Review][MEDIUM] Add loading state to collection dropdown in ItemDetail [src/web/src/features/items/components/ItemDetail.tsx:254-268]
 - [ ] [AI-Review][MEDIUM] Wrap ItemRow in React.memo with custom comparison to prevent unnecessary re-renders [src/web/src/features/items/components/ItemRow.tsx]
 - [ ] [AI-Review][MEDIUM] Fix EmptyState text pattern to match e2e test expectations [src/web/src/components/common/EmptyState.tsx]
 

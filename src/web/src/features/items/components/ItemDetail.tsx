@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { X, ExternalLink, Star, Archive, Trash2, Calendar, Plus, Check, ChevronsUpDown } from 'lucide-react';
+import FocusLock from 'react-focus-lock';
 import { Button } from '../../../components/ui/button';
 import { Textarea } from '../../../components/ui/textarea';
 import {
@@ -55,6 +56,7 @@ export function ItemDetail() {
   const toggleFavorite = useItemsStore((state) => state.toggleFavorite);
   const toggleArchive = useItemsStore((state) => state.toggleArchive);
   const collections = useCollectionsStore((state) => state.collections);
+  const collectionsLoading = useCollectionsStore((state) => state.isLoading);
   const fetchCollections = useCollectionsStore((state) => state.fetchCollections);
   const tags = useTagsStore((state) => state.tags);
   const fetchTags = useTagsStore((state) => state.fetchTags);
@@ -65,6 +67,7 @@ export function ItemDetail() {
   const [newTagInput, setNewTagInput] = useState('');
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [comboboxOpen, setComboboxOpen] = useState(false);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const item = items.find((i) => i.id === selectedItemId);
 
@@ -90,6 +93,16 @@ export function ItemDetail() {
   }, [selectedItemId, selectItem]);
 
   useEffect(() => {
+    if (!selectedItemId) return;
+
+    const focusTimer = requestAnimationFrame(() => {
+      closeButtonRef.current?.focus();
+    });
+
+    return () => cancelAnimationFrame(focusTimer);
+  }, [selectedItemId]);
+
+  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (target.closest('[data-item-detail]')) {
@@ -108,6 +121,14 @@ export function ItemDetail() {
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [selectedItemId, selectItem]);
+
+  const focusShards = useMemo(() => {
+    if (!selectedItemId || typeof document === 'undefined') {
+      return [];
+    }
+
+    return Array.from(document.querySelectorAll('[data-radix-portal]')) as HTMLElement[];
+  }, [selectedItemId, comboboxOpen]);
 
   if (!item) {
     return null;
@@ -225,57 +246,67 @@ export function ItemDetail() {
       />
 
       {/* Side panel */}
-      <div
-        data-item-detail
-        className={cn(
-          'fixed right-0 top-0 h-full w-full sm:w-[680px] bg-white shadow-xl z-50',
-          'transition-transform duration-300 ease-in-out',
-          'flex flex-col',
-          selectedItemId ? 'translate-x-0' : 'translate-x-full',
-        )}
+      <FocusLock
+        disabled={!selectedItemId}
+        returnFocus
+        autoFocus={false}
+        shards={focusShards}
       >
-        {/* Header with actions */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => selectItem(null)}
-            aria-label="Close"
-            className="h-8 w-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-          
-          <div className="flex items-center gap-1">
+        <div
+          data-item-detail
+          role="dialog"
+          aria-modal="true"
+          aria-label="Item details"
+          className={cn(
+            'fixed right-0 top-0 h-full w-full sm:w-[680px] bg-white shadow-xl z-50',
+            'transition-transform duration-300 ease-in-out',
+            'flex flex-col',
+            selectedItemId ? 'translate-x-0' : 'translate-x-full',
+          )}
+        >
+          {/* Header with actions */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
             <Button
+              ref={closeButtonRef}
               variant="ghost"
               size="icon"
-              aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+              onClick={() => selectItem(null)}
+              aria-label="Close"
               className="h-8 w-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
-              onClick={handleToggleFavorite}
             >
-              <Star className={cn('h-5 w-5', item.isFavorite && 'fill-yellow-400 text-yellow-400')} />
+              <X className="h-5 w-5" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={item.isArchived ? 'Unarchive' : 'Archive'}
-              className="h-8 w-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
-              onClick={handleToggleArchive}
-            >
-              <Archive className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Delete"
-              className="h-8 w-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
-              onClick={() => setShowDeleteDialog(true)}
-            >
-              <Trash2 className="h-5 w-5" />
-            </Button>
+            
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                className="h-8 w-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
+                onClick={handleToggleFavorite}
+              >
+                <Star className={cn('h-5 w-5', item.isFavorite && 'fill-yellow-400 text-yellow-400')} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={item.isArchived ? 'Unarchive' : 'Archive'}
+                className="h-8 w-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
+                onClick={handleToggleArchive}
+              >
+                <Archive className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Delete"
+                className="h-8 w-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                <Trash2 className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
-        </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
@@ -327,16 +358,22 @@ export function ItemDetail() {
                 value={item.collectionId || 'none'}
                 onValueChange={handleCollectionChange}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full" aria-busy={collectionsLoading}>
                   <SelectValue placeholder="Select a collection" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
-                  {collections.map((collection) => (
-                    <SelectItem key={collection.id} value={collection.id}>
-                      {collection.name}
+                  {collectionsLoading && collections.length === 0 ? (
+                    <SelectItem value="loading" disabled>
+                      Loading collections...
                     </SelectItem>
-                  ))}
+                  ) : (
+                    collections.map((collection) => (
+                      <SelectItem key={collection.id} value={collection.id}>
+                        {collection.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -492,6 +529,7 @@ export function ItemDetail() {
           </div>
         </div>
       </div>
+      </FocusLock>
 
       {/* Delete confirmation dialog */}
       <ConfirmDeleteDialog

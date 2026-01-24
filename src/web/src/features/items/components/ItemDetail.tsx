@@ -282,6 +282,7 @@ export function ItemDetail() {
                 variant="ghost"
                 size="icon"
                 aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                title={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                 className="h-8 w-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
                 onClick={handleToggleFavorite}
               >
@@ -291,6 +292,7 @@ export function ItemDetail() {
                 variant="ghost"
                 size="icon"
                 aria-label={item.isArchived ? 'Unarchive' : 'Archive'}
+                title={item.isArchived ? 'Unarchive' : 'Archive'}
                 className="h-8 w-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
                 onClick={handleToggleArchive}
               >
@@ -300,6 +302,7 @@ export function ItemDetail() {
                 variant="ghost"
                 size="icon"
                 aria-label="Delete"
+                title="Delete"
                 className="h-8 w-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
                 onClick={() => setShowDeleteDialog(true)}
               >
@@ -334,6 +337,7 @@ export function ItemDetail() {
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
+                  title="Open link in new tab"
                   className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 transition-colors"
                 >
                   <ExternalLink className="h-4 w-4" />

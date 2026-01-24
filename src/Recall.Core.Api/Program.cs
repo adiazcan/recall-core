@@ -121,6 +121,7 @@ app.MapGet("/health", () => Results.Ok(new HealthResponse("ok")))
 app.MapItemsEndpoints();
 app.MapTagsEndpoints();
 app.MapCollectionsEndpoints();
+app.MapMeEndpoints();
 
 app.Run();
 

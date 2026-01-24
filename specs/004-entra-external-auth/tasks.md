@@ -110,9 +110,9 @@
 
 ### Implementation
 
-- [ ] T033 [US4] Create MeEndpoints class with GET /api/v1/me endpoint in src/Recall.Core.Api/Endpoints/MeEndpoints.cs
-- [ ] T034 [US4] Register MeEndpoints in src/Recall.Core.Api/Program.cs
-- [ ] T035 [US4] Add integration test for /me endpoint in src/tests/Recall.Core.Api.Tests/Endpoints/MeEndpointsTests.cs
+- [X] T033 [US4] Create MeEndpoints class with GET /api/v1/me endpoint in src/Recall.Core.Api/Endpoints/MeEndpoints.cs
+- [X] T034 [US4] Register MeEndpoints in src/Recall.Core.Api/Program.cs
+- [X] T035 [US4] Add integration test for /me endpoint in src/tests/Recall.Core.Api.Tests/Endpoints/MeEndpointsTests.cs
 
 **Checkpoint**: /me endpoint returns user identity - US4 complete
 

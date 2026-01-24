@@ -95,7 +95,8 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     headers.set('Content-Type', 'application/json');
   }
 
-  const isProtectedApiRequest = path.includes('/api/v1');
+  const isProtectedApiRequest =
+    !path.startsWith('http') && (path === '/api/v1' || path.startsWith('/api/v1/'));
   if (isProtectedApiRequest && !headers.has('Authorization')) {
     const token = await acquireAccessToken();
     if (token) {
@@ -153,7 +154,8 @@ export async function apiRequestWithResponse<T>(
     headers.set('Content-Type', 'application/json');
   }
 
-  const isProtectedApiRequest = path.includes('/api/v1');
+  const isProtectedApiRequest =
+    !path.startsWith('http') && (path === '/api/v1' || path.startsWith('/api/v1/'));
   if (isProtectedApiRequest && !headers.has('Authorization')) {
     const token = await acquireAccessToken();
     if (token) {

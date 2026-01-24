@@ -63,6 +63,7 @@ export function useAuth() {
           ...loginRequest,
           account: tokenAccount,
         });
+        return null;
       }
 
       throw error;

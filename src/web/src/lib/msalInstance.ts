@@ -3,7 +3,7 @@ import {
   PublicClientApplication,
   type AccountInfo,
 } from '@azure/msal-browser';
-import { apiRequest, msalConfig } from './authConfig';
+import { loginRequest, msalConfig } from './authConfig';
 
 export const msalInstance = new PublicClientApplication(msalConfig);
 
@@ -20,7 +20,7 @@ export async function acquireAccessToken(): Promise<string | null> {
 
   try {
     const response = await msalInstance.acquireTokenSilent({
-      ...apiRequest,
+      ...loginRequest,
       account,
     });
 
@@ -28,9 +28,10 @@ export async function acquireAccessToken(): Promise<string | null> {
   } catch (error) {
     if (error instanceof InteractionRequiredAuthError) {
       await msalInstance.acquireTokenRedirect({
-        ...apiRequest,
+        ...loginRequest,
         account,
       });
+      return null;
     }
 
     throw error;

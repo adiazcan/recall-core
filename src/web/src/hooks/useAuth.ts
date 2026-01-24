@@ -19,6 +19,14 @@ export function useAuth() {
     return instance.loginRedirect(loginRequest);
   }, [instance]);
 
+  const signOut = useCallback(() => {
+    const tokenAccount = instance.getActiveAccount() ?? accounts[0];
+
+    return instance.logoutRedirect({
+      account: tokenAccount ?? undefined,
+    });
+  }, [accounts, instance]);
+
   const getAccessToken = useCallback(async () => {
     const tokenAccount = instance.getActiveAccount() ?? accounts[0];
 
@@ -49,6 +57,7 @@ export function useAuth() {
     account,
     isAuthenticated,
     signIn,
+    signOut,
     getAccessToken,
   };
 }

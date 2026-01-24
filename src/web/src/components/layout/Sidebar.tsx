@@ -9,6 +9,7 @@ import { CollectionList } from '../../features/collections/components/Collection
 import { TagList } from '../../features/tags/components/TagList';
 import { Button } from '../ui/button';
 import { SignInButton } from '../auth/SignInButton';
+import { SignOutButton } from '../auth/SignOutButton';
 import { UserDisplay } from '../auth/UserDisplay';
 
 const navItems = [
@@ -151,13 +152,16 @@ export function Sidebar() {
       {/* User Profile */}
       <div className="p-4 border-t border-neutral-100 flex-shrink-0">
         {isAuthenticated ? (
-          <button
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-neutral-600 hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset"
-            aria-label="User profile and settings"
-          >
-            <UserDisplay />
-            <Settings className="w-4 h-4 text-neutral-400" />
-          </button>
+          <div className="space-y-2">
+            <div
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-neutral-600"
+              aria-label="User profile"
+            >
+              <UserDisplay />
+              <Settings className="w-4 h-4 text-neutral-400" />
+            </div>
+            <SignOutButton className="w-full" />
+          </div>
         ) : (
           <SignInButton className="w-full" />
         )}

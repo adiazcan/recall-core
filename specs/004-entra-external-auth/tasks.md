@@ -163,9 +163,9 @@
 
 ### Implementation
 
-- [ ] T048 [US6] Create SignOutButton component with logoutRedirect in src/web/src/components/auth/SignOutButton.tsx
-- [ ] T049 [US6] Add SignOutButton to user menu or header in src/web/src/components/layout/Header.tsx (or equivalent)
-- [ ] T050 [US6] Add unit test for SignOutButton component in src/web/src/components/auth/SignOutButton.test.tsx
+- [X] T048 [US6] Create SignOutButton component with logoutRedirect in src/web/src/components/auth/SignOutButton.tsx
+- [X] T049 [US6] Add SignOutButton to user menu or header in src/web/src/components/layout/Header.tsx (or equivalent)
+- [X] T050 [US6] Add unit test for SignOutButton component in src/web/src/components/auth/SignOutButton.test.tsx
 
 **Checkpoint**: Users can sign out - US6 complete
 

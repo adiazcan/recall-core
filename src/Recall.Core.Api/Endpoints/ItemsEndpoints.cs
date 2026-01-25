@@ -200,11 +200,14 @@ public static class ItemsEndpoints
                     string id,
                     IUserContext userContext,
                     IItemService service,
+                    IItemRepository repository,
                     DaprClient daprClient,
                     ILoggerFactory loggerFactory,
                     CancellationToken cancellationToken)
                 =>
                 {
+                    const string enrichmentFailureMessage = "Failed to queue enrichment job";
+                    
                     try
                     {
                         var item = await service.MarkEnrichmentPendingAsync(userContext.UserId, id, cancellationToken);
@@ -242,6 +245,21 @@ public static class ItemsEndpoints
                                 "Failed to enqueue enrichment job. ItemId={ItemId} UserId={UserId}",
                                 item.Id,
                                 userContext.UserId);
+
+                            // Set enrichment status to failed immediately if publishing fails
+                            await repository.UpdateEnrichmentResultAsync(
+                                userContext.UserId,
+                                item.Id,
+                                title: null,
+                                excerpt: null,
+                                thumbnailStorageKey: null,
+                                status: "failed",
+                                error: enrichmentFailureMessage,
+                                enrichedAt: DateTime.UtcNow,
+                                cancellationToken);
+
+                            var failedResponse = new EnrichResponse(enrichmentFailureMessage, item.Id.ToString(), "failed");
+                            return TypedResults.Accepted($"/api/v1/items/{item.Id}", failedResponse);
                         }
 
                         var response = new EnrichResponse("Enrichment job enqueued", item.Id.ToString(), "pending");

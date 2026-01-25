@@ -58,27 +58,27 @@
 
 ### Implementation for User Story 1+4
 
-- [ ] T019 [US1] Inject DaprClient into ItemsEndpoints and publish enrichment.requested event after item creation in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
-- [ ] T020 [US1] Set enrichmentStatus=pending for newly created items in POST /items endpoint in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
-- [ ] T021 [P] [US1] Create IEnrichmentService interface in src/Recall.Core.Enrichment/Services/IEnrichmentService.cs
-- [ ] T022 [P] [US1] Create ISsrfValidator interface in src/Recall.Core.Enrichment/Services/ISsrfValidator.cs
-- [ ] T023 [P] [US1] Create IHtmlFetcher interface in src/Recall.Core.Enrichment/Services/IHtmlFetcher.cs
-- [ ] T024 [P] [US1] Create IMetadataExtractor interface in src/Recall.Core.Enrichment/Services/IMetadataExtractor.cs
-- [ ] T025 [P] [US1] Create IThumbnailGenerator interface in src/Recall.Core.Enrichment/Services/IThumbnailGenerator.cs
-- [ ] T026 [P] [US1] Create IThumbnailStorage interface in src/Recall.Core.Enrichment/Storage/IThumbnailStorage.cs
-- [ ] T027 [US4] Implement SsrfValidator with IP range blocking (10.x, 172.16-31.x, 192.168.x, 127.x, 169.254.x, ::1, fc00::/7, fe80::/10) in src/Recall.Core.Enrichment/Services/SsrfValidator.cs
-- [ ] T028 [US1] Implement HtmlFetcher with SSRF validation, timeout (10s connect, 30s total), size limit (5MB), redirect limit (3) in src/Recall.Core.Enrichment/Services/HtmlFetcher.cs
-- [ ] T029 [US1] Implement MetadataExtractor using AngleSharp (og:title → title → h1, og:description → meta description → first p, og:image) in src/Recall.Core.Enrichment/Services/MetadataExtractor.cs
-- [ ] T030 [US1] Implement ThumbnailGenerator with og:image download via HtmlFetcher, SkiaSharp resize (600x400, JPEG 80%), and Playwright fallback screenshot (sandbox mode enabled per FR-023) in src/Recall.Core.Enrichment/Services/ThumbnailGenerator.cs
-- [ ] T031 [US1] Implement BlobThumbnailStorage using Azure Blob Storage (container: thumbnails, key: {userId}/{itemId}.jpg) in src/Recall.Core.Enrichment/Storage/BlobThumbnailStorage.cs
-- [ ] T032 [US1] Implement EnrichmentService orchestrating fetch → extract → generate thumbnail → update item in src/Recall.Core.Enrichment/Services/EnrichmentService.cs
-- [ ] T033 [US1] Create EnrichmentController with [Topic("enrichment-pubsub", "enrichment.requested")] subscriber endpoint in src/Recall.Core.Enrichment/Controllers/EnrichmentController.cs
-- [ ] T034 [US1] Add dead letter handler [Topic("enrichment-pubsub", "enrichment.deadletter")] to mark items as failed in src/Recall.Core.Enrichment/Controllers/EnrichmentController.cs
-- [ ] T035 [US1] Register all services in Program.cs and configure Dapr subscriber (UseCloudEvents, MapControllers, MapSubscribeHandler) in src/Recall.Core.Enrichment/Program.cs
-- [ ] T036 [US1] Add IItemsRepository method UpdateEnrichmentResultAsync(itemId, title, excerpt, thumbnailKey, status, error, enrichedAt) in src/Recall.Core.Api/Repositories/IItemsRepository.cs
-- [ ] T037 [US1] Implement UpdateEnrichmentResultAsync in ItemsRepository with MongoDB update in src/Recall.Core.Api/Repositories/ItemsRepository.cs
-- [ ] T038 [US1] Add structured logging for enrichment job lifecycle (queued, started, succeeded, failed) in src/Recall.Core.Enrichment/Controllers/EnrichmentController.cs
-- [ ] T039 [US1] Add OpenTelemetry metrics (enrichment.jobs.succeeded, enrichment.jobs.failed, enrichment.jobs.duration) in src/Recall.Core.Enrichment/Services/EnrichmentService.cs
+- [x] T019 [US1] Inject DaprClient into ItemsEndpoints and publish enrichment.requested event after item creation in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+- [x] T020 [US1] Set enrichmentStatus=pending for newly created items in POST /items endpoint in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+- [x] T021 [P] [US1] Create IEnrichmentService interface in src/Recall.Core.Enrichment/Services/IEnrichmentService.cs
+- [x] T022 [P] [US1] Create ISsrfValidator interface in src/Recall.Core.Enrichment/Services/ISsrfValidator.cs
+- [x] T023 [P] [US1] Create IHtmlFetcher interface in src/Recall.Core.Enrichment/Services/IHtmlFetcher.cs
+- [x] T024 [P] [US1] Create IMetadataExtractor interface in src/Recall.Core.Enrichment/Services/IMetadataExtractor.cs
+- [x] T025 [P] [US1] Create IThumbnailGenerator interface in src/Recall.Core.Enrichment/Services/IThumbnailGenerator.cs
+- [x] T026 [P] [US1] Create IThumbnailStorage interface in src/Recall.Core.Enrichment/Storage/IThumbnailStorage.cs
+- [x] T027 [US4] Implement SsrfValidator with IP range blocking (10.x, 172.16-31.x, 192.168.x, 127.x, 169.254.x, ::1, fc00::/7, fe80::/10) in src/Recall.Core.Enrichment/Services/SsrfValidator.cs
+- [x] T028 [US1] Implement HtmlFetcher with SSRF validation, timeout (10s connect, 30s total), size limit (5MB), redirect limit (3) in src/Recall.Core.Enrichment/Services/HtmlFetcher.cs
+- [x] T029 [US1] Implement MetadataExtractor using AngleSharp (og:title → title → h1, og:description → meta description → first p, og:image) in src/Recall.Core.Enrichment/Services/MetadataExtractor.cs
+- [x] T030 [US1] Implement ThumbnailGenerator with og:image download via HtmlFetcher, SkiaSharp resize (600x400, JPEG 80%), and Playwright fallback screenshot (sandbox mode enabled per FR-023) in src/Recall.Core.Enrichment/Services/ThumbnailGenerator.cs
+- [x] T031 [US1] Implement BlobThumbnailStorage using Azure Blob Storage (container: thumbnails, key: {userId}/{itemId}.jpg) in src/Recall.Core.Enrichment/Storage/BlobThumbnailStorage.cs
+- [x] T032 [US1] Implement EnrichmentService orchestrating fetch → extract → generate thumbnail → update item in src/Recall.Core.Enrichment/Services/EnrichmentService.cs
+- [x] T033 [US1] Create EnrichmentController with [Topic("enrichment-pubsub", "enrichment.requested")] subscriber endpoint in src/Recall.Core.Enrichment/Controllers/EnrichmentController.cs
+- [x] T034 [US1] Add dead letter handler [Topic("enrichment-pubsub", "enrichment.deadletter")] to mark items as failed in src/Recall.Core.Enrichment/Controllers/EnrichmentController.cs
+- [x] T035 [US1] Register all services in Program.cs and configure Dapr subscriber (UseCloudEvents, MapControllers, MapSubscribeHandler) in src/Recall.Core.Enrichment/Program.cs
+- [x] T036 [US1] Add IItemsRepository method UpdateEnrichmentResultAsync(itemId, title, excerpt, thumbnailKey, status, error, enrichedAt) in src/Recall.Core.Api/Repositories/IItemsRepository.cs
+- [x] T037 [US1] Implement UpdateEnrichmentResultAsync in ItemsRepository with MongoDB update in src/Recall.Core.Api/Repositories/ItemsRepository.cs
+- [x] T038 [US1] Add structured logging for enrichment job lifecycle (queued, started, succeeded, failed) in src/Recall.Core.Enrichment/Controllers/EnrichmentController.cs
+- [x] T039 [US1] Add OpenTelemetry metrics (enrichment.jobs.succeeded, enrichment.jobs.failed, enrichment.jobs.duration) in src/Recall.Core.Enrichment/Services/EnrichmentService.cs
 
 **Checkpoint**: Core enrichment pipeline complete - items are saved fast, enrichment runs async, SSRF is blocked
 
@@ -92,9 +92,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T040 [US2] Verify GET /api/v1/items returns ItemDto with enrichment fields (title, excerpt, thumbnailUrl, enrichmentStatus, enrichmentError, enrichedAt) in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
-- [ ] T041 [US2] Verify GET /api/v1/items/{id} returns ItemDto with enrichment fields in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
-- [ ] T042 [US2] Update ItemDto.FromEntity to compute thumbnailUrl from ThumbnailStorageKey as /api/v1/items/{id}/thumbnail in src/Recall.Core.Api/Models/ItemDto.cs
+- [x] T040 [US2] Verify GET /api/v1/items returns ItemDto with enrichment fields (title, excerpt, thumbnailUrl, enrichmentStatus, enrichmentError, enrichedAt) in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+- [x] T041 [US2] Verify GET /api/v1/items/{id} returns ItemDto with enrichment fields in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+- [x] T042 [US2] Update ItemDto.FromEntity to compute thumbnailUrl from ThumbnailStorageKey as /api/v1/items/{id}/thumbnail in src/Recall.Core.Api/Models/ItemDto.cs
 
 **Checkpoint**: API returns enrichment fields - users can see enriched content
 
@@ -108,11 +108,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T043 [US3] Create GET /api/v1/items/{id}/thumbnail endpoint returning image/jpeg from blob storage in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
-- [ ] T044 [US3] Add ownership check in thumbnail endpoint (return 404 if item.UserId != currentUserId or thumbnail not available) in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
-- [ ] T045 [US3] Add IThumbnailStorage interface and BlobThumbnailStorage in API project for thumbnail retrieval in src/Recall.Core.Api/Services/BlobThumbnailStorage.cs
-- [ ] T046 [US3] Register BlobThumbnailStorage in API Program.cs in src/Recall.Core.Api/Program.cs
-- [ ] T047 [US3] Add AddAzureBlobServiceClient("blobs") in API Program.cs in src/Recall.Core.Api/Program.cs
+- [x] T043 [US3] Create GET /api/v1/items/{id}/thumbnail endpoint returning image/jpeg from blob storage in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+- [x] T044 [US3] Add ownership check in thumbnail endpoint (return 404 if item.UserId != currentUserId or thumbnail not available) in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+- [x] T045 [US3] Add IThumbnailStorage interface and BlobThumbnailStorage in API project for thumbnail retrieval in src/Recall.Core.Api/Services/BlobThumbnailStorage.cs
+- [x] T046 [US3] Register BlobThumbnailStorage in API Program.cs in src/Recall.Core.Api/Program.cs
+- [x] T047 [US3] Add AddAzureBlobServiceClient("blobs") in API Program.cs in src/Recall.Core.Api/Program.cs
 
 **Checkpoint**: Thumbnails securely accessible only by owning user
 

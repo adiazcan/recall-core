@@ -20,6 +20,12 @@ if (string.IsNullOrWhiteSpace(mongoConnectionString))
     throw new InvalidOperationException("Missing MongoDB connection string: ConnectionStrings:recalldb");
 }
 
+var blobConnectionString = builder.Configuration.GetConnectionString("blobs");
+if (string.IsNullOrWhiteSpace(blobConnectionString))
+{
+    throw new InvalidOperationException("Missing Blob Storage connection string: ConnectionStrings:blobs");
+}
+
 var mongoUrl = new MongoUrl(mongoConnectionString);
 var mongoClient = new MongoClient(mongoUrl);
 var mongoDatabaseName = string.IsNullOrWhiteSpace(mongoUrl.DatabaseName)
@@ -33,6 +39,11 @@ builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<ICollectionRepository, CollectionRepository>();
 builder.Services.AddScoped<ICollectionService, CollectionService>();
+builder.AddAzureBlobServiceClient("blobs");
+var enrichmentOptions = builder.Configuration.GetSection("Enrichment").Get<EnrichmentOptions>()
+    ?? new EnrichmentOptions();
+builder.Services.AddSingleton(enrichmentOptions);
+builder.Services.AddSingleton<IThumbnailStorage, BlobThumbnailStorage>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, HttpUserContext>();
 builder.Services.AddDaprClient();

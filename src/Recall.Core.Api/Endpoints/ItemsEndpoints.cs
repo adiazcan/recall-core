@@ -1,3 +1,4 @@
+using Dapr.Client;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Recall.Core.Api.Auth;
@@ -15,16 +16,56 @@ public static class ItemsEndpoints
             .WithTags("Items");
 
         group.MapPost("", async Task<Results<Created<ItemDto>, Ok<ItemDto>, BadRequest<ErrorResponse>>>
-            (CreateItemRequest request, IUserContext userContext, IItemService service, CancellationToken cancellationToken)
+            (CreateItemRequest request,
+            IUserContext userContext,
+            IItemService service,
+            DaprClient daprClient,
+            ILoggerFactory loggerFactory,
+            CancellationToken cancellationToken)
                 =>
                 {
                     try
                     {
                         var result = await service.SaveItemAsync(userContext.UserId, request, cancellationToken);
                         var dto = ItemDto.FromEntity(result.Item);
-                        return result.Created
-                            ? TypedResults.Created($"/api/v1/items/{dto.Id}", dto)
-                            : TypedResults.Ok(dto);
+
+                        if (result.Created)
+                        {
+                            var job = new EnrichmentJob
+                            {
+                                ItemId = dto.Id,
+                                UserId = userContext.UserId,
+                                Url = result.Item.Url,
+                                EnqueuedAt = DateTime.UtcNow
+                            };
+
+                            var logger = loggerFactory.CreateLogger("ItemsEndpoints");
+
+                            try
+                            {
+                                await daprClient.PublishEventAsync(
+                                    "enrichment-pubsub",
+                                    "enrichment.requested",
+                                    job,
+                                    cancellationToken);
+                                logger.LogInformation(
+                                    "Enrichment job queued. ItemId={ItemId} UserId={UserId}",
+                                    dto.Id,
+                                    userContext.UserId);
+                            }
+                            catch (Exception ex)
+                            {
+                                logger.LogWarning(
+                                    ex,
+                                    "Failed to enqueue enrichment job. ItemId={ItemId} UserId={UserId}",
+                                    dto.Id,
+                                    userContext.UserId);
+                            }
+
+                            return TypedResults.Created($"/api/v1/items/{dto.Id}", dto);
+                        }
+
+                        return TypedResults.Ok(dto);
                     }
                     catch (RequestValidationException ex)
                     {
@@ -121,6 +162,48 @@ public static class ItemsEndpoints
             {
                 operation.Summary = "Get item details";
                 operation.Description = "Retrieve a single saved item by id.";
+                return Task.CompletedTask;
+            });
+
+        group.MapGet(
+            "{id}/thumbnail",
+            async Task<Results<FileStreamHttpResult, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
+            (
+                    string id,
+                    IUserContext userContext,
+                    IItemService service,
+                    IThumbnailStorage thumbnailStorage,
+                    CancellationToken cancellationToken)
+                =>
+                {
+                    try
+                    {
+                        var item = await service.GetItemByIdAsync(userContext.UserId, id, cancellationToken);
+                        if (item is null || string.IsNullOrWhiteSpace(item.ThumbnailStorageKey))
+                        {
+                            return TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Item not found")));
+                        }
+
+                        var stream = await thumbnailStorage.GetThumbnailAsync(item.ThumbnailStorageKey, cancellationToken);
+                        if (stream is null)
+                        {
+                            return TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Item not found")));
+                        }
+
+                        return TypedResults.File(stream, "image/jpeg");
+                    }
+                    catch (RequestValidationException ex)
+                    {
+                        return TypedResults.BadRequest(new ErrorResponse(new ErrorDetail(ex.Code, ex.Message)));
+                    }
+                })
+            .Produces(StatusCodes.Status200OK, contentType: "image/jpeg")
+            .Produces<BadRequest<ErrorResponse>>(StatusCodes.Status400BadRequest)
+            .Produces<NotFound<ErrorResponse>>(StatusCodes.Status404NotFound)
+            .AddOpenApiOperationTransformer((operation, context, ct) =>
+            {
+                operation.Summary = "Get item thumbnail";
+                operation.Description = "Retrieve the thumbnail image for an item.";
                 return Task.CompletedTask;
             });
 

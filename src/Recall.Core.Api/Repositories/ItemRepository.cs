@@ -38,6 +38,11 @@ public sealed class ItemRepository(IMongoDatabase database) : IItemRepository
             filter &= Builders<Item>.Filter.Eq(item => item.Status, query.Status);
         }
 
+        if (!string.IsNullOrWhiteSpace(query.EnrichmentStatus))
+        {
+            filter &= Builders<Item>.Filter.Eq(item => item.EnrichmentStatus, query.EnrichmentStatus);
+        }
+
         if (query.IsFavorite.HasValue)
         {
             filter &= Builders<Item>.Filter.Eq(item => item.IsFavorite, query.IsFavorite.Value);
@@ -86,6 +91,49 @@ public sealed class ItemRepository(IMongoDatabase database) : IItemRepository
             update,
             options,
             cancellationToken);
+    }
+
+    public async Task<bool> UpdateEnrichmentResultAsync(
+        string userId,
+        ObjectId id,
+        string? title,
+        string? excerpt,
+        string? thumbnailStorageKey,
+        string status,
+        string? error,
+        DateTime? enrichedAt,
+        CancellationToken cancellationToken = default)
+    {
+        var updates = new List<UpdateDefinition<Item>>
+        {
+            Builders<Item>.Update.Set(item => item.EnrichmentStatus, status),
+            Builders<Item>.Update.Set(item => item.EnrichmentError, error),
+            Builders<Item>.Update.Set(item => item.EnrichedAt, enrichedAt),
+            Builders<Item>.Update.Set(item => item.UpdatedAt, DateTime.UtcNow)
+        };
+
+        if (title is not null)
+        {
+            updates.Add(Builders<Item>.Update.Set(item => item.Title, title));
+        }
+
+        if (excerpt is not null)
+        {
+            updates.Add(Builders<Item>.Update.Set(item => item.Excerpt, excerpt));
+        }
+
+        if (thumbnailStorageKey is not null)
+        {
+            updates.Add(Builders<Item>.Update.Set(item => item.ThumbnailStorageKey, thumbnailStorageKey));
+        }
+
+        var update = Builders<Item>.Update.Combine(updates);
+        var result = await _items.UpdateOneAsync(
+            item => item.Id == id && item.UserId == userId,
+            update,
+            cancellationToken: cancellationToken);
+
+        return result.MatchedCount > 0 && result.ModifiedCount > 0;
     }
 
     public async Task<long> DeleteAsync(string userId, ObjectId id, CancellationToken cancellationToken = default)

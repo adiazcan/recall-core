@@ -1,0 +1,27 @@
+apiVersion: dapr.io/v1alpha1
+kind: Resiliency
+metadata:
+  name: enrichment-resiliency
+scopes:
+  - enrichment
+spec:
+  policies:
+    timeouts:
+      enrichmentTimeout: 30s
+    retries:
+      enrichmentRetry:
+        policy: exponential
+        maxInterval: 5m
+        maxRetries: 5
+    circuitBreakers:
+      enrichmentBreaker:
+        maxRequests: 1
+        interval: 5s
+        timeout: 30s
+        trip: consecutiveFailures >= 5
+  targets:
+    apps:
+      enrichment:
+        timeout: enrichmentTimeout
+        retry: enrichmentRetry
+        circuitBreaker: enrichmentBreaker

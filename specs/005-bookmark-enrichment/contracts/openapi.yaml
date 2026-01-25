@@ -1,0 +1,406 @@
+openapi: 3.1.1
+info:
+  title: Recall.Core.Api | v1 (Enrichment Extension)
+  description: |
+    API contract extensions for bookmark enrichment feature.
+    This document defines new endpoints and schema changes introduced by the enrichment feature.
+  version: 1.1.0
+servers:
+- url: http://localhost:5080/
+paths:
+  /api/v1/items:
+    post:
+      tags:
+      - Items
+      summary: Save a URL
+      description: |
+        Save a new URL for later with optional title and tags.
+        
+        **Enrichment Behavior:**
+        - New items are created with `enrichmentStatus: "pending"`
+        - An enrichment job is automatically enqueued
+        - If URL already exists (deduplication), returns existing item without new enrichment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateItemRequest'
+        required: true
+      responses:
+        '201':
+          description: Created - New item saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDto'
+        '200':
+          description: OK - Existing item returned (deduplication)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDto'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+
+    get:
+      tags:
+      - Items
+      summary: List saved items
+      description: |
+        Retrieve a paginated list of saved items with optional filters.
+        Response now includes enrichment fields.
+      parameters:
+      - name: status
+        in: query
+        description: Filter by item status (unread, archived)
+        schema:
+          type: string
+      - name: collectionId
+        in: query
+        description: Filter by collection
+        schema:
+          type: string
+      - name: tag
+        in: query
+        description: Filter by tag
+        schema:
+          type: string
+      - name: isFavorite
+        in: query
+        description: Filter by favorite status
+        schema:
+          type: boolean
+      - name: enrichmentStatus
+        in: query
+        description: Filter by enrichment status
+        schema:
+          type: string
+          enum: [pending, succeeded, failed]
+      - name: cursor
+        in: query
+        description: Pagination cursor
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: Page size (default 20, max 50)
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          maximum: 50
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemListResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+
+  /api/v1/items/{id}:
+    get:
+      tags:
+      - Items
+      summary: Get item details
+      description: |
+        Retrieve a single saved item by id.
+        Response includes enrichment fields.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDto'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/items/{id}/thumbnail:
+    get:
+      tags:
+      - Items
+      summary: Get item thumbnail
+      description: |
+        Retrieve the thumbnail image for an item.
+        
+        **Security:**
+        - Requires authentication
+        - Returns 404 if item belongs to different user (not 403)
+        - Returns 404 if thumbnail not available
+      operationId: GetItemThumbnail
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Item ID
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Thumbnail image
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+        '404':
+          description: Item not found or thumbnail not available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/items/{id}/enrich:
+    post:
+      tags:
+      - Items
+      summary: Trigger item enrichment
+      description: |
+        Manually trigger enrichment for an item.
+        
+        **Behavior:**
+        - Enqueues a new enrichment job
+        - Sets `enrichmentStatus` to `pending`
+        - Returns 202 Accepted immediately
+        - No-op if job already pending/in-progress (still returns 202)
+        
+        **Use Cases:**
+        - Retry after failure
+        - Refresh stale metadata
+      operationId: EnrichItem
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Item ID
+        schema:
+          type: string
+      responses:
+        '202':
+          description: Accepted - Enrichment job enqueued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ItemDto:
+      type: object
+      description: Item data transfer object with enrichment fields
+      properties:
+        id:
+          type: string
+          description: Unique item identifier
+          example: "507f1f77bcf86cd799439011"
+        url:
+          type: string
+          description: Original URL
+          example: "https://example.com/article"
+        normalizedUrl:
+          type: string
+          description: Normalized URL for deduplication
+          example: "example.com/article"
+        title:
+          type: ['null', string]
+          description: Page title (enriched or user-provided)
+          example: "Example Article Title"
+          maxLength: 200
+        excerpt:
+          type: ['null', string]
+          description: Page excerpt/description (enriched or user-provided)
+          example: "A brief description of the article content..."
+          maxLength: 500
+        status:
+          type: string
+          description: Read status
+          enum: [unread, archived]
+          default: unread
+        isFavorite:
+          type: boolean
+          description: Favorite flag
+          default: false
+        collectionId:
+          type: ['null', string]
+          description: Parent collection ID
+        tags:
+          type: array
+          description: Associated tags
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+        # Enrichment fields (NEW)
+        thumbnailUrl:
+          type: ['null', string]
+          description: |
+            URL to retrieve thumbnail image.
+            Format: /api/v1/items/{id}/thumbnail
+            Null if no thumbnail available.
+          example: "/api/v1/items/507f1f77bcf86cd799439011/thumbnail"
+        enrichmentStatus:
+          type: string
+          description: Current enrichment status
+          enum: [pending, succeeded, failed]
+          default: pending
+        enrichmentError:
+          type: ['null', string]
+          description: |
+            Error message from last failed enrichment attempt.
+            User-safe message only, no internal details.
+          example: "Failed to fetch page: connection timeout"
+          maxLength: 500
+        enrichedAt:
+          type: ['null', string]
+          format: date-time
+          description: Timestamp of last successful enrichment
+      required:
+        - id
+        - url
+        - normalizedUrl
+        - status
+        - isFavorite
+        - tags
+        - createdAt
+        - updatedAt
+        - enrichmentStatus
+
+    ItemListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemDto'
+        nextCursor:
+          type: ['null', string]
+          description: Cursor for next page, null if no more results
+        hasMore:
+          type: boolean
+          description: Whether more results exist
+      required:
+        - items
+        - hasMore
+
+    EnrichResponse:
+      type: object
+      description: Response for enrichment trigger
+      properties:
+        message:
+          type: string
+          description: Status message
+          example: "Enrichment job enqueued"
+        itemId:
+          type: string
+          description: Item ID being enriched
+        status:
+          type: string
+          description: New enrichment status
+          enum: [pending]
+      required:
+        - message
+        - itemId
+        - status
+
+    CreateItemRequest:
+      type: object
+      properties:
+        url:
+          type: string
+          description: URL to save
+          example: "https://example.com/article"
+        title:
+          type: ['null', string]
+          description: Optional user-provided title (overrides enrichment)
+        tags:
+          type: ['null', array]
+          description: Optional tags to assign
+          items:
+            type: string
+      required:
+        - url
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+      required:
+        - error
+
+    ErrorDetail:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code
+          example: "not_found"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Item not found"
+      required:
+        - code
+        - message
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from Entra External ID
+
+security:
+  - bearerAuth: []
+
+tags:
+- name: Items
+  description: Bookmark item operations

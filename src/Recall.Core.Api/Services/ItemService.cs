@@ -26,6 +26,10 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
             NormalizedUrl = normalizedUrl,
             Title = title,
             Excerpt = null,
+            ThumbnailStorageKey = null,
+            EnrichmentStatus = "pending",
+            EnrichmentError = null,
+            EnrichedAt = null,
             Status = "unread",
             IsFavorite = false,
             CollectionId = null,
@@ -63,12 +67,14 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
         string? collectionId,
         string? tag,
         bool? isFavorite,
+        string? enrichmentStatus,
         string? cursor,
         int? limit,
         CancellationToken cancellationToken = default)
     {
         var normalizedStatus = NormalizeStatus(status);
         var normalizedTag = NormalizeTag(tag);
+        var normalizedEnrichmentStatus = NormalizeEnrichmentStatus(enrichmentStatus);
         var (inboxOnly, collectionObjectId) = NormalizeCollectionFilter(collectionId);
         var (cursorId, cursorCreatedAt) = NormalizeCursor(cursor);
         var pageSize = NormalizeLimit(limit);
@@ -80,6 +86,7 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
             inboxOnly,
             normalizedTag,
             isFavorite,
+            normalizedEnrichmentStatus,
             cursorId,
             cursorCreatedAt,
             pageSize + 1);
@@ -91,7 +98,7 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
             ? CursorPagination.Encode(pageItems[^1].Id.ToString(), pageItems[^1].CreatedAt)
             : null;
 
-        var dtos = pageItems.Select(ItemDto.FromEntity).ToList();
+        var dtos = pageItems.Select(item => ItemDto.FromEntity(item)).ToList();
         return new ItemListResponse
         {
             Items = dtos,
@@ -237,6 +244,23 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
         }
 
         return normalized.Length == 0 ? null : normalized;
+    }
+
+    private static string? NormalizeEnrichmentStatus(string? enrichmentStatus)
+    {
+        if (string.IsNullOrWhiteSpace(enrichmentStatus))
+        {
+            return null;
+        }
+
+        var normalized = enrichmentStatus.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "pending" => normalized,
+            "succeeded" => normalized,
+            "failed" => normalized,
+            _ => throw new RequestValidationException("validation_error", "EnrichmentStatus must be pending, succeeded, or failed.")
+        };
     }
 
     private static string? NormalizeOptionalText(string? value, int maxLength, string fieldName)

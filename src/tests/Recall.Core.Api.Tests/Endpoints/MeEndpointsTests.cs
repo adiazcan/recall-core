@@ -44,6 +44,7 @@ public class MeEndpointsTests : IClassFixture<MongoDbFixture>
             .WithWebHostBuilder(builder =>
             {
                 builder.UseSetting("ConnectionStrings:recalldb", connectionString);
+                builder.UseSetting("ConnectionStrings:blobs", "UseDevelopmentStorage=true");
                 builder.UseSetting("Authentication:TestMode", "true");
             });
 

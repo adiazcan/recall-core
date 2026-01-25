@@ -13,6 +13,7 @@ public interface IItemService
         string? collectionId,
         string? tag,
         bool? isFavorite,
+        string? enrichmentStatus,
         string? cursor,
         int? limit,
         CancellationToken cancellationToken = default);

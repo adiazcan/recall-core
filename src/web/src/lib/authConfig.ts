@@ -1,19 +1,19 @@
 import type { Configuration, RedirectRequest } from '@azure/msal-browser';
 
-const tenantId = import.meta.env.VITE_TENANT_ID;
+const authority = import.meta.env.VITE_AUTHORITY;
 const clientId = import.meta.env.VITE_CLIENT_ID;
 const apiScope = import.meta.env.VITE_API_SCOPE;
 
-if (!tenantId || !clientId || !apiScope) {
+if (!authority || !clientId || !apiScope) {
   throw new Error(
-    'Required environment variables are missing: VITE_TENANT_ID, VITE_CLIENT_ID, VITE_API_SCOPE',
+    'Required environment variables are missing: VITE_AUTHORITY, VITE_CLIENT_ID, VITE_API_SCOPE',
   );
 }
 
 export const msalConfig: Configuration = {
   auth: {
     clientId,
-    authority: `https://${tenantId}.ciamlogin.com`,
+    authority,
     redirectUri: window.location.origin,
     postLogoutRedirectUri: window.location.origin,
   },

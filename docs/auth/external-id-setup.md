@@ -121,7 +121,7 @@ Use `src/Recall.Core.Api/appsettings.Development.json` **or** user secrets. Exam
 Create `src/web/.env.local` (do not commit):
 
 ```bash
-VITE_TENANT_ID=<external-tenant-id>
+VITE_AUTHORITY=https://<tenant-subdomain>.ciamlogin.com
 VITE_CLIENT_ID=<spa-client-id>
 VITE_API_SCOPE=api://<api-client-id>/access_as_user
 VITE_API_BASE_URL=http://localhost:5080
@@ -153,7 +153,7 @@ Provide environment variables via your hosting platform:
   - `AzureAd__Scopes`
 
 - SPA environment:
-   - `VITE_TENANT_ID`
+   - `VITE_AUTHORITY`
    - `VITE_CLIENT_ID`
    - `VITE_API_SCOPE`
   - `VITE_API_BASE_URL`

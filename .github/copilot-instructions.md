@@ -90,7 +90,7 @@ When context files are insufficient:
 - Handle 401 responses by prompting user to sign in again.
 - Handle 403 responses by showing permission/consent message.
 - Silent token refresh runs in background; user interaction only when refresh token expires.
-- Store MSAL config in .env.local: VITE_TENANT_ID, VITE_CLIENT_ID, VITE_API_SCOPE.
+- Store MSAL config in .env.local: VITE_AUTHORITY, VITE_CLIENT_ID, VITE_API_SCOPE.
 
 ## Testing Guidelines
 - Backend tests use xUnit with WebApplicationFactory<Program> and HttpClient.

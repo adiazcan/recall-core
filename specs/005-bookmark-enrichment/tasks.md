@@ -145,8 +145,8 @@
 
 ### Implementation for User Story 6
 
-- [ ] T051 [US6] Modify POST /items to skip DaprClient.PublishEventAsync when returning existing item (deduplication path) in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
-- [ ] T052 [US6] Add logging to distinguish new item creation from deduplication return in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+- [x] T051 [US6] Modify POST /items to skip DaprClient.PublishEventAsync when returning existing item (deduplication path) in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+- [x] T052 [US6] Add logging to distinguish new item creation from deduplication return in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
 
 **Checkpoint**: Deduplication returns existing item without re-enrichment
 

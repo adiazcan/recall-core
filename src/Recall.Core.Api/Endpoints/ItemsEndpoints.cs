@@ -26,6 +26,7 @@ public static class ItemsEndpoints
                 {
                     try
                     {
+                        var logger = loggerFactory.CreateLogger("ItemsEndpoints");
                         var result = await service.SaveItemAsync(userContext.UserId, request, cancellationToken);
                         var dto = ItemDto.FromEntity(result.Item);
 
@@ -39,7 +40,10 @@ public static class ItemsEndpoints
                                 EnqueuedAt = DateTime.UtcNow
                             };
 
-                            var logger = loggerFactory.CreateLogger("ItemsEndpoints");
+                            logger.LogInformation(
+                                "Item created. ItemId={ItemId} UserId={UserId}",
+                                dto.Id,
+                                userContext.UserId);
 
                             try
                             {
@@ -64,6 +68,11 @@ public static class ItemsEndpoints
 
                             return TypedResults.Created($"/api/v1/items/{dto.Id}", dto);
                         }
+
+                        logger.LogInformation(
+                            "Deduplicated item returned. ItemId={ItemId} UserId={UserId}",
+                            dto.Id,
+                            userContext.UserId);
 
                         return TypedResults.Ok(dto);
                     }

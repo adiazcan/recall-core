@@ -10,12 +10,6 @@ const signIn = vi.fn();
 vi.mock('@azure/msal-react', () => ({
   useIsAuthenticated: () => useIsAuthenticated(),
   useMsal: () => useMsal(),
-  InteractionStatus: {
-    None: 'none',
-    Login: 'login',
-    Logout: 'logout',
-    HandleRedirect: 'handleRedirect',
-  },
 }));
 
 vi.mock('../../hooks/useAuth', () => ({

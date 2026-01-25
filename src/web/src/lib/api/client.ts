@@ -138,6 +138,60 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   }
 }
 
+export async function apiRequestBlob(
+  path: string,
+  options: ApiRequestOptions = {},
+): Promise<Blob> {
+  const { timeoutMs = 30_000, ...fetchOptions } = options;
+  const controller = new AbortController();
+  const headers = new Headers(fetchOptions.headers);
+
+  if (!headers.has('Accept')) {
+    headers.set('Accept', 'image/*');
+  }
+
+  const isProtectedApiRequest =
+    !path.startsWith('http') && (path === '/api/v1' || path.startsWith('/api/v1/'));
+  if (isProtectedApiRequest && !headers.has('Authorization')) {
+    const token = await acquireAccessToken();
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+  }
+
+  const signal = fetchOptions.signal ?? controller.signal;
+  const timeoutId = fetchOptions.signal
+    ? null
+    : setTimeout(() => {
+        controller.abort();
+      }, timeoutMs);
+
+  const normalizedBaseUrl = API_BASE_URL.replace(/\/$/, '');
+  const url = path.startsWith('http') ? path : `${normalizedBaseUrl}${path}`;
+
+  try {
+    const response = await fetch(url, {
+      ...fetchOptions,
+      headers,
+      signal,
+    });
+
+    if (!response.ok) {
+      const body = await parseResponseBody(response);
+      if (response.status === 401 || response.status === 403) {
+        authErrorHandler?.(response.status as AuthErrorStatus);
+      }
+      throw new ApiError(response.status, mapApiError(response.status, body), body ?? undefined);
+    }
+
+    return await response.blob();
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
 export async function apiRequestWithResponse<T>(
   path: string,
   options: ApiRequestOptions = {},

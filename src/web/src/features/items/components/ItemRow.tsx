@@ -5,6 +5,7 @@ import type { Item } from '../../../types/entities';
 import { cn } from '../../../lib/utils';
 import { useItemsStore } from '../store';
 import { useToastStore } from '../../../stores/toast-store';
+import { useAuthorizedImageUrl } from '../../../lib/hooks/useAuthorizedImageUrl';
 
 interface ItemRowProps {
   item: Item;
@@ -20,6 +21,7 @@ export const ItemRow = forwardRef<HTMLDivElement, ItemRowProps>(
   const toggleArchive = useItemsStore((state) => state.toggleArchive);
   const { success, error } = useToastStore();
   const [isArchiving, setIsArchiving] = useState(false);
+  const thumbnailUrl = useAuthorizedImageUrl(item.imageUrl);
 
   const handleClick = () => {
     onClick?.(item);
@@ -80,8 +82,8 @@ export const ItemRow = forwardRef<HTMLDivElement, ItemRowProps>(
             isSelected && 'border-indigo-200',
           )}
         >
-          {item.imageUrl ? (
-            <img src={item.imageUrl} alt="" className="w-full h-full object-cover" />
+          {thumbnailUrl ? (
+            <img src={thumbnailUrl} alt="" className="w-full h-full object-cover" />
           ) : (
             <span className="text-sm font-bold text-neutral-400">
               {item.domain.charAt(0).toUpperCase()}

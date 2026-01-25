@@ -6,14 +6,16 @@ namespace Recall.Core.Enrichment.Services;
 public sealed class ThumbnailGenerator : IThumbnailGenerator, IAsyncDisposable
 {
     private readonly IHtmlFetcher _htmlFetcher;
+    private readonly ISsrfValidator _ssrfValidator;
     private readonly EnrichmentOptions _options;
     private readonly ILogger<ThumbnailGenerator> _logger;
     private readonly Lazy<Task<IBrowser>> _browser;
     private IPlaywright? _playwright;
 
-    public ThumbnailGenerator(IHtmlFetcher htmlFetcher, EnrichmentOptions options, ILogger<ThumbnailGenerator> logger)
+    public ThumbnailGenerator(IHtmlFetcher htmlFetcher, ISsrfValidator ssrfValidator, EnrichmentOptions options, ILogger<ThumbnailGenerator> logger)
     {
         _htmlFetcher = htmlFetcher;
+        _ssrfValidator = ssrfValidator;
         _options = options;
         _logger = logger;
         _browser = new Lazy<Task<IBrowser>>(InitializeBrowserAsync);
@@ -23,14 +25,23 @@ public sealed class ThumbnailGenerator : IThumbnailGenerator, IAsyncDisposable
     {
         if (!string.IsNullOrWhiteSpace(ogImageUrl))
         {
-            try
+            // Validate og:image URL before fetching to fail faster on SSRF attempts
+            var validationResult = await _ssrfValidator.ValidateAsync(ogImageUrl, cancellationToken);
+            if (!validationResult.IsAllowed)
             {
-                var imageBytes = await _htmlFetcher.FetchBytesAsync(ogImageUrl, cancellationToken);
-                return ResizeToThumbnail(imageBytes);
+                _logger.LogWarning("SSRF validation failed for og:image. Url={Url} Reason={Reason}", ogImageUrl, validationResult.ErrorMessage);
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogWarning(ex, "Failed to fetch og:image thumbnail. Url={Url}", ogImageUrl);
+                try
+                {
+                    var imageBytes = await _htmlFetcher.FetchBytesAsync(ogImageUrl, cancellationToken);
+                    return ResizeToThumbnail(imageBytes);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to fetch og:image thumbnail. Url={Url}", ogImageUrl);
+                }
             }
         }
 
@@ -103,8 +114,19 @@ public sealed class ThumbnailGenerator : IThumbnailGenerator, IAsyncDisposable
             _options.ThumbnailMaxWidth,
             _options.ThumbnailMaxHeight);
 
-        using var resized = original.Resize(new SKImageInfo(width, height), SKFilterQuality.High);
-        using var image = resized is null ? SKImage.FromBitmap(original) : SKImage.FromBitmap(resized);
+        // Create a new bitmap with the target dimensions
+        using var resized = new SKBitmap(width, height, original.ColorType, original.AlphaType);
+        
+        // Use SKCanvas to draw the resized image with high quality
+        using var canvas = new SKCanvas(resized);
+        canvas.Clear(SKColors.Transparent);
+        canvas.DrawBitmap(original, new SKRect(0, 0, width, height), new SKPaint
+        {
+            FilterQuality = SKFilterQuality.High,
+            IsAntialias = true
+        });
+
+        using var image = SKImage.FromBitmap(resized);
         using var data = image.Encode(SKEncodedImageFormat.Jpeg, _options.ThumbnailQuality);
 
         return data.ToArray();

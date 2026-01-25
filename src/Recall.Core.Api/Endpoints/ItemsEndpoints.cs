@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Recall.Core.Api.Auth;
 using Recall.Core.Api.Models;
+using Recall.Core.Api.Repositories;
 using Recall.Core.Api.Services;
 
 namespace Recall.Core.Api.Endpoints;
@@ -19,6 +20,7 @@ public static class ItemsEndpoints
             (CreateItemRequest request,
             IUserContext userContext,
             IItemService service,
+            IItemRepository repository,
             DaprClient daprClient,
             ILoggerFactory loggerFactory,
             CancellationToken cancellationToken)
@@ -60,6 +62,21 @@ public static class ItemsEndpoints
                                     "Failed to enqueue enrichment job. ItemId={ItemId} UserId={UserId}",
                                     dto.Id,
                                     userContext.UserId);
+
+                                // Set enrichment status to failed immediately if publishing fails
+                                await repository.UpdateEnrichmentResultAsync(
+                                    userContext.UserId,
+                                    result.Item.Id,
+                                    title: null,
+                                    excerpt: null,
+                                    thumbnailStorageKey: null,
+                                    status: "failed",
+                                    error: "Failed to queue enrichment job",
+                                    enrichedAt: DateTime.UtcNow,
+                                    cancellationToken);
+
+                                // Update the DTO to reflect the failed status
+                                dto = dto with { EnrichmentStatus = "failed", EnrichmentError = "Failed to queue enrichment job", EnrichedAt = DateTime.UtcNow };
                             }
 
                             return TypedResults.Created($"/api/v1/items/{dto.Id}", dto);

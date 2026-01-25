@@ -247,27 +247,16 @@ public static class ItemsEndpoints
                                 userContext.UserId);
 
                             // Set enrichment status to failed immediately if publishing fails
-                            try
-                            {
-                                await repository.UpdateEnrichmentResultAsync(
-                                    userContext.UserId,
-                                    item.Id,
-                                    title: null,
-                                    excerpt: null,
-                                    thumbnailStorageKey: null,
-                                    status: "failed",
-                                    error: enrichmentFailureMessage,
-                                    enrichedAt: DateTime.UtcNow,
-                                    cancellationToken);
-                            }
-                            catch (Exception updateEx)
-                            {
-                                logger.LogError(
-                                    updateEx,
-                                    "Failed to update enrichment status to failed. ItemId={ItemId} UserId={UserId}",
-                                    item.Id,
-                                    userContext.UserId);
-                            }
+                            await repository.UpdateEnrichmentResultAsync(
+                                userContext.UserId,
+                                item.Id,
+                                title: null,
+                                excerpt: null,
+                                thumbnailStorageKey: null,
+                                status: "failed",
+                                error: enrichmentFailureMessage,
+                                enrichedAt: DateTime.UtcNow,
+                                cancellationToken);
 
                             var failedResponse = new EnrichResponse(enrichmentFailureMessage, item.Id.ToString(), "failed");
                             return TypedResults.Accepted($"/api/v1/items/{item.Id}", failedResponse);

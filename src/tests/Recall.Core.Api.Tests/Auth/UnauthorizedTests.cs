@@ -46,6 +46,8 @@ public class UnauthorizedTests : IClassFixture<MongoDbFixture>
             .WithWebHostBuilder(builder =>
             {
                 builder.UseSetting("ConnectionStrings:recalldb", connectionString);
+                builder.UseSetting("ConnectionStrings:blobs", "UseDevelopmentStorage=true");
+                builder.UseSetting("ConnectionStrings:blobs", "UseDevelopmentStorage=true");
                 builder.UseSetting("Authentication:TestMode", "true");
             });
 
@@ -62,6 +64,7 @@ public class UnauthorizedTests : IClassFixture<MongoDbFixture>
             .WithWebHostBuilder(builder =>
             {
                 builder.UseSetting("ConnectionStrings:recalldb", connectionString);
+                builder.UseSetting("ConnectionStrings:blobs", "UseDevelopmentStorage=true");
                 builder.UseSetting("Authentication:TestMode", "true");
                 builder.ConfigureServices(services =>
                 {

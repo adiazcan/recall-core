@@ -1,3 +1,4 @@
+using Azure.Storage.Blobs;
 using Dapr.Client;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -39,7 +40,7 @@ builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<ICollectionRepository, CollectionRepository>();
 builder.Services.AddScoped<ICollectionService, CollectionService>();
-builder.AddAzureBlobServiceClient("blobs");
+builder.Services.AddSingleton<BlobServiceClient>(sp => new BlobServiceClient(blobConnectionString));
 var enrichmentOptions = builder.Configuration.GetSection("Enrichment").Get<EnrichmentOptions>()
     ?? new EnrichmentOptions();
 builder.Services.AddSingleton(enrichmentOptions);

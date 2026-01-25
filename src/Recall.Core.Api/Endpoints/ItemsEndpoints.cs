@@ -91,7 +91,7 @@ public static class ItemsEndpoints
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Save a URL";
-                operation.Description = "Save a new URL for later with optional title and tags.";
+                operation.Description = "Save a new URL for later with optional title and tags. New items are created with enrichmentStatus=\"pending\" and an enrichment job is enqueued. If the URL already exists, the existing item is returned and no new enrichment job is enqueued.";
                 return Task.CompletedTask;
             });
 
@@ -239,7 +239,7 @@ public static class ItemsEndpoints
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Trigger item enrichment";
-                operation.Description = "Manually trigger enrichment for an item.";
+                operation.Description = "Manually trigger enrichment for an item. Sets enrichmentStatus=\"pending\" and enqueues a job. Returns 202 Accepted immediately.";
                 return Task.CompletedTask;
             });
 
@@ -281,7 +281,7 @@ public static class ItemsEndpoints
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Get item thumbnail";
-                operation.Description = "Retrieve the thumbnail image for an item.";
+                operation.Description = "Retrieve the thumbnail image for an item. Requires authentication and returns 404 if the item belongs to a different user or no thumbnail is available.";
                 return Task.CompletedTask;
             });
 

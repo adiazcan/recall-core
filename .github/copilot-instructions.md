@@ -123,6 +123,12 @@ When context files are insufficient:
 - All protected endpoints require JWT Bearer token with `access_as_user` scope.
 - Planned Phase 4 (US4): The /api/v1/me endpoint will return authenticated user info (sub, displayName, email, tenantId); do not assume it exists in current phases.
 
+## Enrichment Conventions
+- Publish enrichment jobs via Dapr Pub/Sub: pubsub `enrichment-pubsub`, topic `enrichment.requested`.
+- Deduplication path must return existing item without publishing a new enrichment job.
+- Thumbnail blob key format: `{userId}/{itemId}.jpg` in container `thumbnails`.
+- Enrichment status values: `pending`, `succeeded`, `failed`.
+
 ## General Best Practices
 - Preserve existing code style and formatting.
 - Keep functions focused and small, matching current patterns.

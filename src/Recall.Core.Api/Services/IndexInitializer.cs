@@ -31,7 +31,11 @@ public sealed class IndexInitializer(IMongoDatabase database, ILogger<IndexIniti
             new(
                 Builders<Item>.IndexKeys.Ascending(item => item.UserId)
                     .Ascending(item => item.Tags),
-                new CreateIndexOptions { Name = "ix_items_userId_tags" })
+                new CreateIndexOptions { Name = "ix_items_userId_tags" }),
+            new(
+                Builders<Item>.IndexKeys.Ascending(item => item.UserId)
+                    .Ascending(item => item.EnrichmentStatus),
+                new CreateIndexOptions { Name = "ix_items_userId_enrichmentStatus" })
         };
 
         await items.Indexes.CreateManyAsync(itemIndexes, cancellationToken);

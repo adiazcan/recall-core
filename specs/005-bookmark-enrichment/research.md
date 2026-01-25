@@ -27,9 +27,12 @@ This document captures research findings for implementing asynchronous bookmark 
 - **In-memory queue**: Rejected—jobs lost on restart, no persistence.
 - **Azure Service Bus**: More expensive, not required for single-consumer scenario.
 
-### Implementation Pattern
+### Implementation Pattern (SUPERSEDED - See Section 11)
+
+> ⚠️ **NOTE**: The following code examples show the original Azure Storage Queue approach, which was rejected per constitution requirements. For the current Dapr Pub/Sub implementation, refer to **Section 11**.
 
 ```csharp
+// SUPERSEDED: This pattern is NOT used in the final implementation
 // AppHost.cs - Add Azure Storage with Azurite emulator for local dev
 var storage = builder.AddAzureStorage("storage").RunAsEmulator();
 var queues = storage.AddQueues("queues");
@@ -45,8 +48,9 @@ var enrichment = builder.AddProject<Projects.Recall_Core_Enrichment>("enrichment
     .WithReference(mongodb);
 ```
 
-**Client Integration (API/Enrichment projects)**:
+**Client Integration (API/Enrichment projects)** (SUPERSEDED):
 ```csharp
+// SUPERSEDED: This pattern is NOT used in the final implementation
 // Program.cs
 builder.AddAzureQueueServiceClient("queues");
 builder.AddAzureBlobServiceClient("blobs");
@@ -64,8 +68,9 @@ public class EnrichmentQueueService(QueueServiceClient client)
 }
 ```
 
-**Worker Pattern**:
+**Worker Pattern** (SUPERSEDED):
 ```csharp
+// SUPERSEDED: This pattern is NOT used in the final implementation
 public class EnrichmentWorker : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -93,7 +98,7 @@ public class EnrichmentWorker : BackgroundService
 }
 ```
 
-**Key Considerations**:
+**Key Considerations** (Original Design):
 - At-least-once delivery: Worker must be idempotent.
 - Dequeue count available for poison message handling (max 5 attempts default).
 - Visibility timeout controls retry window (default 30s, configurable).
@@ -427,11 +432,14 @@ public class ThumbnailProcessor
 
 ---
 
-## 7. Aspire AppHost Integration
+## 7. Aspire AppHost Integration (SUPERSEDED - See Section 11)
 
-### Full Configuration
+> ⚠️ **NOTE**: The following configuration shows the original Azure Storage Queue approach. For the current Dapr + Redis implementation, refer to **Section 11**.
+
+### Full Configuration (SUPERSEDED)
 
 ```csharp
+// SUPERSEDED: This configuration is NOT used in the final implementation
 // AppHost.cs
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -475,11 +483,14 @@ builder.Build().Run();
 
 ---
 
-## 8. Worker Service Structure
+## 8. Worker Service Structure (SUPERSEDED - See Section 11)
 
-### Project Setup
+> ⚠️ **NOTE**: The following shows the original BackgroundService pattern with Azure Storage Queue. The final implementation uses ASP.NET Core with Dapr subscriber pattern (see Section 11).
+
+### Project Setup (SUPERSEDED)
 
 ```xml
+<!-- SUPERSEDED: Enrichment service uses Microsoft.NET.Sdk.Web, not Worker SDK -->
 <!-- Recall.Core.Enrichment.csproj -->
 <Project Sdk="Microsoft.NET.Sdk.Worker">
   <PropertyGroup>
@@ -503,9 +514,10 @@ builder.Build().Run();
 </Project>
 ```
 
-### Program.cs
+### Program.cs (SUPERSEDED)
 
 ```csharp
+// SUPERSEDED: Enrichment service uses WebApplication.CreateBuilder with Controllers for Dapr
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.AddServiceDefaults();
@@ -526,11 +538,14 @@ host.Run();
 
 ---
 
-## 9. Retry & Backoff Strategy
+## 9. Retry & Backoff Strategy (SUPERSEDED - See Section 11)
 
-### Implementation
+> ⚠️ **NOTE**: The following shows the original Azure Storage Queue retry pattern. The final implementation uses Dapr resiliency policies (see Section 11).
+
+### Implementation (SUPERSEDED)
 
 ```csharp
+// SUPERSEDED: Dapr handles retries via resiliency.yaml, not application code
 public class EnrichmentWorker : BackgroundService
 {
     private const int MaxAttempts = 5;

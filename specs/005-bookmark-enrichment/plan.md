@@ -14,7 +14,7 @@ Implement asynchronous bookmark enrichment that extracts title, excerpt, and thu
 **Language/Version**: C# / .NET 10, TypeScript / ES2022  
 **Primary Dependencies**: Aspire 13.1.0, CommunityToolkit.Aspire.Hosting.Dapr, Dapr.AspNetCore 1.14.0, MongoDB.Driver.v2, Microsoft.Playwright, Azure.Storage.Blobs, AngleSharp, SkiaSharp  
 **Messaging**: Dapr Pub/Sub (Redis backing store) - per constitution mandate  
-**Storage**: MongoDB (items, enrichment status), Azure Blob Storage (thumbnails)  
+**Storage**: MongoDB (items, enrichment status), Azure Blob Storage (thumbnails), Redis (Dapr Pub/Sub backing store)  
 **Testing**: xUnit (backend), Vitest (frontend), Playwright (e2e)  
 **Target Platform**: Linux containers (API + Enrichment workers with Dapr sidecars), Browser (React frontend)  
 **Project Type**: web (backend + frontend with new microservice)  
@@ -129,5 +129,5 @@ src/web/src/                            # Frontend (minor changes)
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
 | 4th project (Recall.Core.Enrichment) | Isolates Playwright/image processing from API; enables independent scaling | Running enrichment in API process would block request threads and complicate deployment |
-| Dapr sidecar dependency | Constitution mandates Pub/Sub for async workflows; Dapr provides portable abstraction with resiliency | Direct Azure Storage Queue violates constitution; in-memory loses jobs on restart |
+| Dapr sidecar + package deps (Dapr.AspNetCore, CommunityToolkit.Aspire.Hosting.Dapr) | Constitution mandates Pub/Sub for async workflows; Dapr provides portable abstraction with resiliency | Direct Azure Storage Queue violates constitution; in-memory loses jobs on restart |
 | Redis for Pub/Sub backing | Dapr requires backing store; Redis is lightweight and Aspire-integrated | Azure Service Bus adds cloud dependency for local dev; in-memory not durable |

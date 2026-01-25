@@ -64,7 +64,7 @@ This guide lists common issues encountered with Microsoft Entra External ID inte
 
 **Fix**:
 - Clear session storage to remove stale MSAL cache.
-- Confirm the authority uses the External ID tenant: `https://<tenant>.ciamlogin.com`.
+- Confirm the authority uses the correct tenant (External ID: `https://<tenant>.ciamlogin.com`, Workforce: `https://login.microsoftonline.com/<tenant-id>`).
 - Ensure `VITE_CLIENT_ID` is the SPA client ID (not API client ID).
 
 ---

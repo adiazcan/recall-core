@@ -208,6 +208,7 @@
 - [X] T060 [P] Run all frontend tests and verify pass
 - [ ] T061 Run quickstart.md validation (manual end-to-end flow)
 - [X] T062 Verify no secrets committed to source control
+- [X] T063 Update SPA auth configuration to use VITE_AUTHORITY and align docs/examples
 
 ---
 

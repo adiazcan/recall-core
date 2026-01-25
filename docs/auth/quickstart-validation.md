@@ -18,7 +18,7 @@ Use this checklist to validate the end-to-end External ID flow locally.
   - `AzureAd:ClientId` matches API client ID
   - `AzureAd:Scopes` includes `access_as_user`
 - [ ] SPA config set in `src/web/.env.local`
-  - `VITE_TENANT_ID` (External ID tenant ID)
+  - `VITE_AUTHORITY` (External ID: `https://<tenant>.ciamlogin.com` or Workforce: `https://login.microsoftonline.com/<tenant-id>`)
   - `VITE_CLIENT_ID` (SPA client ID)
   - `VITE_API_SCOPE` (`api://<api-client-id>/access_as_user`)
   - `VITE_API_BASE_URL` (`http://localhost:5080`)

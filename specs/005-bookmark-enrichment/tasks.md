@@ -129,6 +129,9 @@
 - [ ] T048 [US5] Create POST /api/v1/items/{id}/enrich endpoint in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
 - [ ] T049 [US5] Implement enrich endpoint logic: verify ownership, set status=pending, publish enrichment.requested event, return 202 Accepted in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
 - [ ] T050 [US5] Create EnrichResponse model (message, itemId, status) in src/Recall.Core.Api/Models/EnrichResponse.cs
+ - [x] T048 [US5] Create POST /api/v1/items/{id}/enrich endpoint in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+ - [x] T049 [US5] Implement enrich endpoint logic: verify ownership, set status=pending, publish enrichment.requested event, return 202 Accepted in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+ - [x] T050 [US5] Create EnrichResponse model (message, itemId, status) in src/Recall.Core.Api/Models/EnrichResponse.cs
 
 **Checkpoint**: Users can retry failed enrichment
 

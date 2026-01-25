@@ -165,6 +165,75 @@ public static class ItemsEndpoints
                 return Task.CompletedTask;
             });
 
+        group.MapPost(
+            "{id}/enrich",
+            async Task<Results<Accepted<EnrichResponse>, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
+            (
+                    string id,
+                    IUserContext userContext,
+                    IItemService service,
+                    DaprClient daprClient,
+                    ILoggerFactory loggerFactory,
+                    CancellationToken cancellationToken)
+                =>
+                {
+                    try
+                    {
+                        var item = await service.MarkEnrichmentPendingAsync(userContext.UserId, id, cancellationToken);
+                        if (item is null)
+                        {
+                            return TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Item not found")));
+                        }
+
+                        var job = new EnrichmentJob
+                        {
+                            ItemId = item.Id.ToString(),
+                            UserId = userContext.UserId,
+                            Url = item.Url,
+                            EnqueuedAt = DateTime.UtcNow
+                        };
+
+                        var logger = loggerFactory.CreateLogger("ItemsEndpoints");
+
+                        try
+                        {
+                            await daprClient.PublishEventAsync(
+                                "enrichment-pubsub",
+                                "enrichment.requested",
+                                job,
+                                cancellationToken);
+                            logger.LogInformation(
+                                "Enrichment job queued. ItemId={ItemId} UserId={UserId}",
+                                item.Id,
+                                userContext.UserId);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogWarning(
+                                ex,
+                                "Failed to enqueue enrichment job. ItemId={ItemId} UserId={UserId}",
+                                item.Id,
+                                userContext.UserId);
+                        }
+
+                        var response = new EnrichResponse("Enrichment job enqueued", item.Id.ToString(), "pending");
+                        return TypedResults.Accepted($"/api/v1/items/{item.Id}", response);
+                    }
+                    catch (RequestValidationException ex)
+                    {
+                        return TypedResults.BadRequest(new ErrorResponse(new ErrorDetail(ex.Code, ex.Message)));
+                    }
+                })
+            .Produces<Accepted<EnrichResponse>>(StatusCodes.Status202Accepted)
+            .Produces<BadRequest<ErrorResponse>>(StatusCodes.Status400BadRequest)
+            .Produces<NotFound<ErrorResponse>>(StatusCodes.Status404NotFound)
+            .AddOpenApiOperationTransformer((operation, context, ct) =>
+            {
+                operation.Summary = "Trigger item enrichment";
+                operation.Description = "Manually trigger enrichment for an item.";
+                return Task.CompletedTask;
+            });
+
         group.MapGet(
             "{id}/thumbnail",
             async Task<Results<FileStreamHttpResult, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>

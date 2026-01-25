@@ -10,6 +10,8 @@ namespace Recall.Core.Api.Endpoints;
 
 public static class ItemsEndpoints
 {
+    private const string EnrichmentFailureMessage = "Failed to queue enrichment job";
+    
     public static IEndpointRouteBuilder MapItemsEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/v1/items")
@@ -26,8 +28,6 @@ public static class ItemsEndpoints
             CancellationToken cancellationToken)
                 =>
                 {
-                    const string enrichmentFailureMessage = "Failed to queue enrichment job";
-                    
                     try
                     {
                         var logger = loggerFactory.CreateLogger("ItemsEndpoints");
@@ -77,12 +77,12 @@ public static class ItemsEndpoints
                                     excerpt: null,
                                     thumbnailStorageKey: null,
                                     status: "failed",
-                                    error: enrichmentFailureMessage,
+                                    error: EnrichmentFailureMessage,
                                     enrichedAt: DateTime.UtcNow,
                                     cancellationToken);
 
                                 // Update the DTO to reflect the failed status
-                                dto = dto with { EnrichmentStatus = "failed", EnrichmentError = enrichmentFailureMessage, EnrichedAt = DateTime.UtcNow };
+                                dto = dto with { EnrichmentStatus = "failed", EnrichmentError = EnrichmentFailureMessage, EnrichedAt = DateTime.UtcNow };
                             }
 
                             return TypedResults.Created($"/api/v1/items/{dto.Id}", dto);
@@ -200,6 +200,7 @@ public static class ItemsEndpoints
                     string id,
                     IUserContext userContext,
                     IItemService service,
+                    IItemRepository repository,
                     DaprClient daprClient,
                     ILoggerFactory loggerFactory,
                     CancellationToken cancellationToken)
@@ -242,6 +243,21 @@ public static class ItemsEndpoints
                                 "Failed to enqueue enrichment job. ItemId={ItemId} UserId={UserId}",
                                 item.Id,
                                 userContext.UserId);
+
+                            // Set enrichment status to failed immediately if publishing fails
+                            await repository.UpdateEnrichmentResultAsync(
+                                userContext.UserId,
+                                item.Id,
+                                title: null,
+                                excerpt: null,
+                                thumbnailStorageKey: null,
+                                status: "failed",
+                                error: EnrichmentFailureMessage,
+                                enrichedAt: DateTime.UtcNow,
+                                cancellationToken);
+
+                            var failedResponse = new EnrichResponse(EnrichmentFailureMessage, item.Id.ToString(), "failed");
+                            return TypedResults.Accepted($"/api/v1/items/{item.Id}", failedResponse);
                         }
 
                         var response = new EnrichResponse("Enrichment job enqueued", item.Id.ToString(), "pending");

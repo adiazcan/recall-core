@@ -120,11 +120,12 @@ public sealed class ThumbnailGenerator : IThumbnailGenerator, IAsyncDisposable
         // Use SKCanvas to draw the resized image with high quality
         using var canvas = new SKCanvas(resized);
         canvas.Clear(SKColors.Transparent);
-        canvas.DrawBitmap(original, new SKRect(0, 0, width, height), new SKPaint
+        using var paint = new SKPaint
         {
             FilterQuality = SKFilterQuality.High,
             IsAntialias = true
-        });
+        };
+        canvas.DrawBitmap(original, new SKRect(0, 0, width, height), paint);
 
         using var image = SKImage.FromBitmap(resized);
         using var data = image.Encode(SKEncodedImageFormat.Jpeg, _options.ThumbnailQuality);

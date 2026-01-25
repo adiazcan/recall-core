@@ -26,6 +26,8 @@ public static class ItemsEndpoints
             CancellationToken cancellationToken)
                 =>
                 {
+                    const string enrichmentFailureMessage = "Failed to queue enrichment job";
+                    
                     try
                     {
                         var result = await service.SaveItemAsync(userContext.UserId, request, cancellationToken);
@@ -71,12 +73,12 @@ public static class ItemsEndpoints
                                     excerpt: null,
                                     thumbnailStorageKey: null,
                                     status: "failed",
-                                    error: "Failed to queue enrichment job",
+                                    error: enrichmentFailureMessage,
                                     enrichedAt: DateTime.UtcNow,
                                     cancellationToken);
 
                                 // Update the DTO to reflect the failed status
-                                dto = dto with { EnrichmentStatus = "failed", EnrichmentError = "Failed to queue enrichment job", EnrichedAt = DateTime.UtcNow };
+                                dto = dto with { EnrichmentStatus = "failed", EnrichmentError = enrichmentFailureMessage, EnrichedAt = DateTime.UtcNow };
                             }
 
                             return TypedResults.Created($"/api/v1/items/{dto.Id}", dto);

@@ -18,6 +18,7 @@ public interface IItemService
         int? limit,
         CancellationToken cancellationToken = default);
     Task<Item?> UpdateItemAsync(string userId, string id, UpdateItemRequest request, CancellationToken cancellationToken = default);
+    Task<Item?> MarkEnrichmentPendingAsync(string userId, string id, CancellationToken cancellationToken = default);
     Task<bool> DeleteItemAsync(string userId, string id, CancellationToken cancellationToken = default);
 }
 

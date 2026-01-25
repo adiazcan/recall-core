@@ -31,6 +31,7 @@ import { useToastStore } from '../../../stores/toast-store';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { TagChip } from '../../tags/components/TagChip';
 import { cn } from '../../../lib/utils';
+import { useAuthorizedImageUrl } from '../../../lib/hooks/useAuthorizedImageUrl';
 
 // Security: Validate URL protocol to prevent javascript: or data: URIs
 function isValidHttpUrl(url: string): boolean {
@@ -71,6 +72,7 @@ export function ItemDetail() {
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const item = selectedItemSnapshot ?? items.find((i) => i.id === selectedItemId);
+  const thumbnailUrl = useAuthorizedImageUrl(item?.imageUrl);
 
   // Fetch collections and tags when panel opens
   useEffect(() => {
@@ -319,10 +321,10 @@ export function ItemDetail() {
         <div className="flex-1 overflow-y-auto">
           <div className="px-6 pb-8 space-y-6">
             {/* Image preview placeholder */}
-            {item.imageUrl && (
+            {thumbnailUrl && (
               <div className="w-full aspect-video bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg overflow-hidden">
                 <img 
-                  src={item.imageUrl} 
+                  src={thumbnailUrl} 
                   alt={item.title || 'Item preview'} 
                   className="w-full h-full object-cover"
                 />

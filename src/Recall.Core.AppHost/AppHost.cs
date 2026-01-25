@@ -12,7 +12,10 @@ var mongo = builder.AddMongoDB("mongo", port: null, userName: mongoUser, passwor
 
 var mongodb = mongo.AddDatabase("recalldb");
 
+var redisPassword = builder.AddParameter("redis-password", "devpassword", publishValueAsDefault: false, secret: true);
+
 var redis = builder.AddRedis("redis")
+    .WithPassword(redisPassword)
     .WithLifetime(ContainerLifetime.Persistent);
 
 var storage = builder.AddAzureStorage("storage").RunAsEmulator();
@@ -31,11 +34,13 @@ var api = builder.AddProject<Projects.Recall_Core_Api>("api")
     .WithHttpHealthCheck("/health");
 
 var enrichment = builder.AddProject<Projects.Recall_Core_Enrichment>("enrichment")
+    .WithHttpEndpoint(name: "enrichment-http", port: 5081)
     .WithReference(mongodb)
     .WithReference(blobs)
     .WithDaprSidecar(new DaprSidecarOptions
     {
         AppId = "enrichment",
+        AppPort = 5081,
         ResourcesPaths = ["./components"]
     })
     .WaitFor(mongodb)

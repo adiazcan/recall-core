@@ -129,6 +129,9 @@
 - [ ] T048 [US5] Create POST /api/v1/items/{id}/enrich endpoint in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
 - [ ] T049 [US5] Implement enrich endpoint logic: verify ownership, set status=pending, publish enrichment.requested event, return 202 Accepted in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
 - [ ] T050 [US5] Create EnrichResponse model (message, itemId, status) in src/Recall.Core.Api/Models/EnrichResponse.cs
+ - [x] T048 [US5] Create POST /api/v1/items/{id}/enrich endpoint in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+ - [x] T049 [US5] Implement enrich endpoint logic: verify ownership, set status=pending, publish enrichment.requested event, return 202 Accepted in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+ - [x] T050 [US5] Create EnrichResponse model (message, itemId, status) in src/Recall.Core.Api/Models/EnrichResponse.cs
 
 **Checkpoint**: Users can retry failed enrichment
 
@@ -142,8 +145,8 @@
 
 ### Implementation for User Story 6
 
-- [ ] T051 [US6] Modify POST /items to skip DaprClient.PublishEventAsync when returning existing item (deduplication path) in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
-- [ ] T052 [US6] Add logging to distinguish new item creation from deduplication return in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+- [x] T051 [US6] Modify POST /items to skip DaprClient.PublishEventAsync when returning existing item (deduplication path) in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+- [x] T052 [US6] Add logging to distinguish new item creation from deduplication return in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
 
 **Checkpoint**: Deduplication returns existing item without re-enrichment
 
@@ -153,12 +156,12 @@
 
 **Purpose**: Final cleanup, documentation, and validation
 
-- [ ] T053 [P] Add OpenAPI documentation tags and descriptions for new endpoints in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
-- [ ] T054 [P] Create appsettings.json for Enrichment project with configuration (ThumbnailContainer, timeouts) in src/Recall.Core.Enrichment/appsettings.json
-- [ ] T055 [P] Update frontend ItemDto type to include enrichment fields in src/web/src/features/items/types.ts (if applicable)
-- [ ] T056 [P] Add index on (userId, enrichmentStatus) in MongoDB initialization in src/Recall.Core.Api/Repositories/IndexInitializer.cs (if exists)
+- [x] T053 [P] Add OpenAPI documentation tags and descriptions for new endpoints in src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs
+- [x] T054 [P] Create appsettings.json for Enrichment project with configuration (ThumbnailContainer, timeouts) in src/Recall.Core.Enrichment/appsettings.json
+- [x] T055 [P] Update frontend ItemDto type to include enrichment fields in src/web/src/features/items/types.ts (if applicable)
+- [x] T056 [P] Add index on (userId, enrichmentStatus) in MongoDB initialization in src/Recall.Core.Api/Repositories/IndexInitializer.cs (if exists)
 - [ ] T057 Run quickstart.md validation: start application, create item, verify enrichment completes
-- [ ] T058 [P] Update copilot-instructions.md with enrichment-related patterns and conventions in .github/copilot-instructions.md
+- [x] T058 [P] Update copilot-instructions.md with enrichment-related patterns and conventions in .github/copilot-instructions.md
 
 ---
 

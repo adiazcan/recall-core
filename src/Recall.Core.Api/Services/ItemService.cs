@@ -158,6 +158,17 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
         return await repository.UpdateAsync(userId, objectId, update, cancellationToken);
     }
 
+    public async Task<Item?> MarkEnrichmentPendingAsync(string userId, string id, CancellationToken cancellationToken = default)
+    {
+        var objectId = ParseObjectId(id, "ItemId must be a valid ObjectId.");
+        var update = Builders<Item>.Update.Combine(
+            Builders<Item>.Update.Set(item => item.EnrichmentStatus, "pending"),
+            Builders<Item>.Update.Set(item => item.EnrichmentError, null),
+            Builders<Item>.Update.Set(item => item.EnrichedAt, null),
+            Builders<Item>.Update.Set(item => item.UpdatedAt, DateTime.UtcNow));
+        return await repository.UpdateAsync(userId, objectId, update, cancellationToken);
+    }
+
     public async Task<bool> DeleteItemAsync(string userId, string id, CancellationToken cancellationToken = default)
     {
         var objectId = ParseObjectId(id, "ItemId must be a valid ObjectId.");

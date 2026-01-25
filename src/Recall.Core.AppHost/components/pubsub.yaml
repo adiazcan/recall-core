@@ -7,6 +7,6 @@ spec:
   version: v1
   metadata:
     - name: redisHost
-      value: "{{ env:REDIS_HOST }}"
+      value: localhost:6379
     - name: redisPassword
-      value: ""
+      value: "devpassword"

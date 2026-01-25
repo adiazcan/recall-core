@@ -10,6 +10,8 @@ namespace Recall.Core.Api.Endpoints;
 
 public static class ItemsEndpoints
 {
+    private const string EnrichmentFailureMessage = "Failed to queue enrichment job";
+    
     public static IEndpointRouteBuilder MapItemsEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/v1/items")
@@ -26,10 +28,9 @@ public static class ItemsEndpoints
             CancellationToken cancellationToken)
                 =>
                 {
-                    const string enrichmentFailureMessage = "Failed to queue enrichment job";
-                    
                     try
                     {
+                        var logger = loggerFactory.CreateLogger("ItemsEndpoints");
                         var result = await service.SaveItemAsync(userContext.UserId, request, cancellationToken);
                         var dto = ItemDto.FromEntity(result.Item);
 
@@ -43,7 +44,10 @@ public static class ItemsEndpoints
                                 EnqueuedAt = DateTime.UtcNow
                             };
 
-                            var logger = loggerFactory.CreateLogger("ItemsEndpoints");
+                            logger.LogInformation(
+                                "Item created. ItemId={ItemId} UserId={UserId}",
+                                dto.Id,
+                                userContext.UserId);
 
                             try
                             {
@@ -73,16 +77,21 @@ public static class ItemsEndpoints
                                     excerpt: null,
                                     thumbnailStorageKey: null,
                                     status: "failed",
-                                    error: enrichmentFailureMessage,
+                                    error: EnrichmentFailureMessage,
                                     enrichedAt: DateTime.UtcNow,
                                     cancellationToken);
 
                                 // Update the DTO to reflect the failed status
-                                dto = dto with { EnrichmentStatus = "failed", EnrichmentError = enrichmentFailureMessage, EnrichedAt = DateTime.UtcNow };
+                                dto = dto with { EnrichmentStatus = "failed", EnrichmentError = EnrichmentFailureMessage, EnrichedAt = DateTime.UtcNow };
                             }
 
                             return TypedResults.Created($"/api/v1/items/{dto.Id}", dto);
                         }
+
+                        logger.LogInformation(
+                            "Deduplicated item returned. ItemId={ItemId} UserId={UserId}",
+                            dto.Id,
+                            userContext.UserId);
 
                         return TypedResults.Ok(dto);
                     }
@@ -101,7 +110,7 @@ public static class ItemsEndpoints
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Save a URL";
-                operation.Description = "Save a new URL for later with optional title and tags.";
+                operation.Description = "Save a new URL for later with optional title and tags. New items are created with enrichmentStatus=\"pending\" and an enrichment job is enqueued. If the URL already exists, the existing item is returned and no new enrichment job is enqueued.";
                 return Task.CompletedTask;
             });
 
@@ -184,6 +193,91 @@ public static class ItemsEndpoints
                 return Task.CompletedTask;
             });
 
+        group.MapPost(
+            "{id}/enrich",
+            async Task<Results<Accepted<EnrichResponse>, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
+            (
+                    string id,
+                    IUserContext userContext,
+                    IItemService service,
+                    IItemRepository repository,
+                    DaprClient daprClient,
+                    ILoggerFactory loggerFactory,
+                    CancellationToken cancellationToken)
+                =>
+                {
+                    try
+                    {
+                        var item = await service.MarkEnrichmentPendingAsync(userContext.UserId, id, cancellationToken);
+                        if (item is null)
+                        {
+                            return TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Item not found")));
+                        }
+
+                        var job = new EnrichmentJob
+                        {
+                            ItemId = item.Id.ToString(),
+                            UserId = userContext.UserId,
+                            Url = item.Url,
+                            EnqueuedAt = DateTime.UtcNow
+                        };
+
+                        var logger = loggerFactory.CreateLogger("ItemsEndpoints");
+
+                        try
+                        {
+                            await daprClient.PublishEventAsync(
+                                "enrichment-pubsub",
+                                "enrichment.requested",
+                                job,
+                                cancellationToken);
+                            logger.LogInformation(
+                                "Enrichment job queued. ItemId={ItemId} UserId={UserId}",
+                                item.Id,
+                                userContext.UserId);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogWarning(
+                                ex,
+                                "Failed to enqueue enrichment job. ItemId={ItemId} UserId={UserId}",
+                                item.Id,
+                                userContext.UserId);
+
+                            // Set enrichment status to failed immediately if publishing fails
+                            await repository.UpdateEnrichmentResultAsync(
+                                userContext.UserId,
+                                item.Id,
+                                title: null,
+                                excerpt: null,
+                                thumbnailStorageKey: null,
+                                status: "failed",
+                                error: EnrichmentFailureMessage,
+                                enrichedAt: DateTime.UtcNow,
+                                cancellationToken);
+
+                            var failedResponse = new EnrichResponse(EnrichmentFailureMessage, item.Id.ToString(), "failed");
+                            return TypedResults.Accepted($"/api/v1/items/{item.Id}", failedResponse);
+                        }
+
+                        var response = new EnrichResponse("Enrichment job enqueued", item.Id.ToString(), "pending");
+                        return TypedResults.Accepted($"/api/v1/items/{item.Id}", response);
+                    }
+                    catch (RequestValidationException ex)
+                    {
+                        return TypedResults.BadRequest(new ErrorResponse(new ErrorDetail(ex.Code, ex.Message)));
+                    }
+                })
+            .Produces<Accepted<EnrichResponse>>(StatusCodes.Status202Accepted)
+            .Produces<BadRequest<ErrorResponse>>(StatusCodes.Status400BadRequest)
+            .Produces<NotFound<ErrorResponse>>(StatusCodes.Status404NotFound)
+            .AddOpenApiOperationTransformer((operation, context, ct) =>
+            {
+                operation.Summary = "Trigger item enrichment";
+                operation.Description = "Manually trigger enrichment for an item. Sets enrichmentStatus=\"pending\" and enqueues a job. Returns 202 Accepted immediately.";
+                return Task.CompletedTask;
+            });
+
         group.MapGet(
             "{id}/thumbnail",
             async Task<Results<FileStreamHttpResult, NotFound<ErrorResponse>, BadRequest<ErrorResponse>>>
@@ -222,7 +316,7 @@ public static class ItemsEndpoints
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Get item thumbnail";
-                operation.Description = "Retrieve the thumbnail image for an item.";
+                operation.Description = "Retrieve the thumbnail image for an item. Requires authentication and returns 404 if the item belongs to a different user or no thumbnail is available.";
                 return Task.CompletedTask;
             });
 

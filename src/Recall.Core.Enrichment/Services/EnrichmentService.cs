@@ -229,6 +229,7 @@ public sealed class EnrichmentService : IEnrichmentService
             : trimmed[..ErrorMaxLength];
     }
 
+    [BsonIgnoreExtraElements]
     private sealed class ItemDocument
     {
         [BsonId]

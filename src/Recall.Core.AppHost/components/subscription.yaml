@@ -8,3 +8,5 @@ spec:
   routes:
     default: /api/enrichment/process
   deadLetterTopic: enrichment.deadletter
+scopes:
+  - enrichment

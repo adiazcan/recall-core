@@ -38,6 +38,11 @@ public sealed class ItemRepository(IMongoDatabase database) : IItemRepository
             filter &= Builders<Item>.Filter.Eq(item => item.Status, query.Status);
         }
 
+        if (!string.IsNullOrWhiteSpace(query.EnrichmentStatus))
+        {
+            filter &= Builders<Item>.Filter.Eq(item => item.EnrichmentStatus, query.EnrichmentStatus);
+        }
+
         if (query.IsFavorite.HasValue)
         {
             filter &= Builders<Item>.Filter.Eq(item => item.IsFavorite, query.IsFavorite.Value);

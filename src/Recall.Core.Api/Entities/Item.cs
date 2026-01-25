@@ -41,4 +41,16 @@ public class Item
 
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; }
+
+    [BsonElement("thumbnailStorageKey")]
+    public string? ThumbnailStorageKey { get; set; }
+
+    [BsonElement("enrichmentStatus")]
+    public string EnrichmentStatus { get; set; } = "pending";
+
+    [BsonElement("enrichmentError")]
+    public string? EnrichmentError { get; set; }
+
+    [BsonElement("enrichedAt")]
+    public DateTime? EnrichedAt { get; set; }
 }

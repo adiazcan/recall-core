@@ -1,9 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <UserSecretsId>f7420c31-987e-4534-a3c8-10d919b91aae</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,8 +11,9 @@
 
   <ItemGroup>
     <PackageReference Include="Dapr.AspNetCore" Version="1.14.0" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Identity.Web" Version="4.3.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.30.0" />
+    <PackageReference Include="AngleSharp" Version="1.1.2" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.47.0" />
+    <PackageReference Include="SkiaSharp" Version="2.88.8" />
   </ItemGroup>
 </Project>

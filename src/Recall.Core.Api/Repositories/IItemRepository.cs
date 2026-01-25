@@ -24,6 +24,7 @@ public sealed record ItemListQuery(
     bool InboxOnly,
     string? Tag,
     bool? IsFavorite,
+    string? EnrichmentStatus,
     ObjectId? CursorId,
     DateTime? CursorCreatedAt,
     int Limit);

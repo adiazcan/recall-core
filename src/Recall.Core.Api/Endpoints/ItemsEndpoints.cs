@@ -53,6 +53,7 @@ public static class ItemsEndpoints
                     string? collectionId,
                     string? tag,
                     bool? isFavorite,
+                    string? enrichmentStatus,
                     string? cursor,
                     int? limit,
                     IUserContext userContext,
@@ -68,6 +69,7 @@ public static class ItemsEndpoints
                                 collectionId,
                                 tag,
                                 isFavorite,
+                                enrichmentStatus,
                                 cursor,
                                 limit,
                                 cancellationToken);

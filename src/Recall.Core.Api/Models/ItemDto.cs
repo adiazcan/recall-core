@@ -15,9 +15,17 @@ public sealed record ItemDto
     public IReadOnlyList<string> Tags { get; init; } = Array.Empty<string>();
     public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; init; }
+    public string? ThumbnailUrl { get; init; }
+    public string EnrichmentStatus { get; init; } = "pending";
+    public string? EnrichmentError { get; init; }
+    public DateTime? EnrichedAt { get; init; }
 
-    public static ItemDto FromEntity(Item item)
+    public static ItemDto FromEntity(Item item, string? baseUrl = null)
     {
+        var prefix = string.IsNullOrWhiteSpace(baseUrl)
+            ? string.Empty
+            : baseUrl.TrimEnd('/');
+
         return new ItemDto
         {
             Id = item.Id.ToString(),
@@ -30,7 +38,13 @@ public sealed record ItemDto
             CollectionId = item.CollectionId?.ToString(),
             Tags = item.Tags.AsReadOnly(),
             CreatedAt = item.CreatedAt,
-            UpdatedAt = item.UpdatedAt
+            UpdatedAt = item.UpdatedAt,
+            ThumbnailUrl = item.ThumbnailStorageKey is null
+                ? null
+                : $"{prefix}/api/v1/items/{item.Id}/thumbnail",
+            EnrichmentStatus = item.EnrichmentStatus,
+            EnrichmentError = item.EnrichmentError,
+            EnrichedAt = item.EnrichedAt
         };
     }
 }

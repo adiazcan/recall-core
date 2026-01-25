@@ -12,7 +12,10 @@ var mongo = builder.AddMongoDB("mongo", port: null, userName: mongoUser, passwor
 
 var mongodb = mongo.AddDatabase("recalldb");
 
+var redisPassword = builder.AddParameter("redis-password", "devpassword", publishValueAsDefault: false, secret: true);
+
 var redis = builder.AddRedis("redis")
+    .WithPassword(redisPassword)
     .WithLifetime(ContainerLifetime.Persistent);
 
 var storage = builder.AddAzureStorage("storage").RunAsEmulator();

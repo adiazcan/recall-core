@@ -1,4 +1,4 @@
-````markdown
+```markdown
 # Tasks: Bookmark Enrichment
 
 **Input**: Design documents from `/specs/005-bookmark-enrichment/`
@@ -254,4 +254,4 @@ T053, T054, T055, T056, T058 can all run in parallel
 - Frontend changes (T055) are optional if frontend not actively developed
 - Playwright browser installation required during CI/CD or first run
 
-````
+```

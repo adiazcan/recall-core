@@ -182,7 +182,7 @@ public sealed record ItemDto
 
 ### EnrichmentJob
 
-Transient message passed via Azure Storage Queue.
+Transient message published via Dapr Pub/Sub (Redis-backed topic).
 
 ```csharp
 // src/Recall.Core.Api/Models/EnrichmentJob.cs (shared via common project or duplicated in Enrichment)

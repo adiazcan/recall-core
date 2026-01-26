@@ -16,7 +16,7 @@ Build a Manifest V3 browser extension for Chrome and Edge that enables users to 
 **Build Tooling**: Vite with CRXJS plugin for MV3 HMR development  
 **Storage**: chrome.storage.local for settings and token cache; chrome.storage.session for ephemeral state  
 **Testing**: Vitest for unit tests; manual testing for extension-specific APIs (no official automation support)  
-**Target Platform**: Chrome 114+ and Microsoft Edge 114+ (Chromium-based, MV3 sidePanel support)  
+**Target Platform**: Chrome 116+ and Microsoft Edge 116+ (Chromium-based, MV3 sidePanel support with sidePanel.open() API)  
 **Project Type**: Browser extension (standalone project at `src/extension/`)  
 **Performance Goals**: Save current tab < 3s e2e; side panel open < 2s; batch save 10 tabs < 15s  
 **Constraints**: MV3 compliance (no background pages, service worker only); minimal permissions (activeTab, sidePanel, storage, identity); no page content capture  

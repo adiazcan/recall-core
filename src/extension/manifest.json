@@ -34,7 +34,8 @@
     "sidePanel"
   ],
   "host_permissions": [
-    "https://*.ciamlogin.com/*"
+    "https://*.ciamlogin.com/*",
+    "https://login.microsoftonline.com/*"
   ],
   "commands": {
     "save-current-tab": {

@@ -111,16 +111,18 @@ export function Popup(): JSX.Element {
     setView('main');
   }, []);
 
+  // Handle batch save complete
+  const handleBatchComplete = useCallback(() => {
+    // Batch save completed - user can click Done to return
+  }, []);
+
   // Render batch-select view
   if (view === 'batch-select' && authState.isAuthenticated) {
     return (
       <div className="flex flex-col min-h-[360px] min-w-[320px]">
         <SaveSelectedTabs
           onCancel={handleCloseBatchSelect}
-          onComplete={() => {
-            // Could auto-close or stay on summary
-            console.log('[Popup] Batch save complete');
-          }}
+          onComplete={handleBatchComplete}
         />
       </div>
     );

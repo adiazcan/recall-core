@@ -6,11 +6,10 @@
  */
 
 import type { JSX } from 'react';
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { TabList } from './TabList';
-import { SaveProgress } from './SaveProgress';
-import { saveUrl } from '../../services/messaging';
-import type { SaveableTab, BatchSaveResult, SaveResult, ExtensionErrorCode } from '../../types';
+import { saveUrls } from '../../services/messaging';
+import type { SaveableTab, BatchSaveResult } from '../../types';
 
 export type BatchSaveStatus = 'selecting' | 'saving' | 'complete';
 
@@ -30,14 +29,6 @@ export function SaveSelectedTabs({
   const [status, setStatus] = useState<BatchSaveStatus>('selecting');
   const [saveResult, setSaveResult] = useState<BatchSaveResult | null>(null);
   const [error, setError] = useState<string | undefined>();
-  const [currentProgress, setCurrentProgress] = useState(0);
-  const isMountedRef = useRef(true);
-
-  useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
 
   // Get selected tabs
   const selectedTabs = useMemo(
@@ -56,7 +47,6 @@ export function SaveSelectedTabs({
 
     setStatus('saving');
     setError(undefined);
-    setCurrentProgress(0);
     setSaveResult(null);
 
     try {
@@ -64,86 +54,15 @@ export function SaveSelectedTabs({
         url: tab.url,
         title: tab.title,
       }));
-
-      const results: Array<SaveResult & { index: number; url: string }> = new Array(
-        items.length,
-      );
-      let currentIndex = 0;
-      let completed = 0;
-
-      const updateProgress = () => {
-        completed += 1;
-        if (isMountedRef.current) {
-          setCurrentProgress(completed);
-        }
-      };
-
-      async function processNext(): Promise<void> {
-        while (currentIndex < items.length) {
-          const index = currentIndex++;
-          const item = items[index];
-
-          try {
-            const result = await saveUrl(item.url, item.title);
-            results[index] = { ...result, index, url: item.url };
-          } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to save';
-            const errorCode = (err as { code?: ExtensionErrorCode })?.code ?? 'UNKNOWN';
-            results[index] = {
-              success: false,
-              isNew: false,
-              error: errorMessage,
-              errorCode,
-              index,
-              url: item.url,
-            };
-          } finally {
-            updateProgress();
-          }
-        }
-      }
-
-      const concurrency = Math.min(3, items.length);
-      await Promise.all(
-        Array.from({ length: concurrency }, () => processNext()),
-      );
-
-      const summary = results.reduce<BatchSaveResult>(
-        (acc, result) => {
-          if (result.success) {
-            if (result.isNew) {
-              acc.created += 1;
-            } else {
-              acc.deduplicated += 1;
-            }
-          } else {
-            acc.failed += 1;
-          }
-          acc.results.push(result);
-          return acc;
-        },
-        {
-          total: items.length,
-          created: 0,
-          deduplicated: 0,
-          failed: 0,
-          results: [],
-        },
-      );
-
-      if (!isMountedRef.current) {
-        return;
-      }
+      const summary = await saveUrls(items);
 
       setSaveResult(summary);
       setStatus('complete');
       onComplete?.(summary);
     } catch (err) {
       console.error('[SaveSelectedTabs] Batch save failed:', err);
-      if (isMountedRef.current) {
-        setError(err instanceof Error ? err.message : 'Failed to save tabs');
-        setStatus('selecting');
-      }
+      setError(err instanceof Error ? err.message : 'Failed to save tabs');
+      setStatus('selecting');
     }
   }, [selectedTabs, onComplete, status]);
 
@@ -207,12 +126,12 @@ export function SaveSelectedTabs({
       {/* Saving view */}
       {status === 'saving' && (
         <div className="flex-1 flex flex-col items-center justify-center p-8">
-          <div className="w-full max-w-xs">
-            <SaveProgress
-              status="saving"
-              batchCurrent={currentProgress}
-              batchTotal={selectedTabs.length}
+          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+            <span
+              className="w-4 h-4 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin dark:border-gray-600 dark:border-t-blue-400"
+              aria-hidden="true"
             />
+            <span>Saving tabs...</span>
           </div>
         </div>
       )}

@@ -211,10 +211,19 @@ export function createMessageListener(
       return false;
     }
 
+    // Helper to safely call sendResponse (may fail if channel is closed)
+    const safeSendResponse = (response: MessageResponse<unknown>): void => {
+      try {
+        sendResponse(response);
+      } catch (err) {
+        console.warn('[Messaging] Failed to send response (channel may be closed):', err);
+      }
+    };
+
     // Execute handler asynchronously
     handler(message as never, sender)
       .then((response) => {
-        sendResponse(response);
+        safeSendResponse(response);
       })
       .catch((error) => {
         console.error('[Messaging] Handler error:', error);
@@ -222,7 +231,7 @@ export function createMessageListener(
           error instanceof Error ? error.message : 'Unknown error';
         const errorCode: ExtensionErrorCode =
           error instanceof MessageError ? error.code : 'UNKNOWN';
-        sendResponse(errorResponse(errorMessage, errorCode));
+        safeSendResponse(errorResponse(errorMessage, errorCode));
       });
 
     // Return true to indicate async response

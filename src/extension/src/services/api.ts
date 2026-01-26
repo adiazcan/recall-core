@@ -161,13 +161,24 @@ export function validateUrl(
 /**
  * Makes an authenticated API request
  */
+function buildApiBaseUrl(): string {
+  const trimmed = config.apiBaseUrl.replace(/\/+$/, '');
+  return /\/api\/v1$/.test(trimmed) ? trimmed : `${trimmed}/api/v1`;
+}
+
+function buildApiUrl(endpoint: string): string {
+  const base = buildApiBaseUrl();
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return `${base}${normalizedEndpoint}`;
+}
+
 async function apiRequest<T>(
   method: string,
   endpoint: string,
   body?: unknown
 ): Promise<T> {
   const accessToken = await getValidAccessToken();
-  const url = `${config.apiBaseUrl}${endpoint}`;
+  const url = buildApiUrl(endpoint);
 
   const headers: HeadersInit = {
     Authorization: `Bearer ${accessToken}`,
@@ -257,7 +268,7 @@ export async function createItem(
     // Make the API call directly to capture response status
     // API returns 201 for new items, 200 for deduplicated items
     const accessToken = await getValidAccessToken();
-    const url = `${config.apiBaseUrl}items`;
+    const url = buildApiUrl('/items');
 
     const response = await fetch(url, {
       method: 'POST',

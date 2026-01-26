@@ -209,21 +209,33 @@ async function processWithConcurrency<T, R>(
   concurrencyLimit: number
 ): Promise<R[]> {
   const results: R[] = new Array(items.length);
-  let currentIndex = 0;
 
-  async function processNext(): Promise<void> {
-    while (currentIndex < items.length) {
-      const index = currentIndex++;
-      results[index] = await processor(items[index], index);
-    }
+  // Process in chunks to maintain concurrency limit
+  for (let i = 0; i < items.length; i += concurrencyLimit) {
+    const chunk = items.slice(i, i + concurrencyLimit);
+    const chunkPromises = chunk.map((item, chunkIndex) => {
+      const actualIndex = i + chunkIndex;
+      return processor(item, actualIndex)
+        .then((result) => {
+          results[actualIndex] = result;
+        })
+        .catch((error) => {
+          // Should not happen as processor catches errors, but handle just in case
+          console.error(`[processWithConcurrency] Unexpected error at index ${actualIndex}:`, error);
+          results[actualIndex] = {
+            success: false,
+            isNew: false,
+            error: error instanceof Error ? error.message : 'Processing failed',
+            errorCode: 'UNKNOWN',
+            index: actualIndex,
+            url: '',
+          } as R;
+        });
+    });
+
+    await Promise.all(chunkPromises);
   }
 
-  // Start concurrent workers
-  const workers = Array(Math.min(concurrencyLimit, items.length))
-    .fill(null)
-    .map(() => processNext());
-
-  await Promise.all(workers);
   return results;
 }
 
@@ -253,26 +265,26 @@ async function handleSaveUrls(
     async (item, index) => {
       const { url, title } = item;
 
-      // Validate URL first
-      const validation = validateUrl(url);
-      if (!validation.valid) {
-        return {
-          success: false,
-          isNew: false,
-          error: validation.error,
-          errorCode: validation.code,
-          index,
-          url,
-        };
-      }
-
       try {
-        const result = await saveItem(url, title);
+        // Validate URL first
+        const validation = validateUrl(url);
+        if (!validation.valid) {
+          return {
+            success: false,
+            isNew: false,
+            error: validation.error,
+            errorCode: validation.code,
+            index,
+            url,
+          };
+        }
+
+        const saveResult = await saveItem(url, title);
         debugLog(
           `[ServiceWorker] Batch item ${index + 1}/${items.length}:`,
-          result.success ? (result.isNew ? 'created' : 'dedupe') : 'failed'
+          saveResult.success ? (saveResult.isNew ? 'created' : 'dedupe') : 'failed'
         );
-        return { ...result, index, url };
+        return { ...saveResult, index, url };
       } catch (error) {
         let errorMessage: string;
         let errorCode: SaveResult['errorCode'];

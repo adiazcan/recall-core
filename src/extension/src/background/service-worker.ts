@@ -216,7 +216,7 @@ chrome.runtime.onInstalled.addListener((details) => {
 /**
  * Handle startup
  */
-chrome.runtime.onStartup.addListener(() => {
+chrome.runtime.onStartup.addListener(async (): Promise<void> => {
   console.log('[ServiceWorker] Browser started');
 });
 

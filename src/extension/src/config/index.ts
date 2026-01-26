@@ -46,7 +46,7 @@ function getEnvVar(
  */
 export const config: ExtensionConfig = {
   apiBaseUrl: getEnvVar('VITE_API_BASE_URL', 'http://localhost:5080'),
-  webAppUrl: getEnvVar('VITE_WEB_APP_URL', 'http://localhost:5169'),
+  webAppUrl: getEnvVar('VITE_WEB_APP_URL', 'http://localhost:3000'),
   entraAuthority: getEnvVar('VITE_ENTRA_AUTHORITY', ''),
   entraClientId: getEnvVar('VITE_ENTRA_CLIENT_ID', ''),
   entraRedirectUrl: getEnvVar('VITE_ENTRA_REDIRECT_URL', ''),

@@ -390,6 +390,6 @@ type ExtensionErrorCode =
 |----------|-------|
 | Backend Entities | None new (uses existing `Item`) |
 | Storage Keys | `auth`, `settings` |
-| Message Types | 6 request types, 3 response types |
+| Message Types | 7 request types (including `OpenSidePanelMessage`), 3 response types |
 | UI State Types | 2 main states (popup, batch) |
 | Error Codes | 7 error codes |

@@ -24,6 +24,10 @@ export interface SaveProgressProps {
   onDismiss?: () => void;
   /** Callback when user needs to sign in due to auth error */
   onSignIn?: () => void;
+  /** Batch mode: current number being processed */
+  batchCurrent?: number;
+  /** Batch mode: total items in batch */
+  batchTotal?: number;
 }
 
 /**
@@ -89,12 +93,15 @@ export function SaveProgress({
   onRetry,
   onDismiss,
   onSignIn,
+  batchCurrent,
+  batchTotal,
 }: SaveProgressProps): JSX.Element | null {
   if (status === 'idle') {
     return null;
   }
 
   const showSignIn = isAuthError(errorCode) && onSignIn;
+  const isBatchMode = batchTotal !== undefined && batchTotal > 1;
 
   return (
     <div className={`p-3 rounded-md border mt-3 ${statusContainerStyles[status]}`}>
@@ -104,7 +111,11 @@ export function SaveProgress({
             className="w-4 h-4 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin dark:border-gray-600 dark:border-t-blue-400"
             aria-hidden="true"
           />
-          <span className="text-[13px] text-gray-700 dark:text-gray-200">Saving...</span>
+          <span className="text-[13px] text-gray-700 dark:text-gray-200">
+            {isBatchMode
+              ? `Saving ${batchCurrent ?? 0} of ${batchTotal}...`
+              : 'Saving...'}
+          </span>
         </div>
       )}
 

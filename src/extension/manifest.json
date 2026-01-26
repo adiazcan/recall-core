@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "Recall - Save & Organize",
   "version": "0.1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArXEkvvNiOpT0BjQZ/omyFuaY2rm2qeJVCOaMhGofiKFvV/Uf2Khx+1BJAfvoQb8jfq8VEOlZvRqMaJIWcbTlZyqpdViljMcE2M0m1WHT2QGhRL82ahHALUuCda6hX3Tmi03w8zcM9VkFPj99XmEqdHVea8wJmHEyuDVdagnP4Na1buS3/1UfKjUOoo+6zaIeZrCuC9PZc5yu8Vyn72EBW6jnIikkDLVnaQ2RZGwnTFCGeph/tOiUtEfcqqlPFM+R2M3+sENzHZ+qVrFSlcXs3c9Zwq0+lV10sPzIOzpZQmr71kft8xRTfuYGyM1pONTWcbUQZ45rdlqtWNU8pjLP8wIDAQAB",
   "description": "Save URLs to your Recall inbox and browse saved content in a side panel.",
   "icons": {
     "16": "src/assets/icon-16.svg",

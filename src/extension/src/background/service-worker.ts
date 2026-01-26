@@ -29,9 +29,11 @@ import type {
   RefreshTokenMessage,
   OpenSidePanelMessage,
   SaveUrlMessage,
+  SaveUrlsMessage,
   MessageResponse,
   AuthStateResponse,
   SaveResult,
+  BatchSaveResult,
 } from '../types';
 
 console.log('[ServiceWorker] Initializing...');
@@ -181,6 +183,148 @@ async function handleSaveUrl(
 }
 
 // =============================================================================
+// Batch Save Implementation
+// =============================================================================
+
+/** Maximum concurrent requests for batch operations */
+const BATCH_CONCURRENCY_LIMIT = 3;
+
+/**
+ * Processes items in batches with limited concurrency
+ *
+ * @param items - Array of items to process
+ * @param processor - Function to process each item
+ * @param concurrencyLimit - Maximum concurrent operations
+ */
+async function processWithConcurrency<T, R>(
+  items: T[],
+  processor: (item: T, index: number) => Promise<R>,
+  concurrencyLimit: number
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let currentIndex = 0;
+
+  async function processNext(): Promise<void> {
+    while (currentIndex < items.length) {
+      const index = currentIndex++;
+      results[index] = await processor(items[index], index);
+    }
+  }
+
+  // Start concurrent workers
+  const workers = Array(Math.min(concurrencyLimit, items.length))
+    .fill(null)
+    .map(() => processNext());
+
+  await Promise.all(workers);
+  return results;
+}
+
+/**
+ * Handles SAVE_URLS message for batch save operations
+ */
+async function handleSaveUrls(
+  message: SaveUrlsMessage
+): Promise<MessageResponse<BatchSaveResult>> {
+  const { items } = message.payload;
+
+  if (!items || items.length === 0) {
+    return successResponse({
+      total: 0,
+      created: 0,
+      deduplicated: 0,
+      failed: 0,
+      results: [],
+    });
+  }
+
+  console.log('[ServiceWorker] Starting batch save of', items.length, 'items');
+
+  // Process items with concurrency limit
+  const results = await processWithConcurrency(
+    items,
+    async (item, index) => {
+      const { url, title } = item;
+
+      // Validate URL first
+      const validation = validateUrl(url);
+      if (!validation.valid) {
+        return {
+          success: false,
+          isNew: false,
+          error: validation.error,
+          errorCode: validation.code,
+          index,
+          url,
+        };
+      }
+
+      try {
+        const result = await saveItem(url, title);
+        console.log(
+          `[ServiceWorker] Batch item ${index + 1}/${items.length}:`,
+          result.success ? (result.isNew ? 'created' : 'dedupe') : 'failed'
+        );
+        return { ...result, index, url };
+      } catch (error) {
+        let errorMessage: string;
+        let errorCode: SaveResult['errorCode'];
+
+        if (error instanceof ApiError) {
+          errorMessage = error.message;
+          errorCode = error.code;
+        } else if (error instanceof AuthError) {
+          errorMessage = error.message;
+          errorCode = error.code;
+        } else {
+          errorMessage = error instanceof Error ? error.message : 'Failed to save';
+          errorCode = 'UNKNOWN';
+        }
+
+        return {
+          success: false,
+          isNew: false,
+          error: errorMessage,
+          errorCode,
+          index,
+          url,
+        };
+      }
+    },
+    BATCH_CONCURRENCY_LIMIT
+  );
+
+  // Calculate summary
+  let created = 0;
+  let deduplicated = 0;
+  let failed = 0;
+
+  for (const result of results) {
+    if (result.success) {
+      if (result.isNew) {
+        created++;
+      } else {
+        deduplicated++;
+      }
+    } else {
+      failed++;
+    }
+  }
+
+  console.log(
+    `[ServiceWorker] Batch save complete: ${created} created, ${deduplicated} deduplicated, ${failed} failed`
+  );
+
+  return successResponse({
+    total: items.length,
+    created,
+    deduplicated,
+    failed,
+    results,
+  });
+}
+
+// =============================================================================
 // Message Handler Registry
 // =============================================================================
 
@@ -191,7 +335,7 @@ const messageHandlers: MessageHandlers = {
   REFRESH_TOKEN: handleRefreshToken,
   OPEN_SIDE_PANEL: handleOpenSidePanel,
   SAVE_URL: handleSaveUrl,
-  // SAVE_URLS will be added in Phase 5
+  SAVE_URLS: handleSaveUrls,
 };
 
 // Register message listener

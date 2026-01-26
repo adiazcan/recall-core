@@ -5,16 +5,17 @@
  * - Authentication state check
  * - Sign-in prompt for unauthenticated users
  * - Save current tab functionality
+ * - Open side panel action
  */
 
 import type { JSX } from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { AuthStatus } from './components/AuthStatus';
 import { SaveCurrentTab } from './components/SaveCurrentTab';
-import { getAuthState, signIn, signOut } from '../services/messaging';
+import { SaveSelectedTabs } from './components/SaveSelectedTabs';
+import { getAuthState, signIn, signOut, openSidePanel } from '../services/messaging';
 import type { AuthStateResponse, ExtensionErrorCode } from '../types';
 
-// View type reserved for future US3 batch-select functionality
 type PopupView = 'main' | 'batch-select';
 
 export function Popup(): JSX.Element {
@@ -24,8 +25,7 @@ export function Popup(): JSX.Element {
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [authError, setAuthError] = useState<string | undefined>();
-  // Reserved for US3: view switching between main and batch-select
-  const [_view, _setView] = useState<PopupView>('main');
+  const [view, setView] = useState<PopupView>('main');
 
   // Check auth state on mount
   useEffect(() => {
@@ -86,6 +86,46 @@ export function Popup(): JSX.Element {
     console.log('[Popup] Save successful');
   }, []);
 
+  // Handle open side panel
+  const handleOpenSidePanel = useCallback(async () => {
+    try {
+      // Get current window ID
+      const currentWindow = await chrome.windows.getCurrent();
+      if (currentWindow.id) {
+        await openSidePanel(currentWindow.id);
+        // Close popup after opening side panel
+        window.close();
+      }
+    } catch (error) {
+      console.error('[Popup] Failed to open side panel:', error);
+    }
+  }, []);
+
+  // Handle batch select view switch
+  const handleOpenBatchSelect = useCallback(() => {
+    setView('batch-select');
+  }, []);
+
+  // Handle return to main view
+  const handleCloseBatchSelect = useCallback(() => {
+    setView('main');
+  }, []);
+
+  // Render batch-select view
+  if (view === 'batch-select' && authState.isAuthenticated) {
+    return (
+      <div className="flex flex-col min-h-[360px] min-w-[320px]">
+        <SaveSelectedTabs
+          onCancel={handleCloseBatchSelect}
+          onComplete={() => {
+            // Could auto-close or stay on summary
+            console.log('[Popup] Batch save complete');
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-[200px]">
       {/* Header */}
@@ -132,6 +172,55 @@ export function Popup(): JSX.Element {
             onSaveSuccess={handleSaveSuccess}
             onSignIn={handleSignIn}
           />
+          
+          {/* Action buttons */}
+          <div className="px-4 py-3 border-t border-gray-200 space-y-2 dark:border-gray-700">
+            {/* Save selected tabs button */}
+            <button
+              type="button"
+              onClick={handleOpenBatchSelect}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                />
+              </svg>
+              Save selected tabs
+            </button>
+
+            {/* Open Side Panel button */}
+            <button
+              type="button"
+              onClick={handleOpenSidePanel}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4 6h16M4 12h16M4 18h7"
+                />
+              </svg>
+              Open Side Panel
+            </button>
+          </div>
         </main>
       )}
 

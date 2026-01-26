@@ -128,23 +128,23 @@
 
 ### Service Worker Implementation for US2
 
-- [ ] T028 [US2] Implement OPEN_SIDE_PANEL message handler using chrome.sidePanel.open() in src/extension/src/background/service-worker.ts
+- [X] T028 [US2] Implement OPEN_SIDE_PANEL message handler using chrome.sidePanel.open() in src/extension/src/background/service-worker.ts
 
 ### Side Panel UI for US2
 
-- [ ] T029 [US2] Create side panel React mount with token receiver listener in src/extension/src/sidepanel/main.tsx
-- [ ] T030 [US2] Create SidePanel component that embeds web app URL in responsive iframe in src/extension/src/sidepanel/SidePanel.tsx
-- [ ] T031 [US2] Implement postMessage token sharing from extension to web app (RECALL_EXT_AUTH) in src/extension/src/sidepanel/SidePanel.tsx
-- [ ] T032 [US2] Handle RECALL_REQUEST_TOKEN message from web app and respond with token in src/extension/src/sidepanel/SidePanel.tsx
+- [X] T029 [US2] Create side panel React mount with token receiver listener in src/extension/src/sidepanel/main.tsx
+- [X] T030 [US2] Create SidePanel component that embeds web app URL in responsive iframe in src/extension/src/sidepanel/SidePanel.tsx
+- [X] T031 [US2] Implement postMessage token sharing from extension to web app (RECALL_EXT_AUTH) in src/extension/src/sidepanel/SidePanel.tsx
+- [X] T032 [US2] Handle RECALL_REQUEST_TOKEN message from web app and respond with token in src/extension/src/sidepanel/SidePanel.tsx
 
 ### Popup Integration for US2
 
-- [ ] T033 [US2] Add "Open Side Panel" button to Popup component in src/extension/src/popup/Popup.tsx
+- [X] T033 [US2] Add "Open Side Panel" button to Popup component in src/extension/src/popup/Popup.tsx
 
 ### Error States for US2
 
-- [ ] T034 [US2] Handle web app load failure with retry option and "open in new tab" link in src/extension/src/sidepanel/SidePanel.tsx
-- [ ] T035 [US2] Handle unauthenticated state in side panel with sign-in guidance in src/extension/src/sidepanel/SidePanel.tsx
+- [X] T034 [US2] Handle web app load failure with retry option and "open in new tab" link in src/extension/src/sidepanel/SidePanel.tsx
+- [X] T035 [US2] Handle unauthenticated state in side panel with sign-in guidance in src/extension/src/sidepanel/SidePanel.tsx
 
 **Checkpoint**: User Story 2 complete - can open side panel, browse Recall content, SSO works
 
@@ -158,25 +158,25 @@
 
 ### Service Worker Implementation for US3
 
-- [ ] T036 [US3] Implement SAVE_URLS message handler with limited concurrency (2-3 parallel requests) in src/extension/src/background/service-worker.ts
-- [ ] T037 [US3] Implement progress reporting for batch operations in src/extension/src/background/service-worker.ts
+- [X] T036 [US3] Implement SAVE_URLS message handler with limited concurrency (2-3 parallel requests) in src/extension/src/background/service-worker.ts
+- [X] T037 [US3] Implement progress reporting for batch operations in src/extension/src/background/service-worker.ts
 
 ### Popup UI for US3
 
-- [ ] T038 [US3] Create TabList component with checkbox selection for open tabs in src/extension/src/popup/components/TabList.tsx
-- [ ] T039 [US3] Create SaveSelectedTabs component orchestrating batch selection and save in src/extension/src/popup/components/SaveSelectedTabs.tsx
-- [ ] T040 [US3] Add batch progress indicator with current/total count in src/extension/src/popup/components/SaveProgress.tsx
-- [ ] T041 [US3] Add batch result summary (X saved, Y already existed, Z failed) in src/extension/src/popup/components/SaveSelectedTabs.tsx
+- [X] T038 [US3] Create TabList component with checkbox selection for open tabs in src/extension/src/popup/components/TabList.tsx
+- [X] T039 [US3] Create SaveSelectedTabs component orchestrating batch selection and save in src/extension/src/popup/components/SaveSelectedTabs.tsx
+- [X] T040 [US3] Add batch progress indicator with current/total count in src/extension/src/popup/components/SaveProgress.tsx
+- [X] T041 [US3] Add batch result summary (X saved, Y already existed, Z failed) in src/extension/src/popup/components/SaveSelectedTabs.tsx
 
 ### Popup Navigation for US3
 
-- [ ] T042 [US3] Update Popup component with view switching between main and batch-select views in src/extension/src/popup/Popup.tsx
-- [ ] T043 [US3] Add "Save selected tabs" button to main popup view in src/extension/src/popup/Popup.tsx
+- [X] T042 [US3] Update Popup component with view switching between main and batch-select views in src/extension/src/popup/Popup.tsx
+- [X] T043 [US3] Add "Save selected tabs" button to main popup view in src/extension/src/popup/Popup.tsx
 
 ### Edge Cases for US3
 
-- [ ] T044 [US3] Filter and mark restricted URLs (chrome://, edge://, about:) as non-selectable in TabList in src/extension/src/popup/components/TabList.tsx
-- [ ] T045 [US3] Handle cancel action to return to main popup without saving in src/extension/src/popup/components/SaveSelectedTabs.tsx
+- [X] T044 [US3] Filter and mark restricted URLs (chrome://, edge://, about:) as non-selectable in TabList in src/extension/src/popup/components/TabList.tsx
+- [X] T045 [US3] Handle cancel action to return to main popup without saving in src/extension/src/popup/components/SaveSelectedTabs.tsx
 
 **Checkpoint**: User Story 3 complete - can batch-select tabs, save with progress, see summary
 
@@ -186,15 +186,15 @@
 
 **Purpose**: Documentation, configuration, and production readiness
 
-- [ ] T046 [P] Create extension development setup documentation in docs/extension/setup.md
-- [ ] T047 [P] Create Entra app registration guide for extension in docs/extension/entra-configuration.md
-- [ ] T048 [P] Create manual testing checklist in docs/extension/testing-checklist.md
-- [ ] T049 Generate stable extension key for consistent ID and update manifest.json
-- [ ] T050 [P] Create unit tests for storage service in src/extension/tests/services/storage.test.ts
-- [ ] T051 [P] Create unit tests for auth service (mocking chrome.identity) in src/extension/tests/services/auth.test.ts
-- [ ] T052 [P] Create unit tests for API service in src/extension/tests/services/api.test.ts
-- [ ] T053 Configure Vitest for extension tests in src/extension/vitest.config.ts and src/extension/tests/setup.ts
-- [ ] T054 Run quickstart.md validation to verify end-to-end flow
+- [X] T046 [P] Create extension development setup documentation in docs/extension/setup.md
+- [X] T047 [P] Create Entra app registration guide for extension in docs/extension/entra-configuration.md
+- [X] T048 [P] Create manual testing checklist in docs/extension/testing-checklist.md
+- [X] T049 Generate stable extension key for consistent ID and update manifest.json
+- [X] T050 [P] Create unit tests for storage service in src/extension/tests/services/storage.test.ts
+- [X] T051 [P] Create unit tests for auth service (mocking chrome.identity) in src/extension/tests/services/auth.test.ts
+- [X] T052 [P] Create unit tests for API service in src/extension/tests/services/api.test.ts
+- [X] T053 Configure Vitest for extension tests in src/extension/vitest.config.ts and src/extension/tests/setup.ts
+- [X] T054 Run quickstart.md validation to verify end-to-end flow
 
 ---
 

@@ -30,3 +30,6 @@ coverage/
 # Temporary files
 *.tmp
 *.swp
+
+# Extension private key (for stable ID)
+extension.pem

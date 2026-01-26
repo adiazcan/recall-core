@@ -13,7 +13,7 @@ This document captures research findings and technical decisions for building a 
 
 ### Decision: Use `chrome.sidePanel` API
 
-**Rationale**: The chrome.sidePanel API (Chrome 114+, Edge 114+) provides a native way to display persistent UI alongside web content. Both Chrome and Edge support the same API surface.
+**Rationale**: The chrome.sidePanel API (Chrome 114+, Edge 114+) provides a native way to display persistent UI alongside web content. The `chrome.sidePanel.open()` method (Chrome 116+, Edge 116+) is required for programmatically opening the side panel from the popup. Both Chrome and Edge support the same API surface.
 
 **Alternatives Considered**:
 - **DevTools Panel**: Limited to developer use; not suitable for general users
@@ -52,8 +52,8 @@ async function openSidePanel() {
 - User can pin extension to keep side panel easily accessible
 
 **Cross-Browser Compatibility**:
-- Chrome: Full support since 114
-- Edge: Full support since 114 (same Chromium base)
+- Chrome: Full sidePanel support since 114; sidePanel.open() since 116 (required for this extension)
+- Edge: Full sidePanel support since 114; sidePanel.open() since 116 (required for this extension)
 - Firefox: Not supported (out of scope)
 
 **Citations**:

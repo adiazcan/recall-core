@@ -12,7 +12,7 @@ Get the Recall browser extension running locally in under 10 minutes.
 |-------------|---------|---------|
 | Node.js | 20+ | JavaScript runtime |
 | pnpm | 9+ | Package manager |
-| Chrome or Edge | 114+ | Browser with sidePanel support |
+| Chrome or Edge | 116+ | Browser with sidePanel.open() API support |
 | Recall API | Running | Backend for saving items |
 | Recall Web App | Running | Side panel content |
 

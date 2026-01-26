@@ -152,7 +152,7 @@ As a user with multiple relevant tabs open, I want to select and save several ta
 - The Recall web app already supports responsive layouts suitable for side panel width of 400px minimum.
 - The existing Entra External ID app registration can be configured to allow extension origins/redirects.
 - The `POST /api/v1/items` endpoint accepts `{ url, title? }` and handles deduplication by returning 200 for existing items.
-- Chrome and Edge both support the `sidePanel` API in their current stable versions (Chrome 114+, Edge 114+).
+- Chrome and Edge both support the `sidePanel` API in their current stable versions (Chrome 116+ for full feature set including sidePanel.open(), Edge 116+).
 - Users have the Recall web app accessible (localhost for dev, deployed URL for production).
 
 ## Dependencies

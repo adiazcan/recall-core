@@ -9,7 +9,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 // Placeholder component for Phase 4 implementation
-function SidePanelPlaceholder(): JSX.Element {
+function SidePanelPlaceholder() {
   return (
     <div
       style={{

@@ -96,8 +96,8 @@
 
 ### Critical
 
-- [ ] [AI-Review][CRITICAL] Commit extension directory to git - all Phase 1-3 code is untracked [src/extension/]
-- [ ] [AI-Review][CRITICAL] Fix TypeScript error: Add JSX import to sidepanel/main.tsx [src/extension/src/sidepanel/main.tsx#L12]
+- [X] [AI-Review][CRITICAL] Commit extension directory to git - all Phase 1-3 code is untracked [src/extension/]
+- [X] [AI-Review][CRITICAL] Fix TypeScript error: Add JSX import to sidepanel/main.tsx [src/extension/src/sidepanel/main.tsx#L12]
 
 ### High
 

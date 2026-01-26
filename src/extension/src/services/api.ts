@@ -254,11 +254,29 @@ export async function createItem(
   }
 
   try {
-    // Make the API call - returns 201 for new, 200 for deduplicated
-    const item = await apiRequest<ItemDto>('POST', '/items', request);
-    // Note: The actual isNew detection would need to check response status
-    // For now, we assume the API returns the item and we treat it as saved
-    return { item, isNew: true };
+    // Make the API call directly to capture response status
+    // API returns 201 for new items, 200 for deduplicated items
+    const accessToken = await getValidAccessToken();
+    const url = `${config.apiBaseUrl}/items`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      throw await handleApiError(response);
+    }
+
+    const item = (await response.json()) as ItemDto;
+    // 201 = newly created, 200 = deduplicated (already existed)
+    const isNew = response.status === 201;
+
+    return { item, isNew };
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;

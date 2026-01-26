@@ -34,12 +34,16 @@ export function SaveCurrentTab({
 
   // Load current tab on mount
   useEffect(() => {
+    let isMounted = true;
+
     async function loadCurrentTab() {
       try {
         const [tab] = await chrome.tabs.query({
           active: true,
           currentWindow: true,
         });
+
+        if (!isMounted) return;
 
         if (tab && tab.id && tab.url) {
           setCurrentTab({
@@ -56,13 +60,20 @@ export function SaveCurrentTab({
           }
         }
       } catch (error) {
+        if (!isMounted) return;
         console.error('[SaveCurrentTab] Failed to get current tab:', error);
       } finally {
-        setIsLoadingTab(false);
+        if (isMounted) {
+          setIsLoadingTab(false);
+        }
       }
     }
 
     loadCurrentTab();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Handle save

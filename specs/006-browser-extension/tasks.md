@@ -107,7 +107,7 @@
 
 ### Medium
 
-- [ ] [AI-Review][MEDIUM] Add cleanup to useEffect to prevent state updates after unmount [src/extension/src/popup/components/SaveCurrentTab.tsx#L28-L55]
+- [X] [AI-Review][MEDIUM] Add cleanup to useEffect to prevent state updates after unmount [src/extension/src/popup/components/SaveCurrentTab.tsx#L28-L55]
 - [ ] [AI-Review][MEDIUM] Create properly sized icon assets (16/32/48/128px) - currently all identical [src/extension/src/assets/]
 - [ ] [AI-Review][MEDIUM] Consider migrating inline styles to Tailwind CSS for consistency with web app [src/extension/src/popup/]
 - [ ] [AI-Review][MEDIUM] Handle background token refresh failure by prompting re-auth in UI [src/extension/src/services/auth.ts#L183-L186]

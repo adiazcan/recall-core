@@ -150,6 +150,26 @@
 
 ---
 
+## Review Follow-ups Phase 4 (AI)
+
+**Generated:** 2026-01-26 | **Reviewer:** Code Review Agent
+
+### High
+
+- [ ] [AI-Review][HIGH] Replace setInterval polling with chrome.storage.onChanged listener for auth state changes [src/extension/src/sidepanel/main.tsx#L81-L96]
+
+### Medium
+
+- [ ] [AI-Review][MEDIUM] Document that iframe onError rarely fires - timeout fallback is primary error detection [src/extension/src/sidepanel/SidePanel.tsx#L137]
+- [ ] [AI-Review][MEDIUM] Move SidePanelApp component to separate file for Fast Refresh support [src/extension/src/sidepanel/main.tsx#L20]
+- [ ] [AI-Review][MEDIUM] Add cancellation protection to handleAuthRequired to prevent unmount race [src/extension/src/sidepanel/main.tsx#L54-L72]
+
+### Low
+
+- [ ] [AI-Review][LOW] Replace console.error/warn with conditional logging for production [src/extension/src/sidepanel/main.tsx#L37]
+
+---
+
 ## Phase 5: User Story 3 - Save Multiple Selected Tabs (Priority: P3)
 
 **Goal**: Users can batch-save multiple tabs at once with progress feedback
@@ -182,6 +202,28 @@
 
 ---
 
+## Review Follow-ups Phase 5 (AI)
+
+**Generated:** 2026-01-26 | **Reviewer:** Code Review Agent
+
+### High
+
+- [ ] [AI-Review][HIGH] Implement progress reporting - setCurrentProgress never called during batch save (T037 partial) [src/extension/src/popup/components/SaveSelectedTabs.tsx#L37-L38]
+- [ ] [AI-Review][HIGH] Add double-submit protection to handleSave - check status before starting save [src/extension/src/popup/components/SaveSelectedTabs.tsx#L44-L63]
+
+### Medium
+
+- [ ] [AI-Review][MEDIUM] Replace isMounted flag with AbortController for React 18+ async cleanup [src/extension/src/popup/components/TabList.tsx#L49-L76]
+- [ ] [AI-Review][MEDIUM] Memoize onTabsLoaded callback in parent or add eslint-disable to prevent re-render loops [src/extension/src/popup/components/TabList.tsx#L75]
+- [ ] [AI-Review][MEDIUM] Consider reusing SaveProgress batch props instead of custom saving UI in SaveSelectedTabs [src/extension/src/popup/components/SaveSelectedTabs.tsx]
+
+### Low
+
+- [ ] [AI-Review][LOW] Replace console.log with conditional logging for production [src/extension/src/background/service-worker.ts]
+- [ ] [AI-Review][LOW] Fix ESLint warning - move component to separate file for fast refresh [src/extension/src/sidepanel/main.tsx#L20]
+
+---
+
 ## Phase 6: Polish & Cross-Cutting Concerns
 
 **Purpose**: Documentation, configuration, and production readiness
@@ -195,6 +237,23 @@
 - [X] T052 [P] Create unit tests for API service in src/extension/tests/services/api.test.ts
 - [X] T053 Configure Vitest for extension tests in src/extension/vitest.config.ts and src/extension/tests/setup.ts
 - [X] T054 Run quickstart.md validation to verify end-to-end flow
+
+---
+
+## Review Follow-ups Phase 6 (AI)
+
+**Generated:** 2026-01-26 | **Reviewer:** Code Review Agent
+
+### Medium
+
+- [ ] [AI-Review][MEDIUM] Fix quickstart.md keyboard shortcut docs - Ctrl+Shift+S doesn't open popup, only Alt+Shift+S exists for quick-save [specs/006-browser-extension/quickstart.md#L171-L178]
+- [ ] [AI-Review][MEDIUM] Add React component unit tests for TabList, SaveProgress, BatchResultSummary [src/extension/tests/]
+- [ ] [AI-Review][MEDIUM] Create .env.example file or update setup.md to not reference it [src/extension/ or docs/extension/setup.md#L42-L44]
+
+### Low
+
+- [ ] [AI-Review][LOW] Update testing-checklist test 12.2 once progress reporting is implemented [docs/extension/testing-checklist.md#L131]
+- [ ] [AI-Review][LOW] Add tests exercising chrome.storage.onChanged mock once polling is replaced with listener [src/extension/tests/setup.ts]
 
 ---
 

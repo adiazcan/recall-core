@@ -217,18 +217,20 @@ window.addEventListener('message', async (event) => {
 
 **Web App Side (requires modification)**:
 ```typescript
+const EXTENSION_ORIGIN = 'chrome-extension://<your-extension-id>'; // TODO: replace with your extension's actual origin
+
 // In web app, listen for extension token
 window.addEventListener('message', (event) => {
-  // Validate origin is extension
-  if (!event.origin.startsWith('chrome-extension://')) return;
-  if (event.data.type === 'RECALL_EXT_AUTH') {
+  // Validate origin is exactly the known extension origin
+  if (event.origin !== EXTENSION_ORIGIN) return;
+  if (event.data?.type === 'RECALL_EXT_AUTH') {
     useExtensionToken(event.data.accessToken, event.data.expiresAt);
   }
 });
 
 // Request token on load if in extension context
 if (window.parent !== window) {
-  window.parent.postMessage({ type: 'RECALL_REQUEST_TOKEN' }, '*');
+  window.parent.postMessage({ type: 'RECALL_REQUEST_TOKEN' }, EXTENSION_ORIGIN);
 }
 ```
 

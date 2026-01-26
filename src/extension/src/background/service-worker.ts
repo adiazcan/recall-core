@@ -204,7 +204,7 @@ chrome.runtime.onMessage.addListener(createMessageListener(messageHandlers));
 /**
  * Handle installation
  */
-chrome.runtime.onInstalled.addListener((details) => {
+chrome.runtime.onInstalled.addListener((details): void => {
   console.log('[ServiceWorker] Extension installed:', details.reason);
 
   // Set up side panel behavior - open on action click option

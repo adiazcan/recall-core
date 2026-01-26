@@ -102,7 +102,7 @@
 ### High
 
 - [X] [AI-Review][HIGH] Fix deduplication detection - always returns isNew:true instead of checking 200 vs 201 response [src/extension/src/services/api.ts#L149]
-- [ ] [AI-Review][HIGH] Create vitest.config.ts and tests/setup.ts for test infrastructure [src/extension/]
+- [X] [AI-Review][HIGH] Create vitest.config.ts and tests/setup.ts for test infrastructure [src/extension/]
 - [ ] [AI-Review][HIGH] Create eslint.config.js - lint script defined but config missing [src/extension/]
 
 ### Medium

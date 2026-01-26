@@ -378,7 +378,8 @@ const RESTRICTED_PREFIXES = [
   'edge://',
   'about:',
   'file://',
-  'devtools://'
+  'devtools://',
+  'data:'
 ];
 
 function isRestrictedUrl(url: string): boolean {

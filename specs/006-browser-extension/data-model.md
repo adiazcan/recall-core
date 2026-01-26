@@ -291,11 +291,14 @@ interface ExtensionError {
 type ExtensionErrorCode =
   | 'AUTH_REQUIRED'
   | 'AUTH_FAILED'
+  | 'AUTH_CANCELLED'
   | 'TOKEN_EXPIRED'
+  | 'TOKEN_REFRESH_FAILED'
   | 'NETWORK_ERROR'
   | 'API_ERROR'
   | 'RESTRICTED_URL'
   | 'INVALID_URL'
+  | 'STORAGE_ERROR'
   | 'UNKNOWN';
 ```
 

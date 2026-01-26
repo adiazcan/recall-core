@@ -49,28 +49,29 @@ export function TabList({
 
   // Load all open tabs
   useEffect(() => {
-    let isMounted = true;
+    const abortController = new AbortController();
 
     async function loadTabs() {
       try {
         // Query all tabs in the current window
         const chromeTabs = await chrome.tabs.query({ currentWindow: true });
 
-        if (!isMounted) return;
+        if (abortController.signal.aborted) return;
 
         // Convert to SaveableTab and filter out null results
         const saveableTabs = chromeTabs
           .map(toSaveableTab)
           .filter((tab): tab is SaveableTab => tab !== null);
 
+        if (abortController.signal.aborted) return;
         setTabs(saveableTabs);
         onTabsLoaded?.(saveableTabs);
       } catch (err) {
-        if (!isMounted) return;
+        if (abortController.signal.aborted) return;
         console.error('[TabList] Failed to load tabs:', err);
         setError('Failed to load tabs');
       } finally {
-        if (isMounted) {
+        if (!abortController.signal.aborted) {
           setIsLoading(false);
         }
       }
@@ -79,7 +80,7 @@ export function TabList({
     loadTabs();
 
     return () => {
-      isMounted = false;
+      abortController.abort();
     };
   }, [onTabsLoaded]);
 

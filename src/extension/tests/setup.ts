@@ -8,6 +8,9 @@ import { vi, beforeEach } from 'vitest';
  */
 
 // Mock chrome.storage API
+const storageChangeListeners = new Set<
+  (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => void
+>();
 const createStorageArea = () => {
   let store: Record<string, unknown> = {};
 
@@ -163,9 +166,13 @@ const chromeMock = {
     sync: mockStorageSync,
     session: mockStorageSession,
     onChanged: {
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      hasListener: vi.fn(() => false),
+      addListener: vi.fn((listener) => {
+        storageChangeListeners.add(listener);
+      }),
+      removeListener: vi.fn((listener) => {
+        storageChangeListeners.delete(listener);
+      }),
+      hasListener: vi.fn((listener) => storageChangeListeners.has(listener)),
     },
   },
   runtime: mockRuntime,
@@ -202,10 +209,19 @@ export const mocks = {
 // Helper to reset all mocks between tests
 export const resetAllMocks = () => {
   vi.clearAllMocks();
+  storageChangeListeners.clear();
   mockStorageLocal._setStore({});
   mockStorageSync._setStore({});
   mockStorageSession._setStore({});
   mockRuntime.lastError = undefined;
+};
+
+// Helper to emit chrome.storage.onChanged events
+export const emitStorageChange = (
+  changes: { [key: string]: chrome.storage.StorageChange },
+  areaName: string = 'local'
+) => {
+  storageChangeListeners.forEach((listener) => listener(changes, areaName));
 };
 
 // Helper to simulate chrome.runtime.lastError

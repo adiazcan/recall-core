@@ -137,6 +137,7 @@ export function SidePanel({ authState, onAuthRequired }: SidePanelProps): JSX.El
   }, [authState.isAuthenticated, sendTokenToWebApp]);
 
   // Handle iframe error
+  // Note: iframe onError is unreliable for cross-origin loads; timeout is primary detection.
   const handleIframeError = useCallback(() => {
     if (loadTimeoutRef.current) {
       window.clearTimeout(loadTimeoutRef.current);

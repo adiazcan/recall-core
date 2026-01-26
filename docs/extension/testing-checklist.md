@@ -139,7 +139,7 @@ Before testing, ensure:
 | # | Test Case | Steps | Expected Result | Pass |
 |---|-----------|-------|-----------------|------|
 | 12.1 | Save selected | Select 3 tabs → Click "Save Selected" | Progress indicator shows | ☐ |
-| 12.2 | Progress updates | Watch during save | Shows X of Y progress | ☐ |
+| 12.2 | Progress updates | Watch during save | Shows incrementing “Saving X of Y” progress | ☐ |
 | 12.3 | Success summary | Complete batch save | Shows: "X saved, Y already existed" | ☐ |
 | 12.4 | Mixed results | Save mix of new/existing URLs | Correct counts in summary | ☐ |
 | 12.5 | All duplicates | Save all previously saved URLs | "Y already in your inbox" | ☐ |

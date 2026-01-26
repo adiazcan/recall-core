@@ -36,7 +36,14 @@ import type {
   BatchSaveResult,
 } from '../types';
 
-console.log('[ServiceWorker] Initializing...');
+const isDev = import.meta.env.MODE !== 'production';
+const debugLog = (...args: unknown[]): void => {
+  if (isDev) {
+    console.log(...args);
+  }
+};
+
+debugLog('[ServiceWorker] Initializing...');
 
 // =============================================================================
 // Message Handlers
@@ -238,7 +245,7 @@ async function handleSaveUrls(
     });
   }
 
-  console.log('[ServiceWorker] Starting batch save of', items.length, 'items');
+  debugLog('[ServiceWorker] Starting batch save of', items.length, 'items');
 
   // Process items with concurrency limit
   const results = await processWithConcurrency(
@@ -261,7 +268,7 @@ async function handleSaveUrls(
 
       try {
         const result = await saveItem(url, title);
-        console.log(
+        debugLog(
           `[ServiceWorker] Batch item ${index + 1}/${items.length}:`,
           result.success ? (result.isNew ? 'created' : 'dedupe') : 'failed'
         );
@@ -311,7 +318,7 @@ async function handleSaveUrls(
     }
   }
 
-  console.log(
+  debugLog(
     `[ServiceWorker] Batch save complete: ${created} created, ${deduplicated} deduplicated, ${failed} failed`
   );
 
@@ -349,7 +356,7 @@ chrome.runtime.onMessage.addListener(createMessageListener(messageHandlers));
  * Handle installation
  */
 chrome.runtime.onInstalled.addListener((details): void => {
-  console.log('[ServiceWorker] Extension installed:', details.reason);
+  debugLog('[ServiceWorker] Extension installed:', details.reason);
 
   // Set up side panel behavior - open on action click option
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch((error) => {
@@ -361,7 +368,7 @@ chrome.runtime.onInstalled.addListener((details): void => {
  * Handle startup
  */
 chrome.runtime.onStartup.addListener(async (): Promise<void> => {
-  console.log('[ServiceWorker] Browser started');
+  debugLog('[ServiceWorker] Browser started');
 });
 
 // =============================================================================
@@ -372,7 +379,7 @@ chrome.runtime.onStartup.addListener(async (): Promise<void> => {
  * Handle keyboard commands
  */
 chrome.commands.onCommand.addListener((command): void => {
-  console.log('[ServiceWorker] Command received:', command);
+  debugLog('[ServiceWorker] Command received:', command);
 
   if (command === 'save-current-tab') {
     // Will be implemented in Phase 3 (T020)
@@ -385,7 +392,7 @@ chrome.commands.onCommand.addListener((command): void => {
  * Gets the active tab and saves its URL to Recall
  */
 async function handleSaveCurrentTabCommand(): Promise<void> {
-  console.log('[ServiceWorker] save-current-tab command triggered');
+  debugLog('[ServiceWorker] save-current-tab command triggered');
 
   try {
     // Get the active tab in the current window
@@ -412,7 +419,7 @@ async function handleSaveCurrentTabCommand(): Promise<void> {
     const result = await saveItem(activeTab.url, activeTab.title);
 
     if (result.success) {
-      console.log('[ServiceWorker] URL saved successfully:', result.item?.id);
+      debugLog('[ServiceWorker] URL saved successfully:', result.item?.id);
       // Could show a success badge/notification here in the future
     } else {
       console.error('[ServiceWorker] Failed to save URL:', result.error);
@@ -423,4 +430,4 @@ async function handleSaveCurrentTabCommand(): Promise<void> {
   }
 }
 
-console.log('[ServiceWorker] Initialization complete');
+debugLog('[ServiceWorker] Initialization complete');

@@ -6,10 +6,11 @@
  */
 
 import type { JSX } from 'react';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { TabList } from './TabList';
-import { saveUrls } from '../../services/messaging';
-import type { SaveableTab, BatchSaveResult } from '../../types';
+import { SaveProgress } from './SaveProgress';
+import { saveUrl } from '../../services/messaging';
+import type { SaveableTab, BatchSaveResult, SaveResult, ExtensionErrorCode } from '../../types';
 
 export type BatchSaveStatus = 'selecting' | 'saving' | 'complete';
 
@@ -30,6 +31,13 @@ export function SaveSelectedTabs({
   const [saveResult, setSaveResult] = useState<BatchSaveResult | null>(null);
   const [error, setError] = useState<string | undefined>();
   const [currentProgress, setCurrentProgress] = useState(0);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Get selected tabs
   const selectedTabs = useMemo(
@@ -44,11 +52,12 @@ export function SaveSelectedTabs({
 
   // Handle save button click
   const handleSave = useCallback(async () => {
-    if (selectedTabs.length === 0) return;
+    if (status !== 'selecting' || selectedTabs.length === 0) return;
 
     setStatus('saving');
     setError(undefined);
     setCurrentProgress(0);
+    setSaveResult(null);
 
     try {
       const items = selectedTabs.map((tab) => ({
@@ -56,16 +65,87 @@ export function SaveSelectedTabs({
         title: tab.title,
       }));
 
-      const result = await saveUrls(items);
-      setSaveResult(result);
+      const results: Array<SaveResult & { index: number; url: string }> = new Array(
+        items.length,
+      );
+      let currentIndex = 0;
+      let completed = 0;
+
+      const updateProgress = () => {
+        completed += 1;
+        if (isMountedRef.current) {
+          setCurrentProgress(completed);
+        }
+      };
+
+      async function processNext(): Promise<void> {
+        while (currentIndex < items.length) {
+          const index = currentIndex++;
+          const item = items[index];
+
+          try {
+            const result = await saveUrl(item.url, item.title);
+            results[index] = { ...result, index, url: item.url };
+          } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Failed to save';
+            const errorCode = (err as { code?: ExtensionErrorCode })?.code ?? 'UNKNOWN';
+            results[index] = {
+              success: false,
+              isNew: false,
+              error: errorMessage,
+              errorCode,
+              index,
+              url: item.url,
+            };
+          } finally {
+            updateProgress();
+          }
+        }
+      }
+
+      const concurrency = Math.min(3, items.length);
+      await Promise.all(
+        Array.from({ length: concurrency }, () => processNext()),
+      );
+
+      const summary = results.reduce<BatchSaveResult>(
+        (acc, result) => {
+          if (result.success) {
+            if (result.isNew) {
+              acc.created += 1;
+            } else {
+              acc.deduplicated += 1;
+            }
+          } else {
+            acc.failed += 1;
+          }
+          acc.results.push(result);
+          return acc;
+        },
+        {
+          total: items.length,
+          created: 0,
+          deduplicated: 0,
+          failed: 0,
+          results: [],
+        },
+      );
+
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      setSaveResult(summary);
       setStatus('complete');
-      onComplete?.(result);
+      onComplete?.(summary);
     } catch (err) {
       console.error('[SaveSelectedTabs] Batch save failed:', err);
-      setError(err instanceof Error ? err.message : 'Failed to save tabs');
-      setStatus('selecting');
+      if (isMountedRef.current) {
+        setError(err instanceof Error ? err.message : 'Failed to save tabs');
+        setStatus('selecting');
+      }
     }
-  }, [selectedTabs, onComplete]);
+  }, [selectedTabs, onComplete, status]);
 
   // Handle done (return to main view)
   const handleDone = useCallback(() => {
@@ -115,7 +195,7 @@ export function SaveSelectedTabs({
             <button
               type="button"
               onClick={handleSave}
-              disabled={selectedIds.size === 0}
+              disabled={selectedIds.size === 0 || status !== 'selecting'}
               className="w-full py-2.5 px-4 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors dark:bg-blue-600 dark:hover:bg-blue-700 dark:disabled:bg-gray-600"
             >
               Save {selectedIds.size} tab{selectedIds.size !== 1 ? 's' : ''}
@@ -127,20 +207,12 @@ export function SaveSelectedTabs({
       {/* Saving view */}
       {status === 'saving' && (
         <div className="flex-1 flex flex-col items-center justify-center p-8">
-          <div className="flex flex-col items-center gap-4">
-            <span
-              className="w-8 h-8 border-3 border-gray-200 border-t-blue-500 rounded-full animate-spin dark:border-gray-600 dark:border-t-blue-400"
-              aria-hidden="true"
+          <div className="w-full max-w-xs">
+            <SaveProgress
+              status="saving"
+              batchCurrent={currentProgress}
+              batchTotal={selectedTabs.length}
             />
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              Saving {selectedTabs.length} tab
-              {selectedTabs.length !== 1 ? 's' : ''}...
-            </p>
-            {currentProgress > 0 && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {currentProgress} of {selectedTabs.length}
-              </p>
-            )}
           </div>
         </div>
       )}
@@ -176,7 +248,7 @@ interface BatchResultSummaryProps {
   result: BatchSaveResult;
 }
 
-function BatchResultSummary({ result }: BatchResultSummaryProps): JSX.Element {
+export function BatchResultSummary({ result }: BatchResultSummaryProps): JSX.Element {
   const { total, created, deduplicated, failed } = result;
   const hasErrors = failed > 0;
 

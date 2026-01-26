@@ -243,8 +243,7 @@ pnpm build
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+Shift+S` (Win/Linux) | Open popup |
-| `Cmd+Shift+S` (Mac) | Open popup |
+| Click extension icon | Open popup |
 | `Alt+Shift+S` (Win/Linux) | Quick save current tab |
 | `Option+Shift+S` (Mac) | Quick save current tab |
 

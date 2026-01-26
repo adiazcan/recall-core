@@ -37,7 +37,7 @@ As a user, I want to open a side panel that shows my Recall inbox and collection
 
 **Acceptance Scenarios**:
 
-1. **Given** the extension is installed, **When** the user clicks the toolbar action (extension icon), **Then** the side panel opens showing the Recall web app in a responsive layout.
+1. **Given** the extension is installed, **When** the user clicks the toolbar action (extension icon) and clicks the "Open Side Panel" button in the popup, **Then** the side panel opens showing the Recall web app in a responsive layout.
 
 2. **Given** the side panel is open, **When** the user navigates within the Recall app (Inbox → Item Detail → Collections → Tags), **Then** navigation works correctly within the panel.
 

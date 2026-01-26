@@ -257,7 +257,7 @@ export async function createItem(
     // Make the API call directly to capture response status
     // API returns 201 for new items, 200 for deduplicated items
     const accessToken = await getValidAccessToken();
-    const url = `${config.apiBaseUrl}/items`;
+    const url = `${config.apiBaseUrl}items`;
 
     const response = await fetch(url, {
       method: 'POST',

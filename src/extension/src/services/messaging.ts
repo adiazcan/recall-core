@@ -220,10 +220,8 @@ export function createMessageListener(
         console.error('[Messaging] Handler error:', error);
         const errorMessage =
           error instanceof Error ? error.message : 'Unknown error';
-        const errorCode =
-          error instanceof MessageError || 'code' in error
-            ? (error.code as ExtensionErrorCode)
-            : 'UNKNOWN';
+        const errorCode: ExtensionErrorCode =
+          error instanceof MessageError ? error.code : 'UNKNOWN';
         sendResponse(errorResponse(errorMessage, errorCode));
       });
 

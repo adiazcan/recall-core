@@ -1,7 +1,7 @@
 # Feature Specification: Chrome/Edge Browser Extension
 
 **Feature Branch**: `006-browser-extension`  
-**Created**: January 25, 2026  
+**Created**: January 26, 2026  
 **Status**: Draft  
 **Input**: User description: "Chrome/Edge extension to save current page or selected tabs + open Side Panel with embedded Recall web app"
 

@@ -101,7 +101,7 @@ describe('Test Setup Verification', () => {
       mocks.tabs.query.mockResolvedValueOnce([
         { id: 1, url: 'https://example.com', title: 'Example' },
         { id: 2, url: 'https://test.com', title: 'Test' },
-      ]);
+      ] as chrome.tabs.Tab[]);
 
       const tabs = await chrome.tabs.query({ currentWindow: true });
       expect(tabs).toHaveLength(2);

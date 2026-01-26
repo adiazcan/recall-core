@@ -126,23 +126,24 @@ export function SaveCurrentTab({
 
   if (isLoadingTab) {
     return (
-      <div className="save-current-tab save-current-tab--loading">
-        <div className="save-current-tab__loading">
-          <span className="save-current-tab__spinner" aria-hidden="true" />
+      <div className="flex items-center justify-center min-h-[120px] p-4">
+        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <span
+            className="w-4 h-4 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin dark:border-gray-600 dark:border-t-blue-400"
+            aria-hidden="true"
+          />
           <span>Loading tab info...</span>
         </div>
-        <style>{saveCurrentTabStyles}</style>
       </div>
     );
   }
 
   if (!currentTab) {
     return (
-      <div className="save-current-tab save-current-tab--error">
-        <p className="save-current-tab__message">
+      <div className="flex items-center justify-center min-h-[120px] p-4">
+        <p className="text-sm text-gray-500 text-center dark:text-gray-400">
           Unable to access current tab
         </p>
-        <style>{saveCurrentTabStyles}</style>
       </div>
     );
   }
@@ -155,29 +156,33 @@ export function SaveCurrentTab({
     saveStatus === 'dedupe';
 
   return (
-    <div className="save-current-tab">
+    <div className="p-4">
       {/* Tab preview */}
-      <div className="save-current-tab__preview">
+      <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg mb-4 dark:bg-gray-800">
         {currentTab.favIconUrl && (
           <img
             src={currentTab.favIconUrl}
             alt=""
-            className="save-current-tab__favicon"
+            className="w-6 h-6 shrink-0 rounded mt-0.5"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
             }}
           />
         )}
-        <div className="save-current-tab__info">
-          <span className="save-current-tab__title">{currentTab.title}</span>
-          <span className="save-current-tab__url">{currentTab.url}</span>
+        <div className="flex flex-col gap-1 min-w-0 flex-1">
+          <span className="text-sm font-medium text-gray-800 line-clamp-2 dark:text-gray-100">
+            {currentTab.title}
+          </span>
+          <span className="text-xs text-gray-500 truncate dark:text-gray-400">
+            {currentTab.url}
+          </span>
         </div>
       </div>
 
       {/* Restricted URL warning */}
       {isRestricted && (
-        <div className="save-current-tab__restricted">
-          <span className="save-current-tab__restricted-icon" aria-hidden="true">
+        <div className="flex items-center gap-2 p-3 bg-amber-100 rounded-md text-[13px] text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">
+          <span className="text-base" aria-hidden="true">
             ⚠️
           </span>
           <span>{restrictedReason ?? 'This page cannot be saved'}</span>
@@ -188,7 +193,7 @@ export function SaveCurrentTab({
       {!isRestricted && (
         <button
           type="button"
-          className="save-current-tab__button"
+          className="w-full py-3 px-4 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors dark:bg-blue-600 dark:hover:bg-blue-700 dark:disabled:bg-gray-600"
           onClick={handleSave}
           disabled={isSaveDisabled}
         >
@@ -209,176 +214,6 @@ export function SaveCurrentTab({
         onRetry={handleRetry}
         onDismiss={handleDismiss}
       />
-
-      <style>{saveCurrentTabStyles}</style>
     </div>
   );
 }
-
-const saveCurrentTabStyles = `
-  .save-current-tab {
-    padding: 16px;
-  }
-
-  .save-current-tab--loading,
-  .save-current-tab--error {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 120px;
-  }
-
-  .save-current-tab__loading {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #6b7280;
-    font-size: 14px;
-  }
-
-  .save-current-tab__spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid #e0e0e0;
-    border-top-color: #3b82f6;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .save-current-tab__message {
-    color: #6b7280;
-    font-size: 14px;
-    text-align: center;
-  }
-
-  .save-current-tab__preview {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px;
-    background-color: #f9fafb;
-    border-radius: 8px;
-    margin-bottom: 16px;
-  }
-
-  .save-current-tab__favicon {
-    width: 24px;
-    height: 24px;
-    flex-shrink: 0;
-    border-radius: 4px;
-    margin-top: 2px;
-  }
-
-  .save-current-tab__info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-    flex: 1;
-  }
-
-  .save-current-tab__title {
-    font-size: 14px;
-    font-weight: 500;
-    color: #1f2937;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .save-current-tab__url {
-    font-size: 12px;
-    color: #6b7280;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .save-current-tab__restricted {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
-    background-color: #fef3c7;
-    border-radius: 6px;
-    font-size: 13px;
-    color: #92400e;
-  }
-
-  .save-current-tab__restricted-icon {
-    font-size: 16px;
-  }
-
-  .save-current-tab__button {
-    width: 100%;
-    padding: 12px 16px;
-    font-size: 14px;
-    font-weight: 500;
-    color: white;
-    background-color: #3b82f6;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-
-  .save-current-tab__button:hover:not(:disabled) {
-    background-color: #2563eb;
-  }
-
-  .save-current-tab__button:disabled {
-    background-color: #9ca3af;
-    cursor: not-allowed;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .save-current-tab__loading {
-      color: #9ca3af;
-    }
-
-    .save-current-tab__spinner {
-      border-color: #444;
-      border-top-color: #60a5fa;
-    }
-
-    .save-current-tab__message {
-      color: #9ca3af;
-    }
-
-    .save-current-tab__preview {
-      background-color: #1f2937;
-    }
-
-    .save-current-tab__title {
-      color: #f0f0f0;
-    }
-
-    .save-current-tab__url {
-      color: #9ca3af;
-    }
-
-    .save-current-tab__restricted {
-      background-color: #422006;
-      color: #fbbf24;
-    }
-
-    .save-current-tab__button {
-      background-color: #2563eb;
-    }
-
-    .save-current-tab__button:hover:not(:disabled) {
-      background-color: #1d4ed8;
-    }
-
-    .save-current-tab__button:disabled {
-      background-color: #4b5563;
-    }
-  }
-`;

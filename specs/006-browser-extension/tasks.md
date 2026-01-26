@@ -109,14 +109,14 @@
 
 - [X] [AI-Review][MEDIUM] Add cleanup to useEffect to prevent state updates after unmount [src/extension/src/popup/components/SaveCurrentTab.tsx#L28-L55]
 - [ ] [AI-Review][MEDIUM] Create properly sized icon assets (16/32/48/128px) - currently all identical [src/extension/src/assets/]
-- [ ] [AI-Review][MEDIUM] Consider migrating inline styles to Tailwind CSS for consistency with web app [src/extension/src/popup/]
+- [X] [AI-Review][MEDIUM] Consider migrating inline styles to Tailwind CSS for consistency with web app [src/extension/src/popup/]
 - [ ] [AI-Review][MEDIUM] Handle background token refresh failure by prompting re-auth in UI [src/extension/src/services/auth.ts#L183-L186]
 
 ### Low
 
-- [ ] [AI-Review][LOW] Remove unused _view/_setView state variables or mark as intentional [src/extension/src/popup/Popup.tsx#L18]
+- [X] [AI-Review][LOW] Remove unused _view/_setView state variables or mark as intentional [src/extension/src/popup/Popup.tsx#L18]
 - [ ] [AI-Review][LOW] Replace console.log with conditional logging for production [src/extension/src/background/service-worker.ts]
-- [ ] [AI-Review][LOW] Add empty string guard to getInitials function [src/extension/src/popup/components/AuthStatus.tsx#L71]
+- [X] [AI-Review][LOW] Add empty string guard to getInitials function [src/extension/src/popup/components/AuthStatus.tsx#L71]
 
 ---
 

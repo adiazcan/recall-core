@@ -29,32 +29,33 @@ export function AuthStatus({
 }: AuthStatusProps): JSX.Element {
   if (isLoading) {
     return (
-      <div className="auth-status auth-status--loading">
-        <span className="auth-status__spinner" aria-hidden="true" />
-        <span className="auth-status__text">Checking sign-in...</span>
-        <style>{authStatusStyles}</style>
+      <div className="flex items-center justify-center gap-2 p-5 border-b border-gray-200 dark:border-gray-700">
+        <span
+          className="w-4 h-4 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin dark:border-gray-600 dark:border-t-blue-400"
+          aria-hidden="true"
+        />
+        <span className="text-sm text-gray-500 dark:text-gray-400">Checking sign-in...</span>
       </div>
     );
   }
 
   if (!authState.isAuthenticated) {
     return (
-      <div className="auth-status auth-status--signed-out">
-        <div className="auth-status__message">
-          <span className="auth-status__icon" aria-hidden="true">
+      <div className="flex flex-col items-center gap-3 p-5 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2">
+          <span className="text-xl" aria-hidden="true">
             👋
           </span>
-          <span className="auth-status__text">Sign in to save bookmarks</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">Sign in to save bookmarks</span>
         </div>
         <button
           type="button"
-          className="auth-status__button auth-status__button--primary"
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed dark:bg-blue-600 dark:hover:bg-blue-700"
           onClick={onSignIn}
           disabled={isSigningIn}
         >
           {isSigningIn ? 'Signing in...' : 'Sign in'}
         </button>
-        <style>{authStatusStyles}</style>
       </div>
     );
   }
@@ -62,26 +63,32 @@ export function AuthStatus({
   const displayName = authState.user?.name || authState.user?.email || 'User';
 
   return (
-    <div className="auth-status auth-status--signed-in">
-      <div className="auth-status__user">
-        <span className="auth-status__avatar" aria-hidden="true">
+    <div className="flex items-center justify-between gap-3 p-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+        <span
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-500 text-white text-xs font-semibold shrink-0 dark:bg-blue-600"
+          aria-hidden="true"
+        >
           {getInitials(displayName)}
         </span>
-        <div className="auth-status__info">
-          <span className="auth-status__name">{displayName}</span>
+        <div className="flex flex-col min-w-0">
+          <span className="text-sm font-medium text-gray-800 truncate dark:text-gray-100">
+            {displayName}
+          </span>
           {authState.user?.email && authState.user.email !== displayName && (
-            <span className="auth-status__email">{authState.user.email}</span>
+            <span className="text-xs text-gray-500 truncate dark:text-gray-400">
+              {authState.user.email}
+            </span>
           )}
         </div>
       </div>
       <button
         type="button"
-        className="auth-status__button auth-status__button--secondary"
+        className="px-3 py-1.5 text-xs font-medium text-gray-500 bg-transparent border border-gray-300 rounded-md hover:bg-gray-100 hover:text-gray-600 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
         onClick={onSignOut}
       >
         Sign out
       </button>
-      <style>{authStatusStyles}</style>
     </div>
   );
 }
@@ -90,196 +97,10 @@ export function AuthStatus({
  * Gets initials from a display name
  */
 function getInitials(name: string): string {
+  if (!name || !name.trim()) return '??';
   const parts = name.trim().split(/\s+/);
   if (parts.length >= 2) {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
   return name.substring(0, 2).toUpperCase();
 }
-
-const authStatusStyles = `
-  .auth-status {
-    padding: 12px;
-    border-bottom: 1px solid #e5e7eb;
-  }
-
-  .auth-status--loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 20px 12px;
-  }
-
-  .auth-status--signed-out {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 20px 12px;
-  }
-
-  .auth-status--signed-in {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .auth-status__spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid #e0e0e0;
-    border-top-color: #3b82f6;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .auth-status__message {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .auth-status__icon {
-    font-size: 20px;
-  }
-
-  .auth-status__text {
-    font-size: 14px;
-    color: #6b7280;
-  }
-
-  .auth-status__user {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .auth-status__avatar {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background-color: #3b82f6;
-    color: white;
-    font-size: 12px;
-    font-weight: 600;
-    flex-shrink: 0;
-  }
-
-  .auth-status__info {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  .auth-status__name {
-    font-size: 14px;
-    font-weight: 500;
-    color: #1f2937;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .auth-status__email {
-    font-size: 12px;
-    color: #6b7280;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .auth-status__button {
-    padding: 8px 16px;
-    font-size: 14px;
-    font-weight: 500;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-
-  .auth-status__button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .auth-status__button--primary {
-    background-color: #3b82f6;
-    color: white;
-    border: none;
-  }
-
-  .auth-status__button--primary:hover:not(:disabled) {
-    background-color: #2563eb;
-  }
-
-  .auth-status__button--secondary {
-    background-color: transparent;
-    color: #6b7280;
-    border: 1px solid #d1d5db;
-    padding: 6px 12px;
-    font-size: 12px;
-  }
-
-  .auth-status__button--secondary:hover {
-    background-color: #f3f4f6;
-    color: #4b5563;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .auth-status {
-      border-bottom-color: #374151;
-    }
-
-    .auth-status__text {
-      color: #9ca3af;
-    }
-
-    .auth-status__spinner {
-      border-color: #444;
-      border-top-color: #60a5fa;
-    }
-
-    .auth-status__avatar {
-      background-color: #2563eb;
-    }
-
-    .auth-status__name {
-      color: #f0f0f0;
-    }
-
-    .auth-status__email {
-      color: #9ca3af;
-    }
-
-    .auth-status__button--primary {
-      background-color: #2563eb;
-    }
-
-    .auth-status__button--primary:hover:not(:disabled) {
-      background-color: #1d4ed8;
-    }
-
-    .auth-status__button--secondary {
-      color: #9ca3af;
-      border-color: #4b5563;
-    }
-
-    .auth-status__button--secondary:hover {
-      background-color: #374151;
-      color: #d1d5db;
-    }
-  }
-`;

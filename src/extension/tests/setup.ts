@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi, beforeEach } from 'vitest';
 
 /**
  * Chrome API Mocks for Extension Testing
@@ -74,7 +74,7 @@ const mockIdentity = {
 
 // Mock chrome.tabs API
 const mockTabs = {
-  query: vi.fn(() => Promise.resolve([])),
+  query: vi.fn(() => Promise.resolve([] as chrome.tabs.Tab[])),
   get: vi.fn((tabId: number) =>
     Promise.resolve({
       id: tabId,

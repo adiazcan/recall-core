@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "Recall - Save for Later",
+  "version": "1.0.0",
+  "description": "Save URLs to your Recall inbox with one click. Browse saved items in the side panel.",
+  "permissions": [
+    "activeTab",
+    "sidePanel",
+    "storage",
+    "identity",
+    "tabs"
+  ],
+  "host_permissions": [],
+  "background": {
+    "service_worker": "src/background/service-worker.ts",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_icon": {
+      "16": "assets/icon-16.png",
+      "32": "assets/icon-32.png",
+      "48": "assets/icon-48.png",
+      "128": "assets/icon-128.png"
+    },
+    "default_title": "Save to Recall"
+  },
+  "side_panel": {
+    "default_path": "src/sidepanel/index.html"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Open popup / Save current tab"
+    },
+    "save-current-tab": {
+      "suggested_key": {
+        "default": "Alt+Shift+S",
+        "mac": "Option+Shift+S"
+      },
+      "description": "Quick save current tab"
+    }
+  },
+  "icons": {
+    "16": "assets/icon-16.png",
+    "32": "assets/icon-32.png",
+    "48": "assets/icon-48.png",
+    "128": "assets/icon-128.png"
+  },
+  "minimum_chrome_version": "116",
+  "key": "PLACEHOLDER_REPLACE_WITH_GENERATED_KEY"
+}

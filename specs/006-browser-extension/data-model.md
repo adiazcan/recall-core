@@ -103,17 +103,21 @@ type ExtensionMessage =
 // Save single URL
 interface SaveUrlMessage {
   type: 'SAVE_URL';
-  url: string;
-  title?: string;
+  payload: {
+    url: string;
+    title?: string;
+  };
 }
 
 // Save multiple URLs (batch)
 interface SaveUrlsMessage {
   type: 'SAVE_URLS';
-  items: Array<{
-    url: string;
-    title?: string;
-  }>;
+  payload: {
+    items: Array<{
+      url: string;
+      title?: string;
+    }>;
+  };
 }
 
 // Get current auth state

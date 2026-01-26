@@ -227,7 +227,7 @@ chrome.runtime.onStartup.addListener(async (): Promise<void> => {
 /**
  * Handle keyboard commands
  */
-chrome.commands.onCommand.addListener((command) => {
+chrome.commands.onCommand.addListener((command): void => {
   console.log('[ServiceWorker] Command received:', command);
 
   if (command === 'save-current-tab') {

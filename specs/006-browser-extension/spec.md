@@ -87,7 +87,7 @@ As a user with multiple relevant tabs open, I want to select and save several ta
 #### Extension Core
 
 - **FR-001**: Extension MUST be built with Manifest V3 and support both Chrome and Microsoft Edge (Chromium).
-- **FR-002**: Extension MUST request only minimal permissions: `activeTab`, `sidePanel`, `storage`, and `identity`.
+- **FR-002**: Extension MUST request only minimal permissions: `activeTab`, `sidePanel`, `storage`, `identity`, and `tabs` (for batch save functionality).
 - **FR-003**: Extension MUST NOT capture or store page content—only URLs and titles.
 
 #### Save Current Tab

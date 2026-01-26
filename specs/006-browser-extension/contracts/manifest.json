@@ -50,6 +50,6 @@
     "48": "assets/icon-48.png",
     "128": "assets/icon-128.png"
   },
-  "minimum_chrome_version": "114",
+  "minimum_chrome_version": "116",
   "key": "PLACEHOLDER_REPLACE_WITH_GENERATED_KEY"
 }

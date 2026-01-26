@@ -19,13 +19,13 @@
 
 **Purpose**: Project initialization, build tooling, and basic structure
 
-- [ ] T001 Create extension project structure at src/extension/ per plan.md
-- [ ] T002 Initialize package.json with React 19, Vite 6, CRXJS plugin, and TypeScript dependencies in src/extension/package.json
-- [ ] T003 [P] Configure TypeScript with ES2022 target in src/extension/tsconfig.json
-- [ ] T004 [P] Configure Vite with CRXJS plugin for MV3 in src/extension/vite.config.ts
-- [ ] T005 [P] Create manifest.json with MV3 structure (permissions, service_worker, side_panel, commands) in src/extension/manifest.json
-- [ ] T006 [P] Create environment configuration files (.env.development, .env.production) in src/extension/
-- [ ] T007 [P] Create placeholder icon assets (16, 32, 48, 128px) in src/extension/assets/
+- [X] T001 Create extension project structure at src/extension/ per plan.md
+- [X] T002 Initialize package.json with React 19, Vite 6, CRXJS plugin, and TypeScript dependencies in src/extension/package.json
+- [X] T003 [P] Configure TypeScript with ES2022 target in src/extension/tsconfig.json
+- [X] T004 [P] Configure Vite with CRXJS plugin for MV3 in src/extension/vite.config.ts
+- [X] T005 [P] Create manifest.json with MV3 structure (permissions, service_worker, side_panel, commands) in src/extension/manifest.json
+- [X] T006 [P] Create environment configuration files (.env.development, .env.production) in src/extension/
+- [X] T007 [P] Create placeholder icon assets (16, 32, 48, 128px) in src/extension/assets/
 
 ---
 
@@ -37,25 +37,25 @@
 
 ### Types and Configuration
 
-- [ ] T008 Create shared TypeScript types from contracts/messages.ts in src/extension/src/types/index.ts
-- [ ] T009 [P] Implement environment-aware configuration module in src/extension/src/config/index.ts
+- [X] T008 Create shared TypeScript types from contracts/messages.ts in src/extension/src/types/index.ts
+- [X] T009 [P] Implement environment-aware configuration module in src/extension/src/config/index.ts
 
 ### Core Services
 
-- [ ] T010 Implement chrome.storage wrapper service in src/extension/src/services/storage.ts
-- [ ] T011 Implement authentication service with PKCE flow (launchWebAuthFlow, token exchange, silent token refresh with expiry check, re-auth prompt on refresh failure) in src/extension/src/services/auth.ts
-- [ ] T012 [P] Implement chrome.runtime message helpers in src/extension/src/services/messaging.ts
-- [ ] T013 Implement API client service with Bearer token attachment in src/extension/src/services/api.ts
+- [X] T010 Implement chrome.storage wrapper service in src/extension/src/services/storage.ts
+- [X] T011 Implement authentication service with PKCE flow (launchWebAuthFlow, token exchange, silent token refresh with expiry check, re-auth prompt on refresh failure) in src/extension/src/services/auth.ts
+- [X] T012 [P] Implement chrome.runtime message helpers in src/extension/src/services/messaging.ts
+- [X] T013 Implement API client service with Bearer token attachment in src/extension/src/services/api.ts
 
 ### Service Worker Foundation
 
-- [ ] T014 Create service worker skeleton with message listener registration in src/extension/src/background/service-worker.ts
-- [ ] T015 Implement auth message handlers (GET_AUTH_STATE, SIGN_IN, SIGN_OUT, REFRESH_TOKEN) in service worker src/extension/src/background/service-worker.ts
+- [X] T014 Create service worker skeleton with message listener registration in src/extension/src/background/service-worker.ts
+- [X] T015 Implement auth message handlers (GET_AUTH_STATE, SIGN_IN, SIGN_OUT, REFRESH_TOKEN) in service worker src/extension/src/background/service-worker.ts
 
 ### Entry Points
 
-- [ ] T016 [P] Create popup HTML entry point in src/extension/src/popup/index.html
-- [ ] T017 [P] Create side panel HTML entry point in src/extension/src/sidepanel/index.html
+- [X] T016 [P] Create popup HTML entry point in src/extension/src/popup/index.html
+- [X] T017 [P] Create side panel HTML entry point in src/extension/src/sidepanel/index.html
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -69,24 +69,54 @@
 
 ### Service Worker Implementation for US1
 
-- [ ] T018 [US1] Implement SAVE_URL message handler in service worker (call POST /api/v1/items) in src/extension/src/background/service-worker.ts
-- [ ] T019 [US1] Add URL validation and restricted URL checking (chrome://, edge://, about:) in src/extension/src/services/api.ts
-- [ ] T020 [US1] Implement command handler for quick save keyboard shortcut (save-current-tab command) in src/extension/src/background/service-worker.ts
+- [X] T018 [US1] Implement SAVE_URL message handler in service worker (call POST /api/v1/items) in src/extension/src/background/service-worker.ts
+- [X] T019 [US1] Add URL validation and restricted URL checking (chrome://, edge://, about:) in src/extension/src/services/api.ts
+- [X] T020 [US1] Implement command handler for quick save keyboard shortcut (save-current-tab command) in src/extension/src/background/service-worker.ts
 
 ### Popup UI for US1
 
-- [ ] T021 [US1] Create popup React mount and entry in src/extension/src/popup/main.tsx
-- [ ] T022 [US1] Create AuthStatus component showing sign-in state in src/extension/src/popup/components/AuthStatus.tsx
-- [ ] T023 [US1] Create SaveCurrentTab component with save button and feedback in src/extension/src/popup/components/SaveCurrentTab.tsx
-- [ ] T024 [US1] Create SaveProgress component for loading/success/error states in src/extension/src/popup/components/SaveProgress.tsx
-- [ ] T025 [US1] Create main Popup component with auth check and save current tab view in src/extension/src/popup/Popup.tsx
+- [X] T021 [US1] Create popup React mount and entry in src/extension/src/popup/main.tsx
+- [X] T022 [US1] Create AuthStatus component showing sign-in state in src/extension/src/popup/components/AuthStatus.tsx
+- [X] T023 [US1] Create SaveCurrentTab component with save button and feedback in src/extension/src/popup/components/SaveCurrentTab.tsx
+- [X] T024 [US1] Create SaveProgress component for loading/success/error states in src/extension/src/popup/components/SaveProgress.tsx
+- [X] T025 [US1] Create main Popup component with auth check and save current tab view in src/extension/src/popup/Popup.tsx
 
 ### Error Handling for US1
 
-- [ ] T026 [US1] Handle API response codes (201 created, 200 dedupe, 4xx/5xx errors) with user-friendly messages in src/extension/src/popup/components/SaveCurrentTab.tsx
-- [ ] T027 [US1] Handle unauthenticated state with sign-in prompt in src/extension/src/popup/Popup.tsx
+- [X] T026 [US1] Handle API response codes (201 created, 200 dedupe, 4xx/5xx errors) with user-friendly messages in src/extension/src/popup/components/SaveCurrentTab.tsx
+- [X] T027 [US1] Handle unauthenticated state with sign-in prompt in src/extension/src/popup/Popup.tsx
 
 **Checkpoint**: User Story 1 complete - can save current tab with one click, see success/error feedback
+
+---
+
+## Review Follow-ups (AI)
+
+**Generated:** 2026-01-26 | **Reviewer:** Code Review Agent
+
+### Critical
+
+- [ ] [AI-Review][CRITICAL] Commit extension directory to git - all Phase 1-3 code is untracked [src/extension/]
+- [ ] [AI-Review][CRITICAL] Fix TypeScript error: Add JSX import to sidepanel/main.tsx [src/extension/src/sidepanel/main.tsx#L12]
+
+### High
+
+- [ ] [AI-Review][HIGH] Fix deduplication detection - always returns isNew:true instead of checking 200 vs 201 response [src/extension/src/services/api.ts#L149]
+- [ ] [AI-Review][HIGH] Create vitest.config.ts and tests/setup.ts for test infrastructure [src/extension/]
+- [ ] [AI-Review][HIGH] Create eslint.config.js - lint script defined but config missing [src/extension/]
+
+### Medium
+
+- [ ] [AI-Review][MEDIUM] Add cleanup to useEffect to prevent state updates after unmount [src/extension/src/popup/components/SaveCurrentTab.tsx#L28-L55]
+- [ ] [AI-Review][MEDIUM] Create properly sized icon assets (16/32/48/128px) - currently all identical [src/extension/src/assets/]
+- [ ] [AI-Review][MEDIUM] Consider migrating inline styles to Tailwind CSS for consistency with web app [src/extension/src/popup/]
+- [ ] [AI-Review][MEDIUM] Handle background token refresh failure by prompting re-auth in UI [src/extension/src/services/auth.ts#L183-L186]
+
+### Low
+
+- [ ] [AI-Review][LOW] Remove unused _view/_setView state variables or mark as intentional [src/extension/src/popup/Popup.tsx#L18]
+- [ ] [AI-Review][LOW] Replace console.log with conditional logging for production [src/extension/src/background/service-worker.ts]
+- [ ] [AI-Review][LOW] Add empty string guard to getInitials function [src/extension/src/popup/components/AuthStatus.tsx#L71]
 
 ---
 

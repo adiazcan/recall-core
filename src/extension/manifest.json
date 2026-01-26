@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "Recall - Save & Organize",
+  "version": "0.1.0",
+  "description": "Save URLs to your Recall inbox and browse saved content in a side panel.",
+  "icons": {
+    "16": "src/assets/icon-16.svg",
+    "32": "src/assets/icon-32.svg",
+    "48": "src/assets/icon-48.svg",
+    "128": "src/assets/icon-128.svg"
+  },
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_icon": {
+      "16": "src/assets/icon-16.svg",
+      "32": "src/assets/icon-32.svg",
+      "48": "src/assets/icon-48.svg"
+    },
+    "default_title": "Recall"
+  },
+  "side_panel": {
+    "default_path": "src/sidepanel/index.html"
+  },
+  "background": {
+    "service_worker": "src/background/service-worker.ts",
+    "type": "module"
+  },
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage",
+    "identity",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "https://*.ciamlogin.com/*"
+  ],
+  "commands": {
+    "save-current-tab": {
+      "suggested_key": {
+        "default": "Alt+Shift+S",
+        "mac": "Alt+Shift+S"
+      },
+      "description": "Save current tab to Recall"
+    }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

@@ -130,6 +130,7 @@ export function Popup(): JSX.Element {
           <SaveCurrentTab
             isAuthenticated={authState.isAuthenticated}
             onSaveSuccess={handleSaveSuccess}
+            onSignIn={handleSignIn}
           />
         </main>
       )}

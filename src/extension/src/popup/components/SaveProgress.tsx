@@ -22,6 +22,8 @@ export interface SaveProgressProps {
   onRetry?: () => void;
   /** Callback when user clicks dismiss */
   onDismiss?: () => void;
+  /** Callback when user needs to sign in due to auth error */
+  onSignIn?: () => void;
 }
 
 /**
@@ -52,6 +54,18 @@ function getErrorDisplayMessage(code: ExtensionErrorCode | undefined, fallback: 
 }
 
 /**
+ * Determines if the error is auth-related and requires re-authentication
+ */
+function isAuthError(code: ExtensionErrorCode | undefined): boolean {
+  return (
+    code === 'AUTH_REQUIRED' ||
+    code === 'AUTH_FAILED' ||
+    code === 'TOKEN_EXPIRED' ||
+    code === 'TOKEN_REFRESH_FAILED'
+  );
+}
+
+/**
  * Determines if retry should be offered based on error code
  */
 function isRetryable(code: ExtensionErrorCode | undefined): boolean {
@@ -74,10 +88,13 @@ export function SaveProgress({
   savedTitle,
   onRetry,
   onDismiss,
+  onSignIn,
 }: SaveProgressProps): JSX.Element | null {
   if (status === 'idle') {
     return null;
   }
+
+  const showSignIn = isAuthError(errorCode) && onSignIn;
 
   return (
     <div className={`p-3 rounded-md border mt-3 ${statusContainerStyles[status]}`}>
@@ -149,7 +166,16 @@ export function SaveProgress({
             {getErrorDisplayMessage(errorCode, errorMessage ?? 'Failed to save')}
           </span>
           <div className="flex items-center gap-1">
-            {isRetryable(errorCode) && onRetry && (
+            {showSignIn && (
+              <button
+                type="button"
+                className="px-2 py-1 text-xs font-medium text-white bg-blue-500 rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
+                onClick={onSignIn}
+              >
+                Sign in
+              </button>
+            )}
+            {!showSignIn && isRetryable(errorCode) && onRetry && (
               <button
                 type="button"
                 className="px-2 py-1 text-xs text-blue-500 border border-blue-500 rounded hover:bg-blue-50 dark:text-blue-400 dark:border-blue-400 dark:hover:bg-blue-950"

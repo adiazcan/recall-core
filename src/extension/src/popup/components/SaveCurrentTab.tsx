@@ -17,11 +17,14 @@ export interface SaveCurrentTabProps {
   isAuthenticated: boolean;
   /** Callback when save succeeds */
   onSaveSuccess?: () => void;
+  /** Callback when user needs to sign in due to auth error */
+  onSignIn?: () => void;
 }
 
 export function SaveCurrentTab({
   isAuthenticated,
   onSaveSuccess,
+  onSignIn,
 }: SaveCurrentTabProps): JSX.Element {
   const [currentTab, setCurrentTab] = useState<TabInfo | null>(null);
   const [isLoadingTab, setIsLoadingTab] = useState(true);
@@ -213,6 +216,7 @@ export function SaveCurrentTab({
         savedTitle={savedTitle}
         onRetry={handleRetry}
         onDismiss={handleDismiss}
+        onSignIn={onSignIn}
       />
     </div>
   );

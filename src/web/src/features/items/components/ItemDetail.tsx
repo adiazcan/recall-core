@@ -353,14 +353,14 @@ export function ItemDetail() {
                 <div className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-neutral-500">
                   <ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                   <span className="truncate">{item.url}</span>
-                  <span className="text-[10px] sm:text-xs text-red-600">(Invalid URL protocol)</span>
+                  <span className="text-xs text-red-600">(Invalid URL protocol)</span>
                 </div>
               )}
             </div>
 
             {/* Collection */}
             <div className="space-y-1.5 sm:space-y-2">
-              <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-medium text-neutral-500 uppercase tracking-wider">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-medium text-neutral-500 uppercase tracking-wider">
                 <Archive className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 <span>Collection</span>
               </div>
@@ -398,7 +398,7 @@ export function ItemDetail() {
 
             {/* Tags */}
             <div className="space-y-1.5 sm:space-y-2">
-              <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-medium text-neutral-500 uppercase tracking-wider">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-medium text-neutral-500 uppercase tracking-wider">
                 <span>#</span>
                 <span>Tags</span>
               </div>
@@ -512,7 +512,7 @@ export function ItemDetail() {
 
             {/* Added timestamp */}
             <div className="space-y-1.5 sm:space-y-2">
-              <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-medium text-neutral-500 uppercase tracking-wider">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-medium text-neutral-500 uppercase tracking-wider">
                 <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 <span>Added</span>
               </div>
@@ -524,7 +524,7 @@ export function ItemDetail() {
             {/* Excerpt */}
             {item.excerpt && (
               <div className="space-y-1.5 sm:space-y-2">
-                <div className="text-[10px] sm:text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                <div className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
                   Description
                 </div>
                 <p className="text-sm sm:text-base text-neutral-700 leading-relaxed">{item.excerpt}</p>

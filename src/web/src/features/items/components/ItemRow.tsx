@@ -111,7 +111,7 @@ export const ItemRow = forwardRef<HTMLDivElement, ItemRowProps>(
           <p className="text-xs sm:text-sm text-neutral-500 mb-1.5 sm:mb-2 line-clamp-1">{item.excerpt}</p>
         )}
 
-        <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-neutral-400 flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-3 text-xs text-neutral-400 flex-wrap">
           <span className="font-medium text-neutral-500">{item.domain}</span>
           <span className="w-1 h-1 rounded-full bg-neutral-300 hidden sm:block" />
           <time dateTime={item.createdAt.toISOString()} className="hidden sm:inline">
@@ -123,7 +123,7 @@ export const ItemRow = forwardRef<HTMLDivElement, ItemRowProps>(
               <span className="w-1 h-1 rounded-full bg-neutral-300 hidden sm:block" />
               <div className="flex items-center gap-1 sm:gap-2 hidden sm:flex">
                 {item.tags.slice(0, 2).map((tag) => (
-                  <span key={tag} className="px-1.5 sm:px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 text-[10px] sm:text-xs">
+                  <span key={tag} className="px-1.5 sm:px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 text-xs">
                     #{tag}
                   </span>
                 ))}

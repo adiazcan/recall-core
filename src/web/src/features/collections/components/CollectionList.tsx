@@ -55,7 +55,7 @@ export function CollectionList() {
             <>
               <Folder className={cn('h-3.5 w-3.5 sm:h-4 sm:w-4', isActive ? 'text-indigo-600' : 'text-neutral-500')} />
               <span className="flex-1 text-left truncate">{collection.name}</span>
-              <span className="text-[10px] sm:text-xs text-neutral-400">{collection.itemCount}</span>
+              <span className="text-xs text-neutral-400">{collection.itemCount}</span>
             </>
           )}
         </NavLink>

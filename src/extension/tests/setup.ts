@@ -11,7 +11,7 @@ import { vi, beforeEach } from 'vitest';
 const storageChangeListeners = new Set<
   (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => void
 >();
-const createStorageArea = () => {
+const createStorageArea = (areaName: 'local' | 'sync' | 'session') => {
   let store: Record<string, unknown> = {};
 
   return {
@@ -29,31 +29,85 @@ const createStorageArea = () => {
       return Promise.resolve(result);
     }),
     set: vi.fn((items: Record<string, unknown>) => {
+      const changes: { [key: string]: chrome.storage.StorageChange } = {};
+      Object.keys(items).forEach((key) => {
+        changes[key] = {
+          oldValue: store[key],
+          newValue: items[key],
+        };
+      });
       store = { ...store, ...items };
+      // Emit storage change events
+      storageChangeListeners.forEach((listener) => listener(changes, areaName));
       return Promise.resolve();
     }),
     remove: vi.fn((keys: string | string[]) => {
       const keyArray = Array.isArray(keys) ? keys : [keys];
+      const changes: { [key: string]: chrome.storage.StorageChange } = {};
       keyArray.forEach((key) => {
-        delete store[key];
+        if (key in store) {
+          changes[key] = {
+            oldValue: store[key],
+            newValue: undefined,
+          };
+          delete store[key];
+        }
       });
+      // Emit storage change events if any keys were removed
+      if (Object.keys(changes).length > 0) {
+        storageChangeListeners.forEach((listener) => listener(changes, areaName));
+      }
       return Promise.resolve();
     }),
     clear: vi.fn(() => {
+      const changes: { [key: string]: chrome.storage.StorageChange } = {};
+      Object.keys(store).forEach((key) => {
+        changes[key] = {
+          oldValue: store[key],
+          newValue: undefined,
+        };
+      });
       store = {};
+      // Emit storage change events if store wasn't already empty
+      if (Object.keys(changes).length > 0) {
+        storageChangeListeners.forEach((listener) => listener(changes, areaName));
+      }
       return Promise.resolve();
     }),
     // Expose internal store for test assertions
     _getStore: () => store,
     _setStore: (newStore: Record<string, unknown>) => {
+      const changes: { [key: string]: chrome.storage.StorageChange } = {};
+      // Track removed keys
+      Object.keys(store).forEach((key) => {
+        if (!(key in newStore)) {
+          changes[key] = {
+            oldValue: store[key],
+            newValue: undefined,
+          };
+        }
+      });
+      // Track new/changed keys
+      Object.keys(newStore).forEach((key) => {
+        if (store[key] !== newStore[key]) {
+          changes[key] = {
+            oldValue: store[key],
+            newValue: newStore[key],
+          };
+        }
+      });
       store = newStore;
+      // Emit storage change events if there are any changes
+      if (Object.keys(changes).length > 0) {
+        storageChangeListeners.forEach((listener) => listener(changes, areaName));
+      }
     },
   };
 };
 
-const mockStorageLocal = createStorageArea();
-const mockStorageSync = createStorageArea();
-const mockStorageSession = createStorageArea();
+const mockStorageLocal = createStorageArea('local');
+const mockStorageSync = createStorageArea('sync');
+const mockStorageSession = createStorageArea('session');
 
 // Mock chrome.runtime API
 const mockRuntime = {

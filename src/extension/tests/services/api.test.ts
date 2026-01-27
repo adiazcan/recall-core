@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { mocks, resetAllMocks, setupStorage } from '../setup';
+import { resetAllMocks, setupStorage } from '../setup';
 import type { StoredAuth, ItemDto } from '../../src/types';
 
 // Mock fetch globally

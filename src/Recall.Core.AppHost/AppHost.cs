@@ -52,6 +52,12 @@ var app = builder.AddJavaScriptApp("web", "../web")
     .WithReference(api)
     .WaitFor(api);
 
+var extension = builder.AddJavaScriptApp("extension", "../extension")
+    .WithRunScript("dev")
+    .WithPnpm()
+    .WaitFor(api)
+    .WaitFor(app);
+
 // builder.AddViteApp("web", "../web")
 //     // .WithArgs("--port", "3000", "--host")
 //     .WithReference(api)

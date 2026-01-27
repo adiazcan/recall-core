@@ -5,7 +5,7 @@
  * Uses mocked chrome.storage APIs from tests/setup.ts
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { mocks, resetAllMocks, setupStorage } from '../setup';
 import {
   getAuth,

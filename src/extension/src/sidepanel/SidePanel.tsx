@@ -306,7 +306,7 @@ export function SidePanel({ authState, onAuthRequired }: SidePanelProps): JSX.El
         className="w-full h-full border-0"
         onLoad={handleIframeLoad}
         onError={handleIframeError}
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
         allow="clipboard-read; clipboard-write"
       />
     </div>

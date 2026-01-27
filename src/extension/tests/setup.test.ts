@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { mocks, setupStorage, resetAllMocks } from './setup';
+import { mocks, setupStorage, resetAllMocks, emitStorageChange } from './setup';
 
 describe('Test Setup Verification', () => {
   describe('Chrome API Mocks', () => {
@@ -60,6 +60,34 @@ describe('Test Setup Verification', () => {
       await chrome.storage.local.clear();
       const result = await chrome.storage.local.get(null);
       expect(result).toEqual({});
+    });
+  });
+
+  describe('Storage onChanged Mock', () => {
+    it('should register and emit change listeners', () => {
+      const listener = vi.fn();
+      chrome.storage.onChanged.addListener(listener);
+
+      emitStorageChange(
+        { auth: { oldValue: undefined, newValue: { accessToken: 'token' } } },
+        'local'
+      );
+
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(listener).toHaveBeenCalledWith(
+        { auth: { oldValue: undefined, newValue: { accessToken: 'token' } } },
+        'local'
+      );
+    });
+
+    it('should remove change listeners', () => {
+      const listener = vi.fn();
+      chrome.storage.onChanged.addListener(listener);
+      chrome.storage.onChanged.removeListener(listener);
+
+      emitStorageChange({ settings: { oldValue: undefined, newValue: {} } }, 'local');
+
+      expect(listener).not.toHaveBeenCalled();
     });
   });
 

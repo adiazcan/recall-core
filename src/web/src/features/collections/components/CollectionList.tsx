@@ -36,7 +36,7 @@ export function CollectionList() {
   }
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5 sm:space-y-1">
       {collections.map((collection) => (
         <NavLink
           key={collection.id}
@@ -44,7 +44,7 @@ export function CollectionList() {
           onClick={() => handleCollectionClick(collection.id, collection.name)}
           className={({ isActive }) =>
             cn(
-              'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+              'flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors',
               isActive
                 ? 'bg-neutral-100 text-neutral-900'
                 : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900',
@@ -53,7 +53,7 @@ export function CollectionList() {
         >
           {({ isActive }) => (
             <>
-              <Folder className={cn('h-4 w-4', isActive ? 'text-indigo-600' : 'text-neutral-500')} />
+              <Folder className={cn('h-3.5 w-3.5 sm:h-4 sm:w-4', isActive ? 'text-indigo-600' : 'text-neutral-500')} />
               <span className="flex-1 text-left truncate">{collection.name}</span>
               <span className="text-xs text-neutral-400">{collection.itemCount}</span>
             </>

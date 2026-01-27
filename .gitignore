@@ -13,6 +13,7 @@
 .env*
 !.env.example
 !src/web/.env.example
+!src/extension/.env.example
 src/web/.env.local
 
 # User-specific files (MonoDevelop/Xamarin Studio)

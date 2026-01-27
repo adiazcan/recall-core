@@ -11,7 +11,7 @@ export function SaveUrlDialog({ open, onOpenChange }: SaveUrlDialogProps) {
   }
 
   return (
-    <div className="absolute top-4 left-4 right-4 md:left-6 md:right-6 z-20 bg-white shadow-xl border border-neutral-200 rounded-xl p-4">
+    <div className="absolute top-2 sm:top-4 left-2 sm:left-4 right-2 sm:right-4 md:left-6 md:right-6 z-20 bg-white shadow-xl border border-neutral-200 rounded-lg sm:rounded-xl p-3 sm:p-4">
       <SaveUrlForm variant="inline" onSaved={() => onOpenChange(false)} onCancel={() => onOpenChange(false)} />
     </div>
   );

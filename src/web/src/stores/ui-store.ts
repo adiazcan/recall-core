@@ -25,7 +25,8 @@ export const useUiStore = create<UIState>((set) => ({
       }
       return { viewState: view };
     }),
-  isSidebarOpen: true,
+  // Initialize sidebar based on viewport width (open on desktop, closed on mobile)
+  isSidebarOpen: typeof window !== 'undefined' ? window.innerWidth >= 768 : false,
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
   setSidebarOpen: (open) => set({ isSidebarOpen: open }),
   isSaveUrlOpen: false,

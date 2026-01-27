@@ -29,12 +29,21 @@ import type {
   RefreshTokenMessage,
   OpenSidePanelMessage,
   SaveUrlMessage,
+  SaveUrlsMessage,
   MessageResponse,
   AuthStateResponse,
   SaveResult,
+  BatchSaveResult,
 } from '../types';
 
-console.log('[ServiceWorker] Initializing...');
+const isDev = import.meta.env.MODE !== 'production';
+const debugLog = (...args: unknown[]): void => {
+  if (isDev) {
+    console.log(...args);
+  }
+};
+
+debugLog('[ServiceWorker] Initializing...');
 
 // =============================================================================
 // Message Handlers
@@ -46,11 +55,14 @@ console.log('[ServiceWorker] Initializing...');
 async function handleGetAuthState(
   _message: GetAuthStateMessage
 ): Promise<MessageResponse<AuthStateResponse>> {
+  debugLog('[ServiceWorker] Handling GET_AUTH_STATE');
   try {
     const state = await getAuthState();
+    debugLog('[ServiceWorker] Auth state:', state);
     return successResponse(state);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to get auth state';
+    debugLog('[ServiceWorker] Auth state error:', message);
     return errorResponse(message, 'AUTH_FAILED');
   }
 }
@@ -181,6 +193,165 @@ async function handleSaveUrl(
 }
 
 // =============================================================================
+// Batch Save Implementation
+// =============================================================================
+
+/** Maximum concurrent requests for batch operations */
+const BATCH_CONCURRENCY_LIMIT = 3;
+
+/** Item shape required for batch processing */
+interface BatchProcessItem {
+  url: string;
+  title?: string;
+}
+
+/**
+ * Processes items in batches with limited concurrency
+ *
+ * @param items - Array of items to process (must have url property)
+ * @param processor - Function to process each item
+ * @param concurrencyLimit - Maximum concurrent operations
+ */
+async function processWithConcurrency<T extends BatchProcessItem, R>(
+  items: T[],
+  processor: (item: T, index: number) => Promise<R>,
+  concurrencyLimit: number
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+
+  // Process in chunks to maintain concurrency limit
+  for (let i = 0; i < items.length; i += concurrencyLimit) {
+    const chunk = items.slice(i, i + concurrencyLimit);
+    const chunkPromises = chunk.map((item, chunkIndex) => {
+      const actualIndex = i + chunkIndex;
+      return processor(item, actualIndex)
+        .then((result) => {
+          results[actualIndex] = result;
+        })
+        .catch((error) => {
+          // Should not happen as processor catches errors, but handle just in case
+          results[actualIndex] = {
+            success: false,
+            isNew: false,
+            error: error instanceof Error ? error.message : 'Processing failed',
+            errorCode: 'UNKNOWN',
+            index: actualIndex,
+            url: item.url || '',
+          } as R;
+        });
+    });
+
+    await Promise.all(chunkPromises);
+  }
+
+  return results;
+}
+
+/**
+ * Handles SAVE_URLS message for batch save operations
+ */
+async function handleSaveUrls(
+  message: SaveUrlsMessage
+): Promise<MessageResponse<BatchSaveResult>> {
+  const { items } = message.payload;
+
+  if (!items || items.length === 0) {
+    return successResponse({
+      total: 0,
+      created: 0,
+      deduplicated: 0,
+      failed: 0,
+      results: [],
+    });
+  }
+
+  debugLog('[ServiceWorker] Starting batch save of', items.length, 'items');
+
+  // Process items with concurrency limit
+  const results = await processWithConcurrency(
+    items,
+    async (item, index) => {
+      const { url, title } = item;
+
+      try {
+        // Validate URL first
+        const validation = validateUrl(url);
+        if (!validation.valid) {
+          return {
+            success: false,
+            isNew: false,
+            error: validation.error,
+            errorCode: validation.code,
+            index,
+            url,
+          };
+        }
+
+        const saveResult = await saveItem(url, title);
+        debugLog(
+          `[ServiceWorker] Batch item ${index + 1}/${items.length}:`,
+          saveResult.success ? (saveResult.isNew ? 'created' : 'dedupe') : 'failed'
+        );
+        return { ...saveResult, index, url };
+      } catch (error) {
+        let errorMessage: string;
+        let errorCode: SaveResult['errorCode'];
+
+        if (error instanceof ApiError) {
+          errorMessage = error.message;
+          errorCode = error.code;
+        } else if (error instanceof AuthError) {
+          errorMessage = error.message;
+          errorCode = error.code;
+        } else {
+          errorMessage = error instanceof Error ? error.message : 'Failed to save';
+          errorCode = 'UNKNOWN';
+        }
+
+        return {
+          success: false,
+          isNew: false,
+          error: errorMessage,
+          errorCode,
+          index,
+          url,
+        };
+      }
+    },
+    BATCH_CONCURRENCY_LIMIT
+  );
+
+  // Calculate summary
+  let created = 0;
+  let deduplicated = 0;
+  let failed = 0;
+
+  for (const result of results) {
+    if (result.success) {
+      if (result.isNew) {
+        created++;
+      } else {
+        deduplicated++;
+      }
+    } else {
+      failed++;
+    }
+  }
+
+  debugLog(
+    `[ServiceWorker] Batch save complete: ${created} created, ${deduplicated} deduplicated, ${failed} failed`
+  );
+
+  return successResponse({
+    total: items.length,
+    created,
+    deduplicated,
+    failed,
+    results,
+  });
+}
+
+// =============================================================================
 // Message Handler Registry
 // =============================================================================
 
@@ -191,7 +362,7 @@ const messageHandlers: MessageHandlers = {
   REFRESH_TOKEN: handleRefreshToken,
   OPEN_SIDE_PANEL: handleOpenSidePanel,
   SAVE_URL: handleSaveUrl,
-  // SAVE_URLS will be added in Phase 5
+  SAVE_URLS: handleSaveUrls,
 };
 
 // Register message listener
@@ -205,7 +376,7 @@ chrome.runtime.onMessage.addListener(createMessageListener(messageHandlers));
  * Handle installation
  */
 chrome.runtime.onInstalled.addListener((details): void => {
-  console.log('[ServiceWorker] Extension installed:', details.reason);
+  debugLog('[ServiceWorker] Extension installed:', details.reason);
 
   // Set up side panel behavior - open on action click option
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch((error) => {
@@ -217,7 +388,7 @@ chrome.runtime.onInstalled.addListener((details): void => {
  * Handle startup
  */
 chrome.runtime.onStartup.addListener(async (): Promise<void> => {
-  console.log('[ServiceWorker] Browser started');
+  debugLog('[ServiceWorker] Browser started');
 });
 
 // =============================================================================
@@ -228,7 +399,7 @@ chrome.runtime.onStartup.addListener(async (): Promise<void> => {
  * Handle keyboard commands
  */
 chrome.commands.onCommand.addListener((command): void => {
-  console.log('[ServiceWorker] Command received:', command);
+  debugLog('[ServiceWorker] Command received:', command);
 
   if (command === 'save-current-tab') {
     // Will be implemented in Phase 3 (T020)
@@ -241,7 +412,7 @@ chrome.commands.onCommand.addListener((command): void => {
  * Gets the active tab and saves its URL to Recall
  */
 async function handleSaveCurrentTabCommand(): Promise<void> {
-  console.log('[ServiceWorker] save-current-tab command triggered');
+  debugLog('[ServiceWorker] save-current-tab command triggered');
 
   try {
     // Get the active tab in the current window
@@ -268,7 +439,7 @@ async function handleSaveCurrentTabCommand(): Promise<void> {
     const result = await saveItem(activeTab.url, activeTab.title);
 
     if (result.success) {
-      console.log('[ServiceWorker] URL saved successfully:', result.item?.id);
+      debugLog('[ServiceWorker] URL saved successfully:', result.item?.id);
       // Could show a success badge/notification here in the future
     } else {
       console.error('[ServiceWorker] Failed to save URL:', result.error);
@@ -279,4 +450,4 @@ async function handleSaveCurrentTabCommand(): Promise<void> {
   }
 }
 
-console.log('[ServiceWorker] Initialization complete');
+debugLog('[ServiceWorker] Initialization complete');

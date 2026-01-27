@@ -47,9 +47,15 @@ var enrichment = builder.AddProject<Projects.Recall_Core_Enrichment>("enrichment
     .WaitFor(redis)
     .WaitFor(api);
 
-builder.AddViteApp("web", "../web")
-    .WithHttpEndpoint(name: "web-http", env: "PORT")
+var app = builder.AddJavaScriptApp("web", "../web")
+    .WithRunScript("dev:custom")
     .WithReference(api)
     .WaitFor(api);
+
+var extension = builder.AddJavaScriptApp("extension", "../extension")
+    .WithRunScript("dev")
+    .WithPnpm()
+    .WaitFor(api)
+    .WaitFor(app);
 
 builder.Build().Run();

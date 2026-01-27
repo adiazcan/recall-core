@@ -53,14 +53,14 @@ export function TagList() {
 
   if (tags.length === 0) {
     return (
-      <div className="px-3 py-4 text-sm text-neutral-500 text-center">
+      <div className="px-2 sm:px-3 py-3 sm:py-4 text-xs sm:text-sm text-neutral-500 text-center">
         No tags yet
       </div>
     );
   }
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5 sm:space-y-1">
       {tags.map((tag) => (
         <NavLink
           key={tag.name}
@@ -68,7 +68,7 @@ export function TagList() {
           onClick={() => handleTagClick(tag.name)}
           className={({ isActive }) =>
             cn(
-              'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+              'flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors',
               isActive
                 ? 'bg-neutral-100 text-neutral-900'
                 : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900',
@@ -79,7 +79,7 @@ export function TagList() {
             <>
               <div
                 className={cn(
-                  'h-3 w-3 rounded-full',
+                  'h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full',
                   getBackgroundColor(tag.color),
                 )}
                 aria-hidden="true"

@@ -25,5 +25,8 @@ export default defineConfig({
     hmr: {
       port: 5173,
     },
+    // CORS enabled for development only - allows extension to load assets during dev
+    // Production builds do not include this permissive CORS policy
+    cors: true,
   },
 });

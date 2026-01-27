@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { Plus, Menu } from 'lucide-react';
 import { useEffect } from 'react';
 import { Button } from '../../../components/ui/button';
 import { EmptyState } from '../../../components/common/EmptyState';
@@ -13,6 +13,7 @@ export function ItemsView() {
   const isSaveUrlOpen = useUiStore((state) => state.isSaveUrlOpen);
   const openSaveUrl = useUiStore((state) => state.openSaveUrl);
   const closeSaveUrl = useUiStore((state) => state.closeSaveUrl);
+  const toggleSidebar = useUiStore((state) => state.toggleSidebar);
 
   const { items, isLoading, isLoadingMore, hasMore, fetchItems, fetchMore, selectItem, selectedItemId } = useItemsStore();
 
@@ -29,14 +30,27 @@ export function ItemsView() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-neutral-100">
-        <div>
-          <p className="text-xs uppercase tracking-wider text-neutral-500 mb-1">Your library</p>
-          <h2 className="text-2xl font-semibold text-neutral-900">{viewState.title}</h2>
+      <div className="flex-shrink-0 flex items-center justify-between gap-2 p-3 sm:p-4 md:p-6 border-b border-neutral-100">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          {/* Mobile menu button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden h-8 w-8 flex-shrink-0"
+            onClick={toggleSidebar}
+            aria-label="Toggle menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wider text-neutral-500 mb-0.5 sm:mb-1">Your library</p>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-neutral-900 truncate">{viewState.title}</h2>
+          </div>
         </div>
-        <Button onClick={openSaveUrl} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Save URL
+        <Button onClick={openSaveUrl} className="gap-1.5 sm:gap-2 text-xs sm:text-sm flex-shrink-0 px-2.5 sm:px-4">
+          <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <span className="hidden sm:inline">Save URL</span>
+          <span className="sm:hidden">Save</span>
         </Button>
       </div>
 
@@ -44,7 +58,7 @@ export function ItemsView() {
       <div className="flex-1 overflow-hidden relative">
         <SaveUrlDialog open={isSaveUrlOpen} onOpenChange={(open) => (open ? openSaveUrl() : closeSaveUrl())} />
         {!isLoading && items.length === 0 ? (
-          <div className="p-6">
+          <div className="p-3 sm:p-4 md:p-6">
             <EmptyState
               title="No items found"
               description={

@@ -16,6 +16,7 @@ export function SidePanelApp(): JSX.Element {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string>();
+  const [initError, setInitError] = useState<string>();
   const isMountedRef = useRef(true);
 
   useEffect(() => {
@@ -29,17 +30,29 @@ export function SidePanelApp(): JSX.Element {
     let cancelled = false;
 
     async function checkAuth() {
+      console.log('[SidePanelApp] Starting auth check...');
       try {
+        console.log('[SidePanelApp] Calling getAuthState()...');
         const state = await getAuthState();
+        console.log('[SidePanelApp] Auth state received:', JSON.stringify(state));
         if (!cancelled && isMountedRef.current) {
           setAuthState(state);
+          setInitError(undefined);
         }
       } catch (error) {
-        console.error('[SidePanel] Failed to get auth state:', error);
+        console.error('[SidePanelApp] getAuthState() failed:', error);
         if (!cancelled && isMountedRef.current) {
           setAuthState({ isAuthenticated: false });
+          // Set error message for display
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          if (errorMessage.includes('timeout') || errorMessage.includes('No response')) {
+            setInitError('Unable to connect to extension. Try reloading the extension.');
+          } else {
+            setInitError(`Connection error: ${errorMessage}`);
+          }
         }
       } finally {
+        console.log('[SidePanelApp] Auth check finished');
         if (!cancelled && isMountedRef.current) {
           setIsLoading(false);
         }
@@ -124,6 +137,28 @@ export function SidePanelApp(): JSX.Element {
           <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin dark:border-gray-600 dark:border-t-blue-400" />
           <span className="text-sm text-gray-600 dark:text-gray-400">Loading...</span>
         </div>
+      </div>
+    );
+  }
+
+  // Initialization error state (service worker not responding)
+  if (initError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+        <div className="text-5xl mb-4">⚠️</div>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+          Connection Error
+        </h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-xs">
+          {initError}
+        </p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-600"
+        >
+          Reload Panel
+        </button>
       </div>
     );
   }

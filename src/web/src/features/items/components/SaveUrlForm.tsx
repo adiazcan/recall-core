@@ -97,8 +97,8 @@ export function SaveUrlForm({ onSaved, onCancel, variant = 'dialog' }: SaveUrlFo
 
   if (variant === 'inline') {
     return (
-      <form className="flex flex-col md:flex-row gap-3" onSubmit={handleSubmit}>
-        <div className="flex-1 space-y-2">
+      <form className="flex flex-col sm:flex-row gap-2 sm:gap-3" onSubmit={handleSubmit}>
+        <div className="flex-1 space-y-1.5 sm:space-y-2">
           <Input
             id="save-url-input"
             type="url"
@@ -106,25 +106,25 @@ export function SaveUrlForm({ onSaved, onCancel, variant = 'dialog' }: SaveUrlFo
             value={url}
             onChange={(event) => setUrl(event.target.value)}
             aria-invalid={error ? true : undefined}
-            className="h-10 bg-neutral-50 border-neutral-200 rounded-lg px-4 text-sm text-neutral-900 placeholder:text-neutral-400 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/30"
+            className="h-9 sm:h-10 bg-neutral-50 border-neutral-200 rounded-lg px-3 sm:px-4 text-xs sm:text-sm text-neutral-900 placeholder:text-neutral-400 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/30"
             autoFocus
           />
-          {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+          {error ? <p className="text-xs sm:text-sm text-rose-600">{error}</p> : null}
         </div>
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-1.5 sm:gap-2 justify-end">
           <Button
             type="button"
             variant="outline"
             onClick={onCancel}
             disabled={isSaving}
-            className="h-10 rounded-lg border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+            className="h-9 sm:h-10 rounded-lg border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 text-xs sm:text-sm px-3 sm:px-4"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={isSaving}
-            className="h-10 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+            className="h-9 sm:h-10 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 text-xs sm:text-sm px-3 sm:px-4"
           >
             {isSaving ? 'Saving…' : 'Save'}
           </Button>

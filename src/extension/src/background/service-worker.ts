@@ -55,11 +55,14 @@ debugLog('[ServiceWorker] Initializing...');
 async function handleGetAuthState(
   _message: GetAuthStateMessage
 ): Promise<MessageResponse<AuthStateResponse>> {
+  debugLog('[ServiceWorker] Handling GET_AUTH_STATE');
   try {
     const state = await getAuthState();
+    debugLog('[ServiceWorker] Auth state:', state);
     return successResponse(state);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to get auth state';
+    debugLog('[ServiceWorker] Auth state error:', message);
     return errorResponse(message, 'AUTH_FAILED');
   }
 }

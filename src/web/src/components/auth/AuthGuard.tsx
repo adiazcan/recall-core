@@ -1,8 +1,13 @@
 import type { ReactNode } from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { InteractionStatus } from '@azure/msal-browser';
 import { useIsAuthenticated, useMsal } from '@azure/msal-react';
 import { useAuth } from '../../hooks/useAuth';
+import {
+  isInExtensionFrame,
+  hasValidExtensionToken,
+  onExtensionTokenChange,
+} from '../../lib/extensionAuth';
 
 type AuthGuardProps = {
   children: ReactNode;
@@ -13,8 +18,64 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const { inProgress } = useMsal();
   const { signIn } = useAuth();
   const hasInitiatedSignIn = useRef(false);
+  const [hasExtensionToken, setHasExtensionToken] = useState(() => {
+    const hasToken = hasValidExtensionToken();
+    console.log('[AuthGuard] Initial hasExtensionToken:', hasToken);
+    return hasToken;
+  });
+  const inExtensionFrame = isInExtensionFrame();
+
+  console.log('[AuthGuard] Render - inExtensionFrame:', inExtensionFrame, 'hasExtensionToken:', hasExtensionToken, 'isAuthenticated:', isAuthenticated);
+
+  // Listen for extension token changes
+  useEffect(() => {
+    if (!inExtensionFrame) {
+      return;
+    }
+
+    console.log('[AuthGuard] Setting up token change listener');
+    
+    // Check current state in case token arrived before listener was set up
+    const currentHasToken = hasValidExtensionToken();
+    if (currentHasToken) {
+      console.log('[AuthGuard] Token already available at listener setup');
+      setHasExtensionToken(true);
+    }
+
+    const unsubscribe = onExtensionTokenChange((hasToken) => {
+      console.log('[AuthGuard] Token change event received:', hasToken);
+      setHasExtensionToken(hasToken);
+    });
+
+    // Also poll briefly in case we missed the event
+    const pollInterval = setInterval(() => {
+      const nowHasToken = hasValidExtensionToken();
+      if (nowHasToken) {
+        console.log('[AuthGuard] Poll detected token available');
+        setHasExtensionToken(true);
+        clearInterval(pollInterval);
+      }
+    }, 500);
+
+    // Stop polling after 10 seconds
+    const pollTimeout = setTimeout(() => {
+      clearInterval(pollInterval);
+    }, 10000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(pollInterval);
+      clearTimeout(pollTimeout);
+    };
+  }, [inExtensionFrame]);
 
   useEffect(() => {
+    // If in extension frame, don't auto-redirect to MSAL sign-in
+    // Wait for extension to provide token
+    if (inExtensionFrame) {
+      return;
+    }
+
     if (isAuthenticated) {
       return;
     }
@@ -29,8 +90,28 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
     hasInitiatedSignIn.current = true;
     void signIn();
-  }, [inProgress, isAuthenticated, signIn]);
+  }, [inProgress, isAuthenticated, signIn, inExtensionFrame]);
 
+  // In extension frame, check extension token
+  if (inExtensionFrame) {
+    if (hasExtensionToken) {
+      return <>{children}</>;
+    }
+
+    // Waiting for extension to provide token
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-6">
+        <div className="w-full max-w-sm rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+          <h1 className="text-lg font-semibold text-neutral-900">Waiting for authentication…</h1>
+          <p className="mt-2 text-sm text-neutral-600">
+            Please sign in through the extension popup if prompted.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Standard MSAL authentication flow
   if (isAuthenticated) {
     return <>{children}</>;
   }

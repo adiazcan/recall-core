@@ -18,54 +18,36 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const { inProgress } = useMsal();
   const { signIn } = useAuth();
   const hasInitiatedSignIn = useRef(false);
-  const [hasExtensionToken, setHasExtensionToken] = useState(() => {
-    const hasToken = hasValidExtensionToken();
-    console.log('[AuthGuard] Initial hasExtensionToken:', hasToken);
-    return hasToken;
-  });
+  const [hasExtensionToken, setHasExtensionToken] = useState(() => hasValidExtensionToken());
   const inExtensionFrame = isInExtensionFrame();
-
-  console.log('[AuthGuard] Render - inExtensionFrame:', inExtensionFrame, 'hasExtensionToken:', hasExtensionToken, 'isAuthenticated:', isAuthenticated);
 
   // Listen for extension token changes
   useEffect(() => {
     if (!inExtensionFrame) {
       return;
     }
-
-    console.log('[AuthGuard] Setting up token change listener');
     
     // Check current state in case token arrived before listener was set up
     const currentHasToken = hasValidExtensionToken();
     if (currentHasToken) {
-      console.log('[AuthGuard] Token already available at listener setup');
       setHasExtensionToken(true);
     }
 
     const unsubscribe = onExtensionTokenChange((hasToken) => {
-      console.log('[AuthGuard] Token change event received:', hasToken);
       setHasExtensionToken(hasToken);
     });
 
-    // Also poll briefly in case we missed the event
-    const pollInterval = setInterval(() => {
+    // Check once after a short delay in case token arrives during initialization
+    const checkTimeout = setTimeout(() => {
       const nowHasToken = hasValidExtensionToken();
       if (nowHasToken) {
-        console.log('[AuthGuard] Poll detected token available');
         setHasExtensionToken(true);
-        clearInterval(pollInterval);
       }
-    }, 500);
-
-    // Stop polling after 10 seconds
-    const pollTimeout = setTimeout(() => {
-      clearInterval(pollInterval);
-    }, 10000);
+    }, 1000);
 
     return () => {
       unsubscribe();
-      clearInterval(pollInterval);
-      clearTimeout(pollTimeout);
+      clearTimeout(checkTimeout);
     };
   }, [inExtensionFrame]);
 

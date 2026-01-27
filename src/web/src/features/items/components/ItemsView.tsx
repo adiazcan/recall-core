@@ -14,6 +14,7 @@ export function ItemsView() {
   const openSaveUrl = useUiStore((state) => state.openSaveUrl);
   const closeSaveUrl = useUiStore((state) => state.closeSaveUrl);
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
+  const isSidebarOpen = useUiStore((state) => state.isSidebarOpen);
 
   const { items, isLoading, isLoadingMore, hasMore, fetchItems, fetchMore, selectItem, selectedItemId } = useItemsStore();
 
@@ -39,11 +40,12 @@ export function ItemsView() {
             className="md:hidden h-8 w-8 flex-shrink-0"
             onClick={toggleSidebar}
             aria-label="Toggle menu"
+            aria-expanded={isSidebarOpen}
           >
             <Menu className="h-5 w-5" />
           </Button>
           <div className="min-w-0">
-            <p className="text-[10px] sm:text-xs uppercase tracking-wider text-neutral-500 mb-0.5 sm:mb-1">Your library</p>
+            <p className="text-xs uppercase tracking-wider text-neutral-500 mb-0.5 sm:mb-1">Your library</p>
             <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-neutral-900 truncate">{viewState.title}</h2>
           </div>
         </div>

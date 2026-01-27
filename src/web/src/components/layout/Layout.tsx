@@ -20,7 +20,15 @@ export function Layout() {
           isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none',
         )}
         onClick={() => setSidebarOpen(false)}
-        aria-hidden="true"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setSidebarOpen(false);
+          }
+        }}
+        role="button"
+        tabIndex={isSidebarOpen ? 0 : -1}
+        aria-label="Close sidebar"
       />
       {/* Sidebar - fixed overlay on mobile, static on desktop */}
       <div

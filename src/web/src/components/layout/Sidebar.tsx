@@ -156,7 +156,7 @@ export function Sidebar() {
         {/* Collections */}
         <div>
           <div className="flex items-center justify-between px-2 sm:px-3 mb-2">
-            <h3 className="text-[10px] sm:text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+            <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
               Collections
             </h3>
             <Button
@@ -175,7 +175,7 @@ export function Sidebar() {
 
         {/* Tags */}
         <div>
-          <h3 className="text-[10px] sm:text-xs font-semibold text-neutral-400 uppercase tracking-wider px-2 sm:px-3 mb-2">Tags</h3>
+          <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-2 sm:px-3 mb-2">Tags</h3>
           <TagList />
         </div>
       </div>

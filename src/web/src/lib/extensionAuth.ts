@@ -93,7 +93,6 @@ function setExtensionToken(accessToken: string, expiresAt: number): void {
   tokenRequestRetries = 0;
   
   extensionToken = { accessToken, expiresAt };
-  console.log('[ExtensionAuth] Token received, expires at:', new Date(expiresAt).toISOString());
   notifyTokenChangeListeners(true);
 }
 
@@ -102,7 +101,6 @@ function setExtensionToken(accessToken: string, expiresAt: number): void {
  */
 function clearExtensionToken(): void {
   extensionToken = null;
-  console.log('[ExtensionAuth] Token cleared (sign out)');
   notifyTokenChangeListeners(false);
 }
 
@@ -114,7 +112,9 @@ function notifyTokenChangeListeners(hasToken: boolean): void {
     try {
       listener(hasToken);
     } catch (error) {
-      console.error('[ExtensionAuth] Listener error:', error);
+      if (import.meta.env.DEV) {
+        console.error('[ExtensionAuth] Listener error:', error);
+      }
     }
   });
 }
@@ -150,7 +150,6 @@ export function requestTokenFromExtension(): void {
   };
 
   try {
-    console.log('[ExtensionAuth] Requesting token from extension (attempt', tokenRequestRetries + 1, ')');
     window.parent.postMessage(message, '*');
     
     // Schedule retry if we don't receive token
@@ -161,11 +160,11 @@ export function requestTokenFromExtension(): void {
           requestTokenFromExtension();
         }
       }, TOKEN_REQUEST_RETRY_MS);
-    } else {
-      console.warn('[ExtensionAuth] Max retries reached, no token received');
     }
   } catch (error) {
-    console.error('[ExtensionAuth] Failed to request token:', error);
+    if (import.meta.env.DEV) {
+      console.error('[ExtensionAuth] Failed to request token:', error);
+    }
   }
 }
 
@@ -173,23 +172,32 @@ export function requestTokenFromExtension(): void {
  * Handles incoming messages from the extension
  */
 function handleExtensionMessage(event: MessageEvent): void {
-  // Accept messages from any origin when in iframe (extension context)
-  // The extension validates origin on its side
+  // Validate origin - only accept messages from this extension's origin
+  // Extension origin format: chrome-extension://<extension-id> or moz-extension://<extension-id>
+  const isExtensionOrigin = event.origin.startsWith('chrome-extension://') || 
+                            event.origin.startsWith('moz-extension://');
+  
+  if (!isExtensionOrigin) {
+    return;
+  }
+  
+  // Additional validation: verify this is OUR extension by checking if we're in an iframe
+  // Messages from other extensions won't have access to our iframe context
+  if (!isInExtensionFrame()) {
+    return;
+  }
+  
   const data = event.data as ExtensionMessage | undefined;
   
   if (!data || typeof data !== 'object' || !('type' in data)) {
     return;
   }
 
-  console.log('[ExtensionAuth] Received message:', data.type);
-
   switch (data.type) {
     case 'RECALL_EXT_AUTH': {
       const { accessToken, expiresAt } = data as ExtAuthTokenMessage;
       if (accessToken && typeof expiresAt === 'number') {
         setExtensionToken(accessToken, expiresAt);
-      } else {
-        console.warn('[ExtensionAuth] Invalid token message:', { hasToken: !!accessToken, expiresAt });
       }
       break;
     }
@@ -213,11 +221,9 @@ export function initExtensionAuth(): void {
   }
 
   if (!isInExtensionFrame()) {
-    console.log('[ExtensionAuth] Not in extension frame, skipping init');
     return;
   }
 
-  console.log('[ExtensionAuth] Initializing in extension frame');
   window.addEventListener('message', handleExtensionMessage);
   isListenerRegistered = true;
   

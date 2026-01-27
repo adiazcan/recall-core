@@ -29,19 +29,25 @@ export async function sendMessage<T>(
   message: ExtensionMessage,
   timeoutMs: number = MESSAGE_TIMEOUT_MS
 ): Promise<MessageResponse<T>> {
-  console.log('[Messaging] sendMessage called:', message.type);
-  
   return new Promise((resolve, reject) => {
+    let isResolved = false;
+    
     const timeoutId = setTimeout(() => {
-      console.log('[Messaging] TIMEOUT for:', message.type);
-      reject(new Error(`Message timeout: ${message.type} did not receive a response within ${timeoutMs}ms`));
+      if (!isResolved) {
+        isResolved = true;
+        reject(new Error(`Message timeout: ${message.type} did not receive a response within ${timeoutMs}ms`));
+      }
     }, timeoutMs);
 
     try {
-      console.log('[Messaging] Calling chrome.runtime.sendMessage...');
       chrome.runtime.sendMessage(message, (response: MessageResponse<T>) => {
+        if (isResolved) {
+          return; // Already timed out
+        }
+        
         clearTimeout(timeoutId);
-        console.log('[Messaging] Got response for', message.type, ':', response, 'lastError:', chrome.runtime.lastError);
+        isResolved = true;
+        
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message));
           return;
@@ -53,9 +59,11 @@ export async function sendMessage<T>(
         resolve(response);
       });
     } catch (error) {
-      clearTimeout(timeoutId);
-      console.log('[Messaging] Exception:', error);
-      reject(error instanceof Error ? error : new Error(String(error)));
+      if (!isResolved) {
+        clearTimeout(timeoutId);
+        isResolved = true;
+        reject(error instanceof Error ? error : new Error(String(error)));
+      }
     }
   });
 }
@@ -228,30 +236,23 @@ export function createMessageListener(
   sendResponse: (response: MessageResponse<unknown>) => void
 ) => boolean {
   return (message, sender, sendResponse) => {
-    console.log('[MessageListener] Received message:', message?.type, 'from:', sender?.id);
-    
     if (!message || typeof message !== 'object' || !('type' in message)) {
-      console.log('[MessageListener] Invalid message format:', message);
       return false;
     }
     
     const handler = handlers[message.type];
 
     if (!handler) {
-      console.warn('[MessageListener] Unknown message type:', message.type);
       sendResponse(errorResponse('Unknown message type'));
       return false;
     }
 
-    console.log('[MessageListener] Found handler for:', message.type);
-
     // Helper to safely call sendResponse (may fail if channel is closed)
     const safeSendResponse = (response: MessageResponse<unknown>): void => {
       try {
-        console.log('[MessageListener] Sending response for:', message.type);
         sendResponse(response);
       } catch (err) {
-        console.warn('[MessageListener] Failed to send response (channel may be closed):', err);
+        // Channel may be closed, ignore
       }
     };
 
@@ -261,7 +262,6 @@ export function createMessageListener(
         safeSendResponse(response);
       })
       .catch((error) => {
-        console.error('[MessageListener] Handler error:', error);
         const errorMessage =
           error instanceof Error ? error.message : 'Unknown error';
         const errorCode: ExtensionErrorCode =

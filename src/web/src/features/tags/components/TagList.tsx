@@ -85,7 +85,7 @@ export function TagList() {
                 aria-hidden="true"
               />
               <span className="flex-1 text-left truncate">#{tag.name}</span>
-              <span className="text-[10px] sm:text-xs text-neutral-400">{tag.count}</span>
+              <span className="text-xs text-neutral-400">{tag.count}</span>
             </>
           )}
         </NavLink>

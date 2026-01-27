@@ -166,6 +166,15 @@ function buildApiBaseUrl(): string {
   return /\/api\/v1$/.test(trimmed) ? trimmed : `${trimmed}/api/v1`;
 }
 
+/**
+ * Builds the full API URL for an endpoint
+ * @param endpoint - API endpoint path (with or without leading slash)
+ * @returns Full URL with base + /api/v1 + endpoint
+ * 
+ * Note: The leading slash normalization is currently redundant since all
+ * callers already provide endpoints with leading slashes (e.g., '/items').
+ * Kept for defensive programming in case future endpoints are added without it.
+ */
 function buildApiUrl(endpoint: string): string {
   const base = buildApiBaseUrl();
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;

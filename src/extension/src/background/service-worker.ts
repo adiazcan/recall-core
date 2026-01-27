@@ -206,7 +206,7 @@ const BATCH_CONCURRENCY_LIMIT = 3;
  * @param processor - Function to process each item
  * @param concurrencyLimit - Maximum concurrent operations
  */
-async function processWithConcurrency<T, R>(
+async function processWithConcurrency<T extends { url?: string }, R>(
   items: T[],
   processor: (item: T, index: number) => Promise<R>,
   concurrencyLimit: number
@@ -224,14 +224,13 @@ async function processWithConcurrency<T, R>(
         })
         .catch((error) => {
           // Should not happen as processor catches errors, but handle just in case
-          console.error(`[processWithConcurrency] Unexpected error at index ${actualIndex}:`, error);
           results[actualIndex] = {
             success: false,
             isNew: false,
             error: error instanceof Error ? error.message : 'Processing failed',
             errorCode: 'UNKNOWN',
             index: actualIndex,
-            url: '',
+            url: item.url || '',
           } as R;
         });
     });

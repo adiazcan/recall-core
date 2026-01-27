@@ -46,13 +46,11 @@ export function SidePanel({ authState, onAuthRequired }: SidePanelProps): JSX.El
    */
   const sendTokenToWebApp = useCallback(async () => {
     if (!iframeRef.current?.contentWindow) {
-      console.log('[SidePanel] Cannot send token - no iframe contentWindow');
       return;
     }
 
     const auth = await getAuth();
     if (!auth?.accessToken || !auth.expiresAt) {
-      console.log('[SidePanel] Cannot send token - no auth data');
       return;
     }
 
@@ -62,7 +60,6 @@ export function SidePanel({ authState, onAuthRequired }: SidePanelProps): JSX.El
       expiresAt: auth.expiresAt,
     };
 
-    console.log('[SidePanel] Sending token to web app, origin:', webAppOrigin);
     iframeRef.current.contentWindow.postMessage(message, webAppOrigin);
     tokenSentRef.current = true;
   }, [webAppOrigin]);
@@ -97,21 +94,17 @@ export function SidePanel({ authState, onAuthRequired }: SidePanelProps): JSX.El
         return;
       }
 
-      console.log('[SidePanel] Received message from web app:', message.type);
-
       if (message.type === 'RECALL_REQUEST_TOKEN') {
         // Check if we still have a valid token
         const isValid = await hasValidAuth(TOKEN_EXPIRY_BUFFER_MS);
         
         if (!isValid) {
           // Token expired - notify parent to prompt re-auth
-          console.log('[SidePanel] Token invalid, triggering re-auth');
           onAuthRequired();
           return;
         }
 
         // Send token to web app
-        console.log('[SidePanel] Responding with token');
         await sendTokenToWebApp();
       }
     },
@@ -134,16 +127,13 @@ export function SidePanel({ authState, onAuthRequired }: SidePanelProps): JSX.El
       loadTimeoutRef.current = undefined;
     }
 
-    console.log('[SidePanel] Iframe loaded, authState.isAuthenticated:', authState.isAuthenticated);
     setLoadState('loaded');
     setErrorMessage(undefined);
 
-    // Send token to web app immediately after load
-    if (authState.isAuthenticated && !tokenSentRef.current) {
-      console.log('[SidePanel] Sending initial token after iframe load');
-      sendTokenToWebApp();
-    }
-  }, [authState.isAuthenticated, sendTokenToWebApp]);
+    // Don't send token immediately - wait for web app to signal readiness
+    // via RECALL_REQUEST_TOKEN message. This ensures the web app's message
+    // listener is ready before we send the token, preventing race conditions.
+  }, []);
 
   // Handle iframe error
   // Note: iframe onError is unreliable for cross-origin loads; timeout is primary detection.

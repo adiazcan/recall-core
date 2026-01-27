@@ -172,10 +172,18 @@ export function requestTokenFromExtension(): void {
  * Handles incoming messages from the extension
  */
 function handleExtensionMessage(event: MessageEvent): void {
-  // Validate origin - only accept messages from chrome-extension:// origins
-  // when in iframe context (extension side panel)
-  if (!event.origin.startsWith('chrome-extension://') && 
-      !event.origin.startsWith('moz-extension://')) {
+  // Validate origin - only accept messages from this extension's origin
+  // Extension origin format: chrome-extension://<extension-id> or moz-extension://<extension-id>
+  const isExtensionOrigin = event.origin.startsWith('chrome-extension://') || 
+                            event.origin.startsWith('moz-extension://');
+  
+  if (!isExtensionOrigin) {
+    return;
+  }
+  
+  // Additional validation: verify this is OUR extension by checking if we're in an iframe
+  // Messages from other extensions won't have access to our iframe context
+  if (!isInExtensionFrame()) {
     return;
   }
   

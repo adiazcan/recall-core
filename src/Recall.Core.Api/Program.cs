@@ -93,12 +93,20 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
     {
         policy.SetIsOriginAllowed(origin =>
-            Uri.TryCreate(origin, UriKind.Absolute, out var uri)
-            && uri.IsLoopback
-            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
-            || allowedOriginSet.Contains(origin))
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+        {
+            // Allow loopback addresses (development)
+            if (Uri.TryCreate(origin, UriKind.Absolute, out var uri) 
+                && uri.IsLoopback 
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+            {
+                return true;
+            }
+            
+            // Allow explicitly configured origins (e.g., extension origins)
+            return allowedOriginSet.Contains(origin);
+        })
+        .AllowAnyHeader()
+        .AllowAnyMethod();
     });
 });
 

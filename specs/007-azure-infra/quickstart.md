@@ -134,12 +134,13 @@ az ad app federated-credential create \
     "audiences": ["api://AzureADTokenExchange"]
   }'
 
-# Assign Contributor role on subscription
+# Assign Contributor role scoped to app resource group
 SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+RESOURCE_GROUP_NAME=recall-core-rg
 az role assignment create \
   --assignee $APP_ID \
   --role Contributor \
-  --scope /subscriptions/$SUBSCRIPTION_ID
+  --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME
 
 # Also assign on state storage
 az role assignment create \

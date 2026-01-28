@@ -6,10 +6,10 @@
 
 ## Content Quality
 
-- [x] No implementation details (languages, frameworks, APIs)
 - [x] Focused on user value and business needs
-- [x] Written for non-technical stakeholders
+- [x] Written for non-technical stakeholders where possible
 - [x] All mandatory sections completed
+- [ ] Implementation details (Terraform, Azure services) are specified per user requirements
 
 ## Requirement Completeness
 
@@ -27,11 +27,10 @@
 - [x] All functional requirements have clear acceptance criteria
 - [x] User scenarios cover primary flows
 - [x] Feature meets measurable outcomes defined in Success Criteria
-- [x] No implementation details leak into specification
 
 ## Notes
 
 - Spec is ready for `/speckit.clarify` or `/speckit.plan`
-- IaC tool choice (Bicep vs Terraform) documented as team preference with Bicep as default
-- All Azure resource types explicitly named without specifying SDKs or code patterns
-- Security requirements use managed identity and Key Vault without implementation specifics
+- IaC tool choice: Terraform (per user requirements)
+- Azure resource types explicitly named per infrastructure requirements
+- Security requirements use managed identity and Key Vault with specific Azure service configurations

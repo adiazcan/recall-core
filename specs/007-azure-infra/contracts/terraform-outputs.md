@@ -28,8 +28,8 @@ This document defines the Terraform output contract - the values exposed by the 
 | `api_container_app_name` | string | no | API Container App name |
 | `api_container_app_fqdn` | string | no | API Container App FQDN |
 | `api_container_app_url` | string | no | API Container App URL (https://{fqdn}) |
-| `enrichment_job_id` | string | no | Enrichment Job resource ID |
-| `enrichment_job_name` | string | no | Enrichment Job name |
+| `enrichment_container_app_id` | string | no | Enrichment Container App resource ID |
+| `enrichment_container_app_name` | string | no | Enrichment Container App name |
 
 ### Static Web App
 
@@ -115,6 +115,11 @@ output "api_container_app_id" {
   value       = module.container_apps.api_id
 }
 
+output "api_container_app_name" {
+  description = "API Container App name"
+  value       = module.container_apps.api_name
+}
+
 output "api_container_app_fqdn" {
   description = "API Container App FQDN"
   value       = module.container_apps.api_fqdn
@@ -125,9 +130,14 @@ output "api_container_app_url" {
   value       = "https://${module.container_apps.api_fqdn}"
 }
 
-output "enrichment_job_id" {
-  description = "Enrichment Job resource ID"
-  value       = module.container_apps.job_id
+output "enrichment_container_app_id" {
+  description = "Enrichment Container App resource ID"
+  value       = module.container_apps.enrichment_id
+}
+
+output "enrichment_container_app_name" {
+  description = "Enrichment Container App name"
+  value       = module.container_apps.enrichment_name
 }
 
 # Static Web App
@@ -276,7 +286,7 @@ The following outputs are consumed by deployment workflows:
 | Workflow | Outputs Used | Purpose |
 |----------|--------------|---------|
 | `api-deploy.yml` | `api_container_app_name`, `resource_group_name` | Target for revision update |
-| `enrichment-deploy.yml` | `enrichment_job_name`, `resource_group_name` | Target for job image update |
+| `enrichment-deploy.yml` | `enrichment_container_app_name`, `resource_group_name` | Target for container app image update |
 | `web-deploy.yml` | `static_web_app_api_key` | SWA deployment authentication |
 
 ### Application Configuration

@@ -44,7 +44,7 @@ Provision and deploy recall-core to Azure using Terraform IaC with:
 | Principle | Status | Notes |
 |-----------|--------|-------|
 | I. Product Focus | ✅ PASS | Infrastructure enables core save/read/find functionality; no scope creep |
-| II. Privacy-First | ✅ PASS | Key Vault for secrets, MI for auth, no public DB endpoints, storage private |
+| II. Privacy-First | ✅ PASS | Key Vault for secrets, MI for auth; MVP allows public endpoints for DocumentDB/Storage with firewall rules planned for later phases |
 | III. Code Quality | ✅ PASS | IaC follows modular structure (modules per resource type) |
 | IV. Testing Discipline | ✅ PASS | Terraform validate/plan in CI, deployment verification tests |
 | V. Performance | ✅ PASS | ACA scaling configured, queue-triggered jobs for async work |

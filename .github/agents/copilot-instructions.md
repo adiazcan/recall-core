@@ -33,8 +33,7 @@ tests/
 C# / .NET 10 (net10.0): Follow standard conventions
 
 ## Recent Changes
-- 007-azure-infra: Added Aspire 13, Dapr 1.14, MongoDB.Driver 2.30, Azure.Storage.Blobs 12.23, OpenTelemetry
-- 007-azure-infra: Added azurerm provider (≥4.x), azapi provider (for ACA Jobs), GitHub provider (OIDC)
+- 007-azure-infra: Added Aspire 13, Dapr 1.14, MongoDB.Driver 2.30, Azure.Storage.Blobs 12.23, OpenTelemetry; azurerm provider (≥4.x), azapi provider (for ACA Jobs), GitHub provider (OIDC)
 
 
 <!-- MANUAL ADDITIONS START -->

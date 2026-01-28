@@ -19,6 +19,7 @@ This guide walks through deploying recall-core to Azure using the Terraform infr
 | Azure CLI | 2.50+ | `brew install azure-cli` or [install guide](https://docs.microsoft.com/cli/azure/install-azure-cli) |
 | Terraform | 1.7+ | `brew install terraform` or [install guide](https://developer.hashicorp.com/terraform/install) |
 | Docker | 24+ | [Docker Desktop](https://www.docker.com/products/docker-desktop/) |
+| jq | 1.6+ | `brew install jq` or [install guide](https://jqlang.github.io/jq/download/) |
 
 ### Azure Requirements
 

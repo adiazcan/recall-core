@@ -259,7 +259,7 @@ module "static_web_app" {
 
 ### Module: container-apps
 
-**Purpose**: Creates ACA Environment, API Container App, and Enrichment Job.
+**Purpose**: Creates ACA Environment, API Container App, and Enrichment Container App.
 
 **Inputs**:
 | Variable | Type | Required | Description |
@@ -286,11 +286,13 @@ module "static_web_app" {
 |--------|------|-------------|
 | `environment_id` | string | ACA Environment ID |
 | `api_id` | string | API Container App ID |
+| `api_name` | string | API Container App name |
 | `api_fqdn` | string | API Container App FQDN |
 | `api_url` | string | API Container App URL (https://) |
-| `job_id` | string | Enrichment Job ID |
+| `enrichment_id` | string | Enrichment Container App ID |
+| `enrichment_name` | string | Enrichment Container App name |
 | `api_identity_principal_id` | string | API managed identity principal ID |
-| `job_identity_principal_id` | string | Job managed identity principal ID |
+| `enrichment_identity_principal_id` | string | Enrichment managed identity principal ID |
 
 ---
 

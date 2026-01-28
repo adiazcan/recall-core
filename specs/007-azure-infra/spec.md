@@ -211,7 +211,7 @@ As a **DevOps engineer**, I want GitHub Actions workflows to deploy infrastructu
 
 - **NFR-001**: Infrastructure provisioning MUST complete in under 20 minutes for a fresh environment.
 - **NFR-002**: IaC MUST be idempotent—running the same deployment twice produces no changes.
-- **NFR-003**: IaC MUST use Bicep or Terraform (team's existing preference if any, otherwise Bicep as Azure-native).
+- **NFR-003**: IaC for this feature MUST use Terraform as the selected tool. (Organization-wide allowed tools MAY include Bicep or Terraform, but Terraform is required for this feature.)
 
 ### Key Entities
 

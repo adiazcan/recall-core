@@ -136,20 +136,20 @@
 
 ---
 
-## Phase 7: User Story 5 - Storage Queue Messaging (Priority: P2)
+## Phase 7: User Story 5 - Dapr Pub/Sub for Enrichment (Storage Queue-backed) (Priority: P2)
 
-**Goal**: ACA Job processes messages from Storage Queue for enrichment
+**Goal**: Configure Dapr pub/sub using Azure Storage Queues so the enrichment service processes `enrichment.requested` events
 
-**Independent Test**: Send message to queue, verify job picks it up
+**Independent Test**: Publish `enrichment.requested` event via Dapr pub/sub and verify enrichment container app processes it
 
 ### Implementation for User Story 5
 
-- [ ] T050 [US5] Create Storage Queue resource in infra/modules/storage/main.tf
-- [ ] T051 [US5] Configure ACA Job with queue trigger scale rule in infra/modules/container-apps/main.tf (job resource)
-- [ ] T052 [US5] Configure Job environment variables for queue access in infra/modules/container-apps/main.tf
-- [ ] T053 [US5] Create GitHub Actions workflow for enrichment deployment in .github/workflows/enrichment-deploy.yml
+- [ ] T050 [US5] Create Storage Queue resource used as Dapr pub/sub backing store in infra/modules/storage/main.tf
+- [ ] T051 [US5] Configure enrichment ACA container app with Dapr pub/sub component `enrichment-pubsub` (Storage Queue-backed) and subscription to topic `enrichment.requested` in infra/modules/container-apps/main.tf
+- [ ] T052 [US5] Configure enrichment container app environment variables/secrets for Storage Queue access (connection string, queue name) in infra/modules/container-apps/main.tf
+- [ ] T053 [US5] Create GitHub Actions workflow for enrichment service deployment (including Dapr pub/sub config) in .github/workflows/enrichment-deploy.yml
 
-**Checkpoint**: Enrichment job triggers on queue messages and processes them
+**Checkpoint**: Enrichment container app receives `enrichment.requested` events via Dapr pub/sub (Storage Queue-backed) and processes them
 
 ---
 

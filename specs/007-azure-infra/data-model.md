@@ -423,7 +423,7 @@ resource_group
 - Minimum TLS: 1.2
 - HTTPS required: true
 - Network: Public access allowed (MVP)
-- SAS tokens: Disabled (MI only)
+- SAS tokens: Disabled; apps use managed identity where supported and storage account keys/connection strings are provided via Key Vault references for BlobServiceClient and Dapr Azure Storage Queues.
 
 ### DocumentDB
 - Authentication: Admin password in Key Vault

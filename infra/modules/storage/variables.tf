@@ -13,6 +13,11 @@ variable "resource_group_name" {
   description = "Resource group name"
 }
 
+variable "key_vault_id" {
+  type        = string
+  description = "Key Vault resource ID for storing connection string"
+}
+
 variable "blob_container_name" {
   type        = string
   description = "Blob container name"

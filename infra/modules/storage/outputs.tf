@@ -27,3 +27,8 @@ output "primary_queue_endpoint" {
   description = "Queue service endpoint"
   value       = azurerm_storage_account.main.primary_queue_endpoint
 }
+
+output "connection_string_secret_id" {
+  description = "Key Vault secret ID for storage connection string"
+  value       = azurerm_key_vault_secret.storage_connection_string.id
+}

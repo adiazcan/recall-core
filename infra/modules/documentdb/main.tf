@@ -40,14 +40,7 @@ resource "azapi_resource" "mongo_cluster" {
       highAvailability = {
         targetMode = var.environment == "prod" ? "ZoneRedundantPreferred" : "Disabled"
       }
-      publicNetworkAccess = "Enabled"
-      firewallRules = [
-        {
-          name           = "allow-all"
-          startIpAddress = "0.0.0.0"
-          endIpAddress   = "255.255.255.255"
-        }
-      ]
+      publicNetworkAccess = "Disabled"
     }
   })
 }

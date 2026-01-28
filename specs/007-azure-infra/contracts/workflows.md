@@ -186,7 +186,7 @@ jobs:
     name: Build and Push Image
     runs-on: ubuntu-latest
     outputs:
-      image_tag: ${{ steps.meta.outputs.tags }}
+      image_tag: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ inputs.environment || 'dev' }}-${{ github.sha }}
       image_digest: ${{ steps.build.outputs.digest }}
 
     steps:
@@ -248,7 +248,7 @@ jobs:
 
 ## Workflow: enrichment-deploy.yml
 
-**Purpose**: Build Enrichment container image and update ACA Job.
+**Purpose**: Build Enrichment container image and update Enrichment Container App.
 
 **Trigger**: Push to `main` with changes in `src/Recall.Core.Enrichment/**`
 
@@ -322,7 +322,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
 
   deploy:
-    name: Update ACA Job
+    name: Update Enrichment Container App
     needs: build-push
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment || 'dev' }}
@@ -335,10 +335,10 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Update Job Image
+      - name: Update Enrichment Container App Image
         run: |
-          az containerapp job update \
-            --name recall-job-${{ inputs.environment || 'dev' }} \
+          az containerapp update \
+            --name recall-enrichment-${{ inputs.environment || 'dev' }} \
             --resource-group recall-${{ inputs.environment || 'dev' }}-rg \
             --image ${{ needs.build-push.outputs.image_tag }}
 ```

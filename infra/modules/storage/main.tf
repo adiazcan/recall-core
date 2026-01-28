@@ -26,3 +26,9 @@ resource "azurerm_storage_queue" "enrichment" {
   name                 = var.queue_name
   storage_account_name = azurerm_storage_account.main.name
 }
+
+resource "azurerm_key_vault_secret" "storage_connection_string" {
+  name         = "storage-connection-string"
+  value        = azurerm_storage_account.main.primary_connection_string
+  key_vault_id = var.key_vault_id
+}

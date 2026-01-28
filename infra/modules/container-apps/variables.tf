@@ -43,6 +43,11 @@ variable "storage_blob_container_name" {
   description = "Blob container name for thumbnails"
 }
 
+variable "storage_connection_string_secret_id" {
+  type        = string
+  description = "Key Vault secret ID for storage connection string"
+}
+
 variable "documentdb_connection_string_secret_id" {
   type        = string
   description = "Key Vault secret ID for DocumentDB connection string"
@@ -51,6 +56,11 @@ variable "documentdb_connection_string_secret_id" {
 variable "acr_login_server" {
   type        = string
   description = "ACR login server URL"
+}
+
+variable "container_registry_id" {
+  type        = string
+  description = "ACR resource ID for role assignments"
 }
 
 variable "api_image" {

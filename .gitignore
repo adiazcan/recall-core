@@ -438,5 +438,6 @@ src/Recall.Core.Api/appsettings.local.json
 *.tfstate.*
 .terraform.lock.hcl
 *.tfvars
+!infra/environments/*.tfvars
 crash.log
 crash.*.log

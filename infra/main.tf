@@ -34,6 +34,7 @@ module "storage" {
   environment         = var.environment
   location            = var.location
   resource_group_name = module.resource_group.name
+  key_vault_id        = module.keyvault.id
   tags                = local.common_tags
 }
 
@@ -57,8 +58,10 @@ module "container_apps" {
   storage_account_name                   = module.storage.storage_account_name
   storage_queue_name                     = module.storage.queue_name
   storage_blob_container_name            = module.storage.blob_container_name
+  storage_connection_string_secret_id    = module.storage.connection_string_secret_id
   documentdb_connection_string_secret_id = module.documentdb.connection_string_secret_id
   acr_login_server                       = var.acr_login_server
+  container_registry_id                  = var.container_registry_id
   api_image                              = var.api_image
   enrichment_image                       = var.enrichment_image
   tags                                   = local.common_tags

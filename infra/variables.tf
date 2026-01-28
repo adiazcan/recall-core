@@ -20,6 +20,11 @@ variable "acr_login_server" {
   default     = "recallacr.azurecr.io"
 }
 
+variable "container_registry_id" {
+  type        = string
+  description = "ACR resource ID for role assignments"
+}
+
 variable "api_image" {
   type        = string
   description = "Full API container image reference"

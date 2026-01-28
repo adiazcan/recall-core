@@ -162,7 +162,7 @@ As a **DevOps engineer**, I want GitHub Actions workflows to deploy infrastructu
 
 - **FR-004**: System MUST provision an Azure Container Apps environment with managed networking.
 - **FR-005**: System MUST deploy the API as a Container App with HTTPS ingress enabled.
-- **FR-006**: System MUST deploy the Enrichment worker as a Container App with queue-based scaling.
+- **FR-006**: System MUST deploy the Enrichment service as an always-running Container App integrated with Dapr pub/sub (topics `enrichment.requested` and `enrichment.deadletter`) within the Container Apps environment. Any future move to a queue-triggered worker model MUST be tracked as a separate application refactor.
 - **FR-007**: System MUST configure managed identity for Container Apps to access other Azure resources.
 
 #### Frontend - Azure Static Web Apps

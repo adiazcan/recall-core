@@ -472,9 +472,9 @@ To enable passwordless authentication from GitHub Actions to Azure:
 
 3. **Assign Roles** to Service Principal:
    ```bash
-   # Contributor on subscription (or scoped to resource groups)
+   # Contributor scoped to a specific resource group (least privilege)
    az role assignment create \
      --assignee <app-id> \
      --role Contributor \
-     --scope /subscriptions/<subscription-id>
+     --scope /subscriptions/<subscription-id>/resourceGroups/<resource-group-name>
    ```

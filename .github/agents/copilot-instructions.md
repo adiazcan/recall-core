@@ -11,6 +11,9 @@ Auto-generated from all feature plans. Last updated: 2026-01-21
 - MongoDB (items, enrichment status), Azure Blob Storage (thumbnails), Redis (Dapr Pub/Sub backing store) (005-bookmark-enrichment)
 - TypeScript ES2022 + React 19, Vite 6, chrome.* APIs (sidePanel, identity, tabs, storage) (006-browser-extension)
 - chrome.storage.local for settings and token cache; chrome.storage.session for ephemeral state (006-browser-extension)
+- azurerm provider (≥4.x), azapi provider (for ACA Jobs), GitHub provider (OIDC) (007-azure-infra)
+- Aspire 13, Dapr 1.14, MongoDB.Driver 2.30, Azure.Storage.Blobs 12.23, OpenTelemetry (007-azure-infra)
+- Azure DocumentDB (MongoDB API), Azure Blob Storage, Azure Storage Queue (007-azure-infra)
 
 - C# / .NET 10 (net10.0) + ASP.NET Core minimal API, MongoDB.Driver 3.x, Aspire.Hosting.MongoDB (13.1.0) (002-items-tags-collections-api)
 
@@ -30,9 +33,9 @@ tests/
 C# / .NET 10 (net10.0): Follow standard conventions
 
 ## Recent Changes
-- 006-browser-extension: Added TypeScript ES2022 + React 19, Vite 6, chrome.* APIs (sidePanel, identity, tabs, storage)
-- 005-bookmark-enrichment: Added C# / .NET 10, TypeScript / ES2022 + Aspire 13.1.0, CommunityToolkit.Aspire.Hosting.Dapr, Dapr.AspNetCore 1.14.0, MongoDB.Driver.v2, Microsoft.Playwright, Azure.Storage.Blobs, AngleSharp, SkiaSharp
-- 004-entra-external-auth: Added C# / .NET 10, TypeScript ES2022
+- 007-azure-infra: Added Aspire 13, Dapr 1.14, MongoDB.Driver 2.30, Azure.Storage.Blobs 12.23, OpenTelemetry
+- 007-azure-infra: Added azurerm provider (≥4.x), azapi provider (for ACA Jobs), GitHub provider (OIDC)
+- 007-azure-infra: Added azurerm provider (≥4.x), azapi provider (for ACA Jobs), GitHub provider (OIDC)
 
 
 <!-- MANUAL ADDITIONS START -->

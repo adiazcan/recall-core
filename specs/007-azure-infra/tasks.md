@@ -19,13 +19,13 @@
 
 **Purpose**: Create Terraform project structure and configuration scaffolding
 
-- [ ] T001 Create infra directory structure per plan.md in infra/
-- [ ] T002 [P] Create Terraform provider configuration in infra/providers.tf (azurerm, azapi providers)
-- [ ] T003 [P] Create Terraform backend configuration in infra/backend.tf (Azure Storage backend)
-- [ ] T004 [P] Create root module variables definition in infra/variables.tf
-- [ ] T005 [P] Create dev environment values in infra/environments/dev.tfvars
-- [ ] T006 [P] Create prod environment values in infra/environments/prod.tfvars
-- [ ] T007 Create locals definition with common tags in infra/main.tf
+- [x] T001 Create infra directory structure per plan.md in infra/
+- [x] T002 [P] Create Terraform provider configuration in infra/providers.tf (azurerm, azapi providers)
+- [x] T003 [P] Create Terraform backend configuration in infra/backend.tf (Azure Storage backend)
+- [x] T004 [P] Create root module variables definition in infra/variables.tf
+- [x] T005 [P] Create dev environment values in infra/environments/dev.tfvars
+- [x] T006 [P] Create prod environment values in infra/environments/prod.tfvars
+- [x] T007 Create locals definition with common tags in infra/main.tf
 
 ---
 
@@ -35,12 +35,12 @@
 
 **⚠️ CRITICAL**: These are typically created manually or via separate bootstrap scripts before the main Terraform can run
 
-- [ ] T008 Document bootstrap procedure for Terraform state storage in docs/azure/deployment-runbook.md
-- [ ] T009 Create bootstrap script for state storage account in infra/scripts/bootstrap-state.sh
-- [ ] T010 [P] Create bootstrap script for shared ACR in infra/scripts/bootstrap-acr.sh
-- [ ] T011 [P] Create bootstrap script for OIDC federation setup in infra/scripts/bootstrap-oidc.sh
-- [ ] T012 Create API Dockerfile in src/Recall.Core.Api/Dockerfile
-- [ ] T013 [P] Create Enrichment Dockerfile in src/Recall.Core.Enrichment/Dockerfile
+- [x] T008 Document bootstrap procedure for Terraform state storage in docs/azure/deployment-runbook.md
+- [x] T009 Create bootstrap script for state storage account in infra/scripts/bootstrap-state.sh
+- [x] T010 [P] Create bootstrap script for shared ACR in infra/scripts/bootstrap-acr.sh
+- [x] T011 [P] Create bootstrap script for OIDC federation setup in infra/scripts/bootstrap-oidc.sh
+- [x] T012 Create API Dockerfile in src/Recall.Core.Api/Dockerfile
+- [x] T013 [P] Create Enrichment Dockerfile in src/Recall.Core.Enrichment/Dockerfile
 
 **Checkpoint**: Bootstrap resources ready - Terraform modules can now be developed
 
@@ -54,30 +54,30 @@
 
 ### Terraform Modules for User Story 1
 
-- [ ] T014 [US1] Create resource-group module in infra/modules/resource-group/main.tf
-- [ ] T015 [P] [US1] Create resource-group module variables in infra/modules/resource-group/variables.tf
-- [ ] T016 [P] [US1] Create resource-group module outputs in infra/modules/resource-group/outputs.tf
-- [ ] T017 [US1] Create monitoring module (LAW + App Insights) in infra/modules/monitoring/main.tf
-- [ ] T018 [P] [US1] Create monitoring module variables in infra/modules/monitoring/variables.tf
-- [ ] T019 [P] [US1] Create monitoring module outputs in infra/modules/monitoring/outputs.tf
-- [ ] T020 [US1] Create keyvault module in infra/modules/keyvault/main.tf
-- [ ] T021 [P] [US1] Create keyvault module variables in infra/modules/keyvault/variables.tf
-- [ ] T022 [P] [US1] Create keyvault module outputs in infra/modules/keyvault/outputs.tf
-- [ ] T023 [US1] Create storage module (blob + queue) in infra/modules/storage/main.tf
-- [ ] T024 [P] [US1] Create storage module variables in infra/modules/storage/variables.tf
-- [ ] T025 [P] [US1] Create storage module outputs in infra/modules/storage/outputs.tf
-- [ ] T026 [US1] Create documentdb module (MongoDB vCore) in infra/modules/documentdb/main.tf
-- [ ] T027 [P] [US1] Create documentdb module variables in infra/modules/documentdb/variables.tf
-- [ ] T028 [P] [US1] Create documentdb module outputs in infra/modules/documentdb/outputs.tf
-- [ ] T029 [US1] Create container-apps module (ACA env + API app + Job) in infra/modules/container-apps/main.tf
-- [ ] T030 [P] [US1] Create container-apps module variables in infra/modules/container-apps/variables.tf
-- [ ] T031 [P] [US1] Create container-apps module outputs in infra/modules/container-apps/outputs.tf
-- [ ] T032 [US1] Create static-web-app module in infra/modules/static-web-app/main.tf
-- [ ] T033 [P] [US1] Create static-web-app module variables in infra/modules/static-web-app/variables.tf
-- [ ] T034 [P] [US1] Create static-web-app module outputs in infra/modules/static-web-app/outputs.tf
-- [ ] T035 [US1] Compose all modules in root module in infra/main.tf
-- [ ] T036 [US1] Create root module outputs per contracts/terraform-outputs.md in infra/outputs.tf
-- [ ] T037 [US1] Add RBAC role assignments for managed identities in infra/modules/container-apps/rbac.tf
+- [x] T014 [US1] Create resource-group module in infra/modules/resource-group/main.tf
+- [x] T015 [P] [US1] Create resource-group module variables in infra/modules/resource-group/variables.tf
+- [x] T016 [P] [US1] Create resource-group module outputs in infra/modules/resource-group/outputs.tf
+- [x] T017 [US1] Create monitoring module (LAW + App Insights) in infra/modules/monitoring/main.tf
+- [x] T018 [P] [US1] Create monitoring module variables in infra/modules/monitoring/variables.tf
+- [x] T019 [P] [US1] Create monitoring module outputs in infra/modules/monitoring/outputs.tf
+- [x] T020 [US1] Create keyvault module in infra/modules/keyvault/main.tf
+- [x] T021 [P] [US1] Create keyvault module variables in infra/modules/keyvault/variables.tf
+- [x] T022 [P] [US1] Create keyvault module outputs in infra/modules/keyvault/outputs.tf
+- [x] T023 [US1] Create storage module (blob + queue) in infra/modules/storage/main.tf
+- [x] T024 [P] [US1] Create storage module variables in infra/modules/storage/variables.tf
+- [x] T025 [P] [US1] Create storage module outputs in infra/modules/storage/outputs.tf
+- [x] T026 [US1] Create documentdb module (MongoDB vCore) in infra/modules/documentdb/main.tf
+- [x] T027 [P] [US1] Create documentdb module variables in infra/modules/documentdb/variables.tf
+- [x] T028 [P] [US1] Create documentdb module outputs in infra/modules/documentdb/outputs.tf
+- [x] T029 [US1] Create container-apps module (ACA env + API app + Job) in infra/modules/container-apps/main.tf
+- [x] T030 [P] [US1] Create container-apps module variables in infra/modules/container-apps/variables.tf
+- [x] T031 [P] [US1] Create container-apps module outputs in infra/modules/container-apps/outputs.tf
+- [x] T032 [US1] Create static-web-app module in infra/modules/static-web-app/main.tf
+- [x] T033 [P] [US1] Create static-web-app module variables in infra/modules/static-web-app/variables.tf
+- [x] T034 [P] [US1] Create static-web-app module outputs in infra/modules/static-web-app/outputs.tf
+- [x] T035 [US1] Compose all modules in root module in infra/main.tf
+- [x] T036 [US1] Create root module outputs per contracts/terraform-outputs.md in infra/outputs.tf
+- [x] T037 [US1] Add RBAC role assignments for managed identities in infra/modules/container-apps/rbac.tf
 
 **Checkpoint**: `terraform plan` shows all resources; `terraform apply` provisions full environment
 
@@ -91,11 +91,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T038 [US2] Configure API Container App with HTTPS ingress in infra/modules/container-apps/main.tf (api resource)
-- [ ] T039 [US2] Configure API scaling rules (min/max replicas) in infra/modules/container-apps/main.tf
-- [ ] T040 [US2] Configure API environment variables (App Insights, Storage, DocumentDB secrets) in infra/modules/container-apps/main.tf
-- [ ] T041 [US2] Configure API health probes (liveness, readiness) in infra/modules/container-apps/main.tf
-- [ ] T042 [US2] Create GitHub Actions workflow for API deployment in .github/workflows/api-deploy.yml
+- [x] T038 [US2] Configure API Container App with HTTPS ingress in infra/modules/container-apps/main.tf (api resource)
+- [x] T039 [US2] Configure API scaling rules (min/max replicas) in infra/modules/container-apps/main.tf
+- [x] T040 [US2] Configure API environment variables (App Insights, Storage, DocumentDB secrets) in infra/modules/container-apps/main.tf
+- [x] T041 [US2] Configure API health probes (liveness, readiness) in infra/modules/container-apps/main.tf
+- [x] T042 [US2] Create GitHub Actions workflow for API deployment in .github/workflows/api-deploy.yml
 
 **Checkpoint**: API container deployed and responding to health checks via HTTPS
 
@@ -109,9 +109,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T043 [US3] Configure SWA resource with Standard SKU in infra/modules/static-web-app/main.tf
-- [ ] T044 [US3] Configure SWA linked backend to API Container App in infra/modules/static-web-app/main.tf (azapi_resource)
-- [ ] T045 [US3] Create GitHub Actions workflow for web deployment in .github/workflows/web-deploy.yml
+- [x] T043 [US3] Configure SWA resource with Standard SKU in infra/modules/static-web-app/main.tf
+- [x] T044 [US3] Configure SWA linked backend to API Container App in infra/modules/static-web-app/main.tf (azapi_resource)
+- [x] T045 [US3] Create GitHub Actions workflow for web deployment in .github/workflows/web-deploy.yml
 
 **Checkpoint**: Frontend accessible via HTTPS, API calls proxied via linked backend
 
@@ -127,10 +127,10 @@
 
 ### Implementation for User Story 4
 
-- [ ] T046 [US4] Configure DocumentDB MongoDB cluster (M25 tier) in infra/modules/documentdb/main.tf
-- [ ] T047 [US4] Store DocumentDB connection string in Key Vault in infra/modules/documentdb/main.tf
-- [ ] T048 [US4] Configure DocumentDB firewall rules (public access for MVP) in infra/modules/documentdb/main.tf
-- [ ] T049 [US4] Add Key Vault secret reference for DocumentDB in API container config in infra/modules/container-apps/main.tf
+- [x] T046 [US4] Configure DocumentDB MongoDB cluster (M25 tier) in infra/modules/documentdb/main.tf
+- [x] T047 [US4] Store DocumentDB connection string in Key Vault in infra/modules/documentdb/main.tf
+- [x] T048 [US4] Configure DocumentDB firewall rules (public access for MVP) in infra/modules/documentdb/main.tf
+- [x] T049 [US4] Add Key Vault secret reference for DocumentDB in API container config in infra/modules/container-apps/main.tf
 
 **Checkpoint**: API successfully connects to DocumentDB and persists data
 
@@ -144,10 +144,10 @@
 
 ### Implementation for User Story 5
 
-- [ ] T050 [US5] Create Storage Queue resource used as Dapr pub/sub backing store in infra/modules/storage/main.tf
-- [ ] T051 [US5] Configure enrichment ACA container app with Dapr pub/sub component `enrichment-pubsub` (Storage Queue-backed) and subscription to topic `enrichment.requested` in infra/modules/container-apps/main.tf
-- [ ] T052 [US5] Configure enrichment container app environment variables/secrets for Storage Queue access (connection string, queue name) in infra/modules/container-apps/main.tf
-- [ ] T053 [US5] Create GitHub Actions workflow for enrichment service deployment (including Dapr pub/sub config) in .github/workflows/enrichment-deploy.yml
+- [x] T050 [US5] Create Storage Queue resource used as Dapr pub/sub backing store in infra/modules/storage/main.tf
+- [x] T051 [US5] Configure enrichment ACA container app with Dapr pub/sub component `enrichment-pubsub` (Storage Queue-backed) and subscription to topic `enrichment.requested` in infra/modules/container-apps/main.tf
+- [x] T052 [US5] Configure enrichment container app environment variables/secrets for Storage Queue access (connection string, queue name) in infra/modules/container-apps/main.tf
+- [x] T053 [US5] Create GitHub Actions workflow for enrichment service deployment (including Dapr pub/sub config) in .github/workflows/enrichment-deploy.yml
 
 **Checkpoint**: Enrichment container app receives `enrichment.requested` events via Dapr pub/sub (Storage Queue-backed) and processes them
 
@@ -161,10 +161,10 @@
 
 ### Implementation for User Story 6
 
-- [ ] T054 [US6] Create thumbnails blob container in infra/modules/storage/main.tf
-- [ ] T055 [US6] Configure blob container access level (private) in infra/modules/storage/main.tf
-- [ ] T056 [US6] Assign Storage Blob Data Contributor to API identity in infra/modules/container-apps/rbac.tf
-- [ ] T057 [US6] Configure Storage endpoints in API environment variables in infra/modules/container-apps/main.tf
+- [x] T054 [US6] Create thumbnails blob container in infra/modules/storage/main.tf
+- [x] T055 [US6] Configure blob container access level (private) in infra/modules/storage/main.tf
+- [x] T056 [US6] Assign Storage Blob Data Contributor to API identity in infra/modules/container-apps/rbac.tf
+- [x] T057 [US6] Configure Storage endpoints in API environment variables in infra/modules/container-apps/main.tf
 
 **Checkpoint**: API can upload and retrieve blobs using managed identity
 
@@ -177,12 +177,11 @@
 **Independent Test**: Make API request, verify trace in App Insights within 5 minutes
 
 ### Implementation for User Story 7
-
-- [ ] T058 [US7] Create Log Analytics Workspace in infra/modules/monitoring/main.tf
-- [ ] T059 [US7] Create workspace-based Application Insights in infra/modules/monitoring/main.tf
-- [ ] T060 [US7] Configure App Insights connection string in API container in infra/modules/container-apps/main.tf
-- [ ] T061 [US7] Configure App Insights connection string in Job container in infra/modules/container-apps/main.tf
-- [ ] T062 [US7] Document monitoring setup and queries in docs/azure/monitoring-runbook.md
+- [x] T058 [US7] Create Log Analytics Workspace in infra/modules/monitoring/main.tf
+- [x] T059 [US7] Create workspace-based Application Insights in infra/modules/monitoring/main.tf
+- [x] T060 [US7] Configure App Insights connection string in API container in infra/modules/container-apps/main.tf
+- [x] T061 [US7] Configure App Insights connection string in Job container in infra/modules/container-apps/main.tf
+- [x] T062 [US7] Document monitoring setup and queries in docs/azure/monitoring-runbook.md
 
 **Checkpoint**: Distributed traces visible in Application Insights
 
@@ -196,10 +195,10 @@
 
 ### Implementation for User Story 8
 
-- [ ] T063 [US8] Create GitHub Actions workflow for infrastructure deployment in .github/workflows/infra-deploy.yml
-- [ ] T064 [US8] Configure GitHub environments (dev, prod) with protection rules in docs/azure/deployment-runbook.md
-- [ ] T065 [US8] Document GitHub secrets configuration in docs/azure/deployment-runbook.md
-- [ ] T066 [US8] Add workflow trigger documentation to docs/azure/deployment-runbook.md
+- [x] T063 [US8] Create GitHub Actions workflow for infrastructure deployment in .github/workflows/infra-deploy.yml
+- [x] T064 [US8] Configure GitHub environments (dev, prod) with protection rules in docs/azure/deployment-runbook.md
+- [x] T065 [US8] Document GitHub secrets configuration in docs/azure/deployment-runbook.md
+- [x] T066 [US8] Add workflow trigger documentation to docs/azure/deployment-runbook.md
 
 **Checkpoint**: All 4 workflows deployable via GitHub Actions
 
@@ -209,12 +208,12 @@
 
 **Purpose**: Documentation, validation, and cleanup
 
-- [ ] T067 [P] Complete deployment runbook in docs/azure/deployment-runbook.md
-- [ ] T068 [P] Create troubleshooting guide in docs/azure/troubleshooting.md
-- [ ] T069 Run terraform fmt to format all Terraform files in infra/
-- [ ] T070 Run terraform validate to verify configuration in infra/
+- [x] T067 [P] Complete deployment runbook in docs/azure/deployment-runbook.md
+- [x] T068 [P] Create troubleshooting guide in docs/azure/troubleshooting.md
+- [x] T069 Run terraform fmt to format all Terraform files in infra/
+- [x] T070 Run terraform validate to verify configuration in infra/
 - [ ] T071 Execute quickstart.md validation steps manually
-- [ ] T072 Document resource naming convention and topology in docs/azure/deployment-runbook.md
+- [x] T072 Document resource naming convention and topology in docs/azure/deployment-runbook.md
 
 ---
 

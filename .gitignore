@@ -431,3 +431,13 @@ Thumbs.db
 *.msm
 *.msp
 src/Recall.Core.Api/appsettings.local.json
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+*.tfvars
+!infra/environments/*.tfvars
+crash.log
+crash.*.log

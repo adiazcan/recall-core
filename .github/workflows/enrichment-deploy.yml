@@ -1,0 +1,90 @@
+name: Deploy Enrichment
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/Recall.Core.Enrichment/**'
+      - 'src/Recall.Core.ServiceDefaults/**'
+      - '.github/workflows/enrichment-deploy.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        default: dev
+        options:
+          - dev
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: recall-enrichment
+  DOCKERFILE: src/Recall.Core.Enrichment/Dockerfile
+
+jobs:
+  build-push:
+    name: Build and Push Image
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ inputs.environment || 'dev' }}-${{ github.sha }}
+      image_digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login to ACR
+        run: az acr login --name recallacr
+
+      - name: Docker Meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=${{ inputs.environment || 'dev' }}-
+            type=raw,value=${{ inputs.environment || 'dev' }}-latest
+
+      - name: Build and Push
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: src
+          file: ${{ env.DOCKERFILE }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    name: Update Enrichment Container App
+    needs: build-push
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'dev' }}
+
+    steps:
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Update Enrichment Container App Image
+        run: |
+          az containerapp update \
+            --name recall-enrichment-${{ inputs.environment || 'dev' }} \
+            --resource-group recall-${{ inputs.environment || 'dev' }}-rg \
+            --image ${{ needs.build-push.outputs.image_tag }}

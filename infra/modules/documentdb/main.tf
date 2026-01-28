@@ -1,0 +1,67 @@
+resource "random_password" "admin" {
+  length           = 32
+  special          = true
+  override_special = "!@#$%&_+-="
+}
+
+data "azurerm_resource_group" "main" {
+  name = var.resource_group_name
+}
+
+terraform {
+  required_providers {
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.0"
+    }
+  }
+}
+
+resource "azapi_resource" "mongo_cluster" {
+  type      = "Microsoft.DocumentDB/mongoClusters@2024-07-01"
+  name      = "recall-${var.environment}-docdb"
+  location  = var.location
+  parent_id = data.azurerm_resource_group.main.id
+  tags      = var.tags
+
+  body = jsonencode({
+    properties = {
+      administrator = {
+        userName = var.administrator_login
+        password = random_password.admin.result
+      }
+      serverVersion = "7.0"
+      compute = {
+        tier = var.sku_tier
+      }
+      storage = {
+        sizeGb = var.storage_size_gb
+      }
+      highAvailability = {
+        targetMode = var.environment == "prod" ? "ZoneRedundantPreferred" : "Disabled"
+      }
+      publicNetworkAccess = "Enabled"
+      firewallRules = [
+        {
+          name           = "allow-azure-services"
+          startIpAddress = "0.0.0.0"
+          endIpAddress   = "0.0.0.0"
+        }
+      ]
+    }
+  })
+}
+
+locals {
+  documentdb_output            = try(jsondecode(azapi_resource.mongo_cluster.output), {})
+  documentdb_connection_string = try(local.documentdb_output.properties.connectionString, "")
+  documentdb_endpoint          = try(local.documentdb_output.properties.hostName, "")
+}
+
+resource "azurerm_key_vault_secret" "connection_string" {
+  name         = "documentdb-connection-string"
+  value        = local.documentdb_connection_string
+  key_vault_id = var.key_vault_id
+
+  depends_on = [azapi_resource.mongo_cluster]
+}

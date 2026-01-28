@@ -76,8 +76,8 @@ A single Storage Account provides both blob storage for thumbnails and queue sto
 | Resource | Purpose |
 |----------|--------|
 | Blob container: `thumbnails` | Stores generated thumbnail images |
-| Queue: `enrichment-requested` | Async enrichment job queue |
-| Queue: `enrichment-deadletter` | Failed jobs for retry/inspection |
+| Storage queue: `enrichment-queue` | Backing queue for Dapr pub/sub topic `enrichment.requested` (async enrichment jobs) |
+| Storage queue: `enrichment-deadletter` | Backing queue for Dapr pub/sub topic `enrichment.deadletter` (failed jobs for retry/inspection) |
 
 | Setting | Value |
 |---------|-------|

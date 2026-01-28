@@ -115,11 +115,6 @@ output "api_container_app_id" {
   value       = module.container_apps.api_id
 }
 
-output "api_container_app_name" {
-  description = "API Container App name"
-  value       = module.container_apps.api_name
-}
-
 output "api_container_app_fqdn" {
   description = "API Container App FQDN"
   value       = module.container_apps.api_fqdn

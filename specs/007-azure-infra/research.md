@@ -99,23 +99,23 @@ resource "azapi_resource" "documentdb" {
 
 ## Decision 4: Azure Container Apps Architecture
 
-**Decision**: Consumption-tier ACA Environment with separate Container App and Job
+**Decision**: Consumption-tier ACA Environment with separate Container Apps for API and Enrichment (Dapr pub/sub)
 
 **Rationale**:
 - Consumption tier = pay only for actual usage (critical for single-user prod)
 - Container App (API): Always-on with scale-to-zero for cost savings
-- Container Apps Job (Enrichment): Event-driven by Storage Queue
-- No permanent worker running = significant cost savings
+- Container App (Enrichment): Long-running ASP.NET Core service with Dapr enabled, subscribed to `enrichment-pubsub` / `enrichment.requested`
+- Both apps can scale to zero when idle for cost savings
 
 **Scaling Configuration**:
-| Component | Min Replicas | Max Replicas | Trigger |
-|-----------|--------------|--------------|---------|
-| recall-api | 0 (dev) / 1 (prod) | 3 | HTTP requests |
-| recall-job | 0 | 5 | Storage Queue depth |
+| Component        | Min Replicas       | Max Replicas | Trigger                 |
+|------------------|--------------------|--------------|-------------------------|
+| recall-api       | 0 (dev) / 1 (prod) | 3            | HTTP requests           |
+| recall-enrichment| 0                  | 5            | HTTP (via Dapr pub/sub) |
 
 **Container Resources**:
 - API: 0.25 vCPU / 0.5 GB (dev), 0.5 vCPU / 1 GB (prod)
-- Job: 0.5 vCPU / 1 GB (same for dev/prod - runs briefly)
+- Enrichment: 0.5 vCPU / 1 GB (same for dev/prod - runs briefly on demand)
 
 ---
 

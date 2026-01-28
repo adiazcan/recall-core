@@ -135,11 +135,6 @@ output "enrichment_job_id" {
   value       = module.container_apps.job_id
 }
 
-output "enrichment_job_name" {
-  description = "Enrichment Job name"
-  value       = module.container_apps.job_name
-}
-
 # Static Web App
 output "static_web_app_id" {
   description = "SWA resource ID"

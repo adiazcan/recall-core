@@ -37,8 +37,8 @@ This document captures research decisions for deploying recall-core to Azure usi
 **Rationale**:
 - Cost-effective region with good availability
 - All required services available (ACA, SWA, DocumentDB, Storage)
-- Low latency for US-based single user (prod scenario)
-- Paired region (Central US) for future DR if needed
+- Suitable latency profile for Northern Europe; not optimized for low-latency US access
+- Paired region (Sweden South) for future DR, following Azure regional pair guidance
 
 **Alternatives Considered**:
 | Region | Pros | Cons | Rejected Because |

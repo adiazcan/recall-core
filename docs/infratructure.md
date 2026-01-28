@@ -1,45 +1,10 @@
-# Azure Infrastructure Requirements
+# This document has moved
 
-This document describes the Azure resources required to deploy recall-core in production.
+The Azure infrastructure requirements documentation has been moved to the correctly named file:
 
-## Architecture Overview
+- [`docs/infrastructure.md`](./infrastructure.md)
 
-```plaintext
-┌─────────────────────────────────────────────────────────────┐
-│                    Azure Resource Group                      │
-├─────────────────────────────────────────────────────────────┤
-│  ┌───────────────────┐  ┌───────────────────┐              │
-│  │ Container App     │  │ Container App     │              │
-│  │ (api + dapr)      │  │ (enrichment+dapr) │              │
-│  └─────────┬─────────┘  └─────────┬─────────┘              │
-│            │                      │                         │
-│            ▼                      ▼                         │
-│  ┌───────────────────────────────────────────┐             │
-│  │         Azure DocumentDB                   │             │
-│  │         Database: recalldb                 │             │
-│  └───────────────────────────────────────────┘             │
-│                                                             │
-│  ┌───────────────────────────────────────────┐             │
-│  │ Azure Storage Account                      │             │
-│  │ - Blobs: thumbnails    - Queues: enrichment│             │
-│  └───────────────────────────────────────────┘             │
-│                                                             │
-│  ┌───────────────────┐  ┌───────────────────┐              │
-│  │ Static Web App    │  │ Application       │              │
-│  │ (React SPA)       │  │ Insights          │              │
-│  └───────────────────┘  └───────────────────┘              │
-│                                                             │
-│            + Microsoft Entra External ID (separate tenant)  │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## Required Resources
-
-### 1. Compute - Azure Container Apps (ACA)
-
-Azure Container Apps is the recommended compute platform because it provides native Dapr integration.
-
-| Service | Description | Dapr App ID |
+The original filename (`infratructure.md`) was misspelled. Please update any bookmarks or links to point to `docs/infrastructure.md`.
 |---------|-------------|-------------|
 | `api` | .NET 10 minimal API | `api` |
 | `enrichment` | Background enrichment worker | `enrichment` |

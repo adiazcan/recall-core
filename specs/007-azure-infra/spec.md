@@ -173,7 +173,7 @@ As a **DevOps engineer**, I want GitHub Actions workflows to deploy infrastructu
 #### Data - Azure DocumentDB (MongoDB-compatible)
 
 - **FR-010**: System MUST provision an Azure DocumentDB account with MongoDB API compatibility.
-- **FR-011**: System MUST create the required database and collections during provisioning.
+- **FR-011**: System MUST create the required database during provisioning; MongoDB collections MUST be created by the application on first use (not via Terraform).
 - **FR-012**: System MUST provide connection credentials securely to the API (via Key Vault or managed identity).
 
 #### Storage - Azure Storage Account

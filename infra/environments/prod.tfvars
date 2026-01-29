@@ -1,6 +1,7 @@
 # Production environment configuration
 environment = "prod"
 location    = "swedencentral"
+static_web_app_location = "westeurope"
 
 # Container Registry (created via bootstrap script)
 # Replace <subscription-id> with your actual Azure subscription ID

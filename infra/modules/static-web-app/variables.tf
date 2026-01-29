@@ -8,6 +8,11 @@ variable "location" {
   description = "Azure region"
 }
 
+variable "static_web_app_location" {
+  type        = string
+  description = "Azure region for Static Web App (may differ from other resources)"
+}
+
 variable "resource_group_name" {
   type        = string
   description = "Resource group name"

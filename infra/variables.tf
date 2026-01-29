@@ -14,6 +14,12 @@ variable "location" {
   default     = "swedencentral"
 }
 
+variable "static_web_app_location" {
+  type        = string
+  description = "Azure region for Static Web App"
+  default     = "westeurope"
+}
+
 variable "acr_login_server" {
   type        = string
   description = "ACR login server URL"

@@ -1,7 +1,7 @@
 resource "azurerm_static_web_app" "main" {
   name                = "recall-web-${var.environment}"
   resource_group_name = var.resource_group_name
-  location            = var.location
+  location            = var.static_web_app_location
   sku_tier            = var.sku_tier
   sku_size            = var.sku_tier
   tags                = var.tags

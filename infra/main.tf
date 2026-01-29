@@ -71,11 +71,12 @@ module "container_apps" {
 }
 
 module "static_web_app" {
-  source                 = "./modules/static-web-app"
-  environment            = var.environment
-  location               = var.location
-  resource_group_name    = module.resource_group.name
-  container_app_api_id   = module.container_apps.api_id
-  container_app_api_fqdn = module.container_apps.api_fqdn
-  tags                   = local.common_tags
+  source                   = "./modules/static-web-app"
+  environment              = var.environment
+  location                 = var.location
+  static_web_app_location  = var.static_web_app_location
+  resource_group_name      = module.resource_group.name
+  container_app_api_id     = module.container_apps.api_id
+  container_app_api_fqdn   = module.container_apps.api_fqdn
+  tags                     = local.common_tags
 }

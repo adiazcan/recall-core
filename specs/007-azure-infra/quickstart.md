@@ -188,6 +188,8 @@ terraform output
    - Action: `apply`
 4. Wait for completion (~15-20 minutes)
 
+**Note**: The workflow uses OIDC authentication automatically. The Terraform providers detect the authentication method from environment variables (`ARM_USE_OIDC`, `ARM_CLIENT_ID`, etc.) set by the workflow
+
 ---
 
 ## Step 5: Build and Push Container Images
@@ -288,6 +290,25 @@ open $WEB_URL  # macOS
 ---
 
 ## Troubleshooting
+
+### Terraform Authentication Error in GitHub Actions
+
+```
+Error: Error building ARM Config: Authenticating using the Azure CLI is only supported as a User (not a Service Principal).
+```
+
+**Cause**: Terraform is trying to use Azure CLI authentication, but GitHub Actions uses a Service Principal via OIDC.
+
+**Fix**: The workflow should set these environment variables (already configured in `.github/workflows/infra-deploy.yml`):
+```yaml
+env:
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_USE_OIDC: true
+```
+
+This tells Terraform to use OIDC authentication instead of Azure CLI.
 
 ### Terraform Init Fails
 

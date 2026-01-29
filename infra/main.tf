@@ -56,6 +56,9 @@ module "container_apps" {
   app_insights_connection_string         = module.monitoring.app_insights_connection_string
   key_vault_id                           = module.keyvault.id
   storage_account_name                   = module.storage.storage_account_name
+  storage_account_id                     = module.storage.id
+  storage_connection_string              = module.storage.primary_connection_string
+  storage_blob_endpoint                  = module.storage.primary_blob_endpoint
   storage_queue_name                     = module.storage.queue_name
   storage_blob_container_name            = module.storage.blob_container_name
   storage_connection_string_secret_id    = module.storage.connection_string_secret_id

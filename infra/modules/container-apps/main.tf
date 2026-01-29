@@ -96,7 +96,7 @@ resource "azurerm_container_app" "api" {
 
       env {
         name  = "Storage__BlobEndpoint"
-        value = data.azurerm_storage_account.main.primary_blob_endpoint
+        value = var.storage_blob_endpoint
       }
 
       env {

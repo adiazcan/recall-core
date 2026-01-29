@@ -33,6 +33,22 @@ variable "storage_account_name" {
   description = "Storage account name"
 }
 
+variable "storage_account_id" {
+  type        = string
+  description = "Storage account resource ID"
+}
+
+variable "storage_connection_string" {
+  type        = string
+  description = "Storage account primary connection string"
+  sensitive   = true
+}
+
+variable "storage_blob_endpoint" {
+  type        = string
+  description = "Storage blob endpoint URL"
+}
+
 variable "storage_queue_name" {
   type        = string
   description = "Queue name for enrichment"

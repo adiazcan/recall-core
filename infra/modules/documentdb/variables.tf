@@ -18,6 +18,12 @@ variable "key_vault_id" {
   description = "Key Vault resource ID"
 }
 
+variable "key_vault_rbac_ready" {
+  type        = string
+  description = "Dependency signal that Key Vault RBAC is configured"
+  default     = null
+}
+
 variable "administrator_login" {
   type        = string
   description = "DocumentDB administrator username"

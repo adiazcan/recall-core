@@ -31,4 +31,6 @@ resource "azurerm_key_vault_secret" "storage_connection_string" {
   name         = "storage-connection-string"
   value        = azurerm_storage_account.main.primary_connection_string
   key_vault_id = var.key_vault_id
+  
+  depends_on = [var.key_vault_rbac_ready]
 }

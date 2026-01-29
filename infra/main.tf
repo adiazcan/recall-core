@@ -30,21 +30,23 @@ module "keyvault" {
 }
 
 module "storage" {
-  source              = "./modules/storage"
-  environment         = var.environment
-  location            = var.location
-  resource_group_name = module.resource_group.name
-  key_vault_id        = module.keyvault.id
-  tags                = local.common_tags
+  source                = "./modules/storage"
+  environment           = var.environment
+  location              = var.location
+  resource_group_name   = module.resource_group.name
+  key_vault_id          = module.keyvault.id
+  key_vault_rbac_ready  = module.keyvault.terraform_rbac_ready
+  tags                  = local.common_tags
 }
 
 module "documentdb" {
-  source              = "./modules/documentdb"
-  environment         = var.environment
-  location            = var.location
-  resource_group_name = module.resource_group.name
-  key_vault_id        = module.keyvault.id
-  tags                = local.common_tags
+  source                = "./modules/documentdb"
+  environment           = var.environment
+  location              = var.location
+  resource_group_name   = module.resource_group.name
+  key_vault_id          = module.keyvault.id
+  key_vault_rbac_ready  = module.keyvault.terraform_rbac_ready
+  tags                  = local.common_tags
 }
 
 module "container_apps" {

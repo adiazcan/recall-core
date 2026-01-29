@@ -12,3 +12,8 @@ output "vault_uri" {
   description = "Key Vault URI"
   value       = azurerm_key_vault.main.vault_uri
 }
+
+output "terraform_rbac_ready" {
+  description = "Signals that Terraform has RBAC permissions configured"
+  value       = azurerm_role_assignment.terraform_secrets_officer.id
+}

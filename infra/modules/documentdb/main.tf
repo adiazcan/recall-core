@@ -61,5 +61,5 @@ resource "azurerm_key_vault_secret" "connection_string" {
   value        = local.documentdb_connection_string
   key_vault_id = var.key_vault_id
 
-  depends_on = [azapi_resource.mongo_cluster]
+  depends_on = [azapi_resource.mongo_cluster, var.key_vault_rbac_ready]
 }

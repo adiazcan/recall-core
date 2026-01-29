@@ -30,7 +30,7 @@ output "primary_queue_endpoint" {
 
 output "primary_connection_string" {
   description = "Primary connection string"
-  value       = azurerm_storage_account.main.primary_connection_string
+  value       = "DefaultEndpointsProtocol=https;AccountName=${azurerm_storage_account.main.name};AccountKey=${azurerm_storage_account.main.primary_access_key};EndpointSuffix=core.windows.net"
   sensitive   = true
 }
 

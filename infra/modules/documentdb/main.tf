@@ -1,11 +1,9 @@
+data "azurerm_client_config" "current" {}
+
 resource "random_password" "admin" {
   length           = 32
   special          = true
   override_special = "!@#$%&_+-="
-}
-
-data "azurerm_resource_group" "main" {
-  name = var.resource_group_name
 }
 
 terraform {
@@ -21,7 +19,7 @@ resource "azapi_resource" "mongo_cluster" {
   type      = "Microsoft.DocumentDB/mongoClusters@2024-07-01"
   name      = "recall-${var.environment}-docdb"
   location  = var.location
-  parent_id = data.azurerm_resource_group.main.id
+  parent_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.resource_group_name}"
   tags      = var.tags
 
   body = jsonencode({

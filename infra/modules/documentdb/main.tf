@@ -38,6 +38,9 @@ resource "azapi_resource" "mongo_cluster" {
       highAvailability = {
         targetMode = var.environment == "prod" ? "ZoneRedundantPreferred" : "Disabled"
       }
+      sharding = {
+        enabled = var.environment == "prod" ? true : false
+      }
       publicNetworkAccess = "Enabled"
     }
   }

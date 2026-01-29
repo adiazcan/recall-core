@@ -28,7 +28,13 @@ output "primary_queue_endpoint" {
   value       = azurerm_storage_account.main.primary_queue_endpoint
 }
 
-output "connection_string_secret_id" {
-  description = "Key Vault secret ID for storage connection string"
-  value       = azurerm_key_vault_secret.storage_connection_string.id
+output "primary_connection_string" {
+  description = "Primary connection string"
+  value       = "DefaultEndpointsProtocol=https;AccountName=${azurerm_storage_account.main.name};AccountKey=${azurerm_storage_account.main.primary_access_key};EndpointSuffix=core.windows.net"
+  sensitive   = true
+}
+
+output "id" {
+  description = "Storage account ID"
+  value       = azurerm_storage_account.main.id
 }

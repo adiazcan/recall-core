@@ -39,7 +39,7 @@ resource "azapi_resource" "mongo_cluster" {
         targetMode = var.environment == "prod" ? "ZoneRedundantPreferred" : "Disabled"
       }
       sharding = {
-        enabled = var.environment == "prod" ? true : false
+        shardCount = var.environment == "prod" ? 3 : 1
       }
       publicNetworkAccess = "Enabled"
     }

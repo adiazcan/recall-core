@@ -39,13 +39,6 @@ resource "azapi_resource" "mongo_cluster" {
         targetMode = var.environment == "prod" ? "ZoneRedundantPreferred" : "Disabled"
       }
       publicNetworkAccess = "Enabled"
-      firewallRules = [
-        {
-          name           = "allow-azure-services"
-          startIpAddress = "0.0.0.0"
-          endIpAddress   = "0.0.0.0"
-        }
-      ]
     }
   }
 }

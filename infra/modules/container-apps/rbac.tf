@@ -33,3 +33,15 @@ resource "azurerm_role_assignment" "enrichment_storage_queue" {
   role_definition_name = "Storage Queue Data Contributor"
   principal_id         = azurerm_container_app.enrichment.identity[0].principal_id
 }
+
+resource "azurerm_role_assignment" "api_acr_pull" {
+  scope                = var.container_registry_id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_container_app.api.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "enrichment_acr_pull" {
+  scope                = var.container_registry_id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_container_app.enrichment.identity[0].principal_id
+}

@@ -1,3 +1,8 @@
+data "azurerm_storage_account" "main" {
+  name                = var.storage_account_name
+  resource_group_name = var.resource_group_name
+}
+
 resource "azurerm_container_app_environment" "main" {
   name                = "recall-${var.environment}-cae"
   location            = var.location
@@ -30,8 +35,9 @@ resource "azurerm_container_app_environment_dapr_component" "enrichment_pubsub" 
   }
 
   secret {
-    name  = "storage-connection-string"
-    value = data.azurerm_storage_account.main.primary_connection_string
+    name                = "storage-connection-string"
+    identity            = "SystemAssigned"
+    key_vault_secret_id = var.storage_connection_string_secret_id
   }
 }
 
@@ -58,8 +64,9 @@ resource "azurerm_container_app" "api" {
   }
 
   secret {
-    name  = "storage-connection-string"
-    value = var.storage_connection_string
+    name                = "storage-connection-string"
+    identity            = "SystemAssigned"
+    key_vault_secret_id = var.storage_connection_string_secret_id
   }
 
   template {
@@ -146,8 +153,15 @@ resource "azurerm_container_app" "enrichment" {
   }
 
   secret {
-    name  = "storage-connection-string"
-    value = var.storage_connection_string
+    name                = "documentdb-connection-string"
+    identity            = "SystemAssigned"
+    key_vault_secret_id = var.documentdb_connection_string_secret_id
+  }
+
+  secret {
+    name                = "storage-connection-string"
+    identity            = "SystemAssigned"
+    key_vault_secret_id = var.storage_connection_string_secret_id
   }
 
   dapr {
@@ -166,6 +180,16 @@ resource "azurerm_container_app" "enrichment" {
       env {
         name  = "APPLICATIONINSIGHTS_CONNECTION_STRING"
         value = var.app_insights_connection_string
+      }
+
+      env {
+        name        = "ConnectionStrings__recalldb"
+        secret_name = "documentdb-connection-string"
+      }
+
+      env {
+        name        = "ConnectionStrings__blobs"
+        secret_name = "storage-connection-string"
       }
 
       env {

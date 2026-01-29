@@ -43,9 +43,9 @@ resource "azapi_resource" "mongo_cluster" {
       publicNetworkAccess = "Enabled"
       firewallRules = [
         {
-          name           = "allow-all"
+          name           = "allow-azure-services"
           startIpAddress = "0.0.0.0"
-          endIpAddress   = "255.255.255.255"
+          endIpAddress   = "0.0.0.0"
         }
       ]
     }

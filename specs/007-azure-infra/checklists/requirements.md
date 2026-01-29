@@ -9,7 +9,7 @@
 - [x] Focused on user value and business needs
 - [x] Written for non-technical stakeholders where possible
 - [x] All mandatory sections completed
-- [X] Implementation details (Terraform, Azure services) are specified per user requirements
+- [x] Implementation details (Terraform, Azure services) are specified per user requirements
 
 ## Requirement Completeness
 

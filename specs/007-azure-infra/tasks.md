@@ -199,10 +199,6 @@
 - [x] T064 [US8] Configure GitHub environments (dev, prod) with protection rules in docs/azure/deployment-runbook.md
 - [x] T065 [US8] Document GitHub secrets configuration in docs/azure/deployment-runbook.md
 - [x] T066 [US8] Add workflow trigger documentation to docs/azure/deployment-runbook.md
- - [x] T063 [US8] Create GitHub Actions workflow for infrastructure deployment in .github/workflows/infra-deploy.yml
- - [x] T064 [US8] Configure GitHub environments (dev, prod) with protection rules in docs/azure/deployment-runbook.md
- - [x] T065 [US8] Document GitHub secrets configuration in docs/azure/deployment-runbook.md
- - [x] T066 [US8] Add workflow trigger documentation to docs/azure/deployment-runbook.md
 
 **Checkpoint**: All 4 workflows deployable via GitHub Actions
 

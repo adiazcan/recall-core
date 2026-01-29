@@ -27,3 +27,14 @@ output "primary_queue_endpoint" {
   description = "Queue service endpoint"
   value       = azurerm_storage_account.main.primary_queue_endpoint
 }
+
+output "primary_connection_string" {
+  description = "Primary connection string"
+  value       = azurerm_storage_account.main.primary_connection_string
+  sensitive   = true
+}
+
+output "id" {
+  description = "Storage account ID"
+  value       = azurerm_storage_account.main.id
+}

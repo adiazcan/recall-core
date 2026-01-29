@@ -17,12 +17,12 @@ resource "azurerm_storage_account" "main" {
 }
 
 resource "azurerm_storage_container" "thumbnails" {
-  name                  = var.blob_container_name
-  storage_account_name  = azurerm_storage_account.main.name
+  name              = var.blob_container_name
+  storage_account_id = azurerm_storage_account.main.id
   container_access_type = "private"
 }
 
 resource "azurerm_storage_queue" "enrichment" {
-  name                 = var.queue_name
-  storage_account_name = azurerm_storage_account.main.name
+  name               = var.queue_name
+  storage_account_id = azurerm_storage_account.main.id
 }

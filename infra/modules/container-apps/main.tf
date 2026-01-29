@@ -59,7 +59,7 @@ resource "azurerm_container_app" "api" {
 
   secret {
     name  = "storage-connection-string"
-    value = data.azurerm_storage_account.main.primary_connection_string
+    value = var.storage_connection_string
   }
 
   template {
@@ -89,7 +89,7 @@ resource "azurerm_container_app" "api" {
 
       env {
         name  = "Storage__BlobEndpoint"
-        value = data.azurerm_storage_account.main.primary_blob_endpoint
+        value = var.storage_blob_endpoint
       }
 
       env {
@@ -147,7 +147,7 @@ resource "azurerm_container_app" "enrichment" {
 
   secret {
     name  = "storage-connection-string"
-    value = data.azurerm_storage_account.main.primary_connection_string
+    value = var.storage_connection_string
   }
 
   dapr {

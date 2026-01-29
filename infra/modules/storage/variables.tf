@@ -18,6 +18,12 @@ variable "key_vault_id" {
   description = "Key Vault resource ID for storing connection string"
 }
 
+variable "key_vault_rbac_ready" {
+  type        = string
+  description = "Dependency signal that Key Vault RBAC is configured"
+  default     = null
+}
+
 variable "blob_container_name" {
   type        = string
   description = "Blob container name"

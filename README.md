@@ -21,6 +21,16 @@ The Aspire dashboard will open and list:
 - API: http://localhost:5080
 - Web: http://localhost:5173
 
+## Azure Deployment
+
+Infrastructure docs and deployment steps:
+
+- [docs/infra/overview.md](docs/infra/overview.md)
+- [specs/007-infra-azure/quickstart.md](specs/007-infra-azure/quickstart.md)
+- [docs/infra/github-oidc-setup.md](docs/infra/github-oidc-setup.md)
+- [docs/infra/runbook.md](docs/infra/runbook.md)
+- [docs/infra/cost.md](docs/infra/cost.md)
+
 ## Health Check
 
 `curl http://localhost:5080/health`

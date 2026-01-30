@@ -1,0 +1,50 @@
+name: Deploy Web
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        working-directory: src/web
+        run: pnpm install
+
+      - name: Build
+        working-directory: src/web
+        run: pnpm run build
+
+      - name: Deploy to Static Web Apps
+        uses: azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ inputs.environment == 'prod' && secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROD || secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_DEV }}
+          app_location: "src/web"
+          output_location: "dist"
+          skip_app_build: true
+          skip_api_build: true

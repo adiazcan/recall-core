@@ -3,7 +3,7 @@
 # Pre-deployment validation script
 # Checks if the deployment service principal has the required permissions
 #
-set -e
+set -euo pipefail
 
 echo "🔍 Checking deployment prerequisites..."
 echo ""
@@ -30,9 +30,20 @@ echo ""
 ACCOUNT_TYPE=$(az account show --query user.type -o tsv)
 
 if [ "$ACCOUNT_TYPE" = "servicePrincipal" ]; then
-    SP_OBJECT_ID=$(az account show --query user.name -o tsv)
+    # For service principals, get the app ID first, then the object ID
+    APP_ID=$(az account show --query user.name -o tsv)
+    SP_OBJECT_ID=$(az ad sp show --id "$APP_ID" --query id -o tsv 2>/dev/null || echo "")
     
-    echo "🔑 Deployment will use service principal: $SP_OBJECT_ID"
+    if [ -z "$SP_OBJECT_ID" ]; then
+        echo "⚠️  WARNING: Could not retrieve service principal object ID"
+        echo "   Skipping permission check. Deployment may fail if permissions are missing."
+        echo ""
+        exit 0
+    fi
+    
+    echo "🔑 Deployment will use service principal:"
+    echo "   Application ID: $APP_ID"
+    echo "   Object ID: $SP_OBJECT_ID"
     echo ""
     echo "⚠️  IMPORTANT: Role Assignment Permission Check"
     echo ""

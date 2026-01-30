@@ -12,7 +12,8 @@ fi
 
 # Validate permissions before deploying
 echo "🔍 Validating deployment permissions..."
-if ! bash "$(dirname "$0")/../validate-permissions.sh"; then
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if ! bash "$SCRIPT_DIR/../validate-permissions.sh"; then
   echo ""
   echo "❌ Pre-deployment validation failed. Please fix the issues above before deploying."
   exit 1

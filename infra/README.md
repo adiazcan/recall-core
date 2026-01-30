@@ -21,8 +21,6 @@ cd infra
 bash validate-permissions.sh
 ```
 
-**Note**: The script is already executable, but you can also run it with `bash` explicitly.
-
 ### Deploy Infrastructure
 
 You can deploy using the Azure CLI directly or use the provided deployment script:
@@ -206,6 +204,8 @@ If resources already exist with the same names, the deployment will update them.
 - ✅ Diagnostic logs enabled for audit trails
 
 ## Cost Optimization
+
+**Note**: Cost estimates are approximate and may vary based on actual usage patterns, data transfer, region, and Azure pricing changes. Use the [Azure Pricing Calculator](https://azure.microsoft.com/pricing/calculator/) for precise estimates.
 
 ### Dev Environment
 - Free/Basic SKUs reduce costs

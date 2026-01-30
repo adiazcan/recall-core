@@ -38,10 +38,10 @@ Grant the GitHub Actions service principal the **User Access Administrator** rol
 az role assignment create \
   --assignee 3a5a4b29-02ac-46fe-9646-53246630b794 \
   --role "User Access Administrator" \
-  --scope "/subscriptions/<YOUR_SUBSCRIPTION_ID>"
+  --scope "/subscriptions/YOUR_SUBSCRIPTION_ID"
 ```
 
-**Note**: Replace `<YOUR_SUBSCRIPTION_ID>` with your actual Azure subscription ID.
+**Note**: Replace `YOUR_SUBSCRIPTION_ID` with your actual Azure subscription ID.
 
 ### Option 2: Azure Portal
 
@@ -113,7 +113,7 @@ The User Access Administrator role allows the service principal to:
 - ✅ Create role assignments within the subscription
 - ✅ Delete role assignments it created
 - ❌ Does **NOT** grant access to the resources themselves
-- ❌ Does **NOT** allow modifying Azure AD/Entra ID settings
+- ❌ Does **NOT** allow modifying Microsoft Entra ID settings
 - ❌ Does **NOT** allow creating or deleting resources
 
 ### Security Best Practices
@@ -153,7 +153,7 @@ If granting User Access Administrator is not acceptable:
 ## FAQ
 
 **Q: Why can't we use Azure Key Vault access policies instead of RBAC?**
-A: The infrastructure uses RBAC for Key Vault (`enableRbacAuthorization: true`) which is the recommended approach for new deployments. Access policies are legacy.
+A: The infrastructure uses RBAC for Key Vault (`enableRbacAuthorization: true`) which is the recommended approach for new deployments. Access policies are still supported but RBAC provides better integration with Azure's identity and access management.
 
 **Q: Can we grant a less privileged role?**
 A: No. The `Microsoft.Authorization/roleAssignments/write` permission is only available in roles like User Access Administrator and Owner. The former is more limited and preferred.

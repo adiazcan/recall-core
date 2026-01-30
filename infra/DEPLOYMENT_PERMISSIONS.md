@@ -53,7 +53,7 @@ az role assignment create \
   --role "User Access Administrator" \
   --scope "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/rg-recall-dev"
 
-# For prod environment  
+# For prod environment
 az role assignment create \
   --assignee 3a5a4b29-02ac-46fe-9646-53246630b794 \
   --role "User Access Administrator" \

@@ -36,7 +36,5 @@ jobs:
           scope: subscription
           region: westeurope
           template: ./infra/main.bicep
-          parameters: |
-            ./infra/parameters/${{ inputs.environment }}.bicepparam
-            documentDbAdminPassword=${{ secrets.DOCUMENTDB_ADMIN_PASSWORD }}
+          parameters: ./infra/parameters/${{ inputs.environment }}.bicepparam documentDbAdminPassword=${{ secrets.DOCUMENTDB_ADMIN_PASSWORD }}
           deploymentName: recall-${{ inputs.environment }}-${{ github.run_number }}

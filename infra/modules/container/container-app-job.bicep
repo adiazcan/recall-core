@@ -67,10 +67,6 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' e
   name: containerRegistryName
 }
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' existing = {
-  name: storageAccountName
-}
-
 module job 'br/public:avm/res/app/job:0.7.1' = {
   params: {
     name: jobName

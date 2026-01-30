@@ -17,8 +17,11 @@ This directory contains the Bicep infrastructure-as-code templates for deploying
 Before deploying, validate that you have the required permissions:
 
 ```bash
-./validate-permissions.sh
+cd infra
+bash validate-permissions.sh
 ```
+
+**Note**: The script is already executable, but you can also run it with `bash` explicitly.
 
 ### Deploy Infrastructure
 

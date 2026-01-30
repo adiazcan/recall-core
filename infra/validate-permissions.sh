@@ -38,7 +38,7 @@ if [ "$ACCOUNT_TYPE" = "servicePrincipal" ]; then
     echo ""
     echo "   The infrastructure deployment creates role assignments for:"
     echo "   - Key Vault Secrets User"
-    echo "   - App Configuration Data Reader"  
+    echo "   - App Configuration Data Reader"
     echo "   - ACR Pull"
     echo "   - Storage Blob/Queue Data Contributor"
     echo ""
@@ -67,7 +67,7 @@ if [ "$ACCOUNT_TYPE" = "servicePrincipal" ]; then
         echo "     --scope \"/subscriptions/$SUBSCRIPTION_ID\""
         echo ""
         echo "   For more information, see:"
-        echo "   📄 infra/DEPLOYMENT_PERMISSIONS.md"
+        echo "   📄 ./DEPLOYMENT_PERMISSIONS.md"
         echo ""
         exit 1
     fi

@@ -91,7 +91,7 @@ After granting the User Access Administrator role:
 1. **Validate permissions** (optional but recommended):
    ```bash
    cd infra
-   ./validate-permissions.sh
+   bash validate-permissions.sh
    ```
 
 2. **Re-run the deployment workflow**:

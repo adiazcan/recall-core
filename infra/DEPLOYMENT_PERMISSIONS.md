@@ -60,14 +60,6 @@ az role assignment create \
   --scope "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/rg-recall-prod"
 ```
 
-```bash
-# For prod environment  
-az role assignment create \
-  --assignee 3a5a4b29-02ac-46fe-9646-53246630b794 \
-  --role "User Access Administrator" \
-  --scope "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/rg-recall-prod"
-```
-
 ### Using Azure Portal
 
 1. Navigate to [Azure Portal](https://portal.azure.com)

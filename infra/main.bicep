@@ -46,7 +46,7 @@ var enableLinkedBackend = isProd
 var actionGroupName = 'ag-recall-${environmentName}'
 var actionGroupShortName = 'recall-${environmentName}'
 
-module resourceGroup 'modules/core/resource-group.bicep' = {
+module resourceGroupModule 'modules/core/resource-group.bicep' = {
   params: {
     name: resourceGroupName
     location: location
@@ -180,6 +180,7 @@ module enrichmentJob 'modules/container/container-app-job.bicep' = {
     containerAppsEnvironmentId: containerAppsEnvironment.outputs.environmentId
     containerRegistryName: containerRegistry.outputs.acrName
     keyVaultName: keyVault.outputs.keyVaultName
+    appConfigurationName: appConfiguration.outputs.appConfigName
     appInsightsConnectionString: appInsights.outputs.connectionString
     storageAccountName: storageAccount.outputs.storageAccountName
   }
@@ -224,6 +225,5 @@ output swaEndpoint string = staticWebApp.outputs.swaDefaultHostname
 output acrLoginServer string = containerRegistry.outputs.acrLoginServer
 output keyVaultName string = keyVault.outputs.keyVaultName
 output appConfigEndpoint string = appConfiguration.outputs.appConfigEndpoint
-output documentDbEndpoint string = documentDb.outputs.cosmosDbEndpoint
 output storageAccountName string = storageAccount.outputs.storageAccountName
 output appInsightsConnectionString string = appInsights.outputs.connectionString

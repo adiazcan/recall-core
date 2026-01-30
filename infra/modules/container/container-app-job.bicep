@@ -19,6 +19,9 @@ param containerImageTag string = 'latest'
 @description('Key Vault name')
 param keyVaultName string
 
+@description('App Configuration name')
+param appConfigurationName string
+
 @description('Application Insights connection string')
 param appInsightsConnectionString string
 
@@ -49,11 +52,15 @@ param memory string = '2Gi'
 var jobName = 'acj-recall-enrichment-${environmentName}'
 var registryServer = '${containerRegistryName}.azurecr.io'
 var imageName = '${registryServer}/recall-enrichment:${containerImageTag}'
-var keyVaultUri = 'https://${keyVaultName}.vault.azure.net'
+var keyVaultUri = 'https://${keyVaultName}.${environment().suffixes.keyvaultDns}'
 var documentDbSecretName = 'DocumentDbConnectionString'
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
   name: keyVaultName
+}
+
+resource appConfiguration 'Microsoft.AppConfiguration/configurationStores@2023-03-01' existing = {
+  name: appConfigurationName
 }
 
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
@@ -64,7 +71,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' existing 
   name: storageAccountName
 }
 
-var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${listKeys(storageAccount.id, '2024-01-01').keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
+var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
 
 module job 'br/public:avm/res/app/job:0.7.1' = {
   params: {
@@ -142,6 +149,10 @@ module job 'br/public:avm/res/app/job:0.7.1' = {
             value: appInsightsConnectionString
           }
           {
+            name: 'AzureAppConfiguration__Endpoint'
+            value: 'https://${appConfigurationName}.azconfig.io'
+          }
+          {
             name: 'ConnectionStrings__recalldb'
             secretRef: 'documentdb-connection-string'
           }
@@ -164,29 +175,42 @@ module job 'br/public:avm/res/app/job:0.7.1' = {
   }
 }
 
+var jobPrincipalId = job.outputs.?systemAssignedMIPrincipalId ?? ''
+
 var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
+var appConfigDataReaderRoleId = '516239f1-63e1-4d78-a4de-a74fb236a071'
 var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 
 resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(keyVault.id, job.outputs.systemAssignedMIPrincipalId, keyVaultSecretsUserRoleId)
+  name: guid(keyVault.id, jobName, keyVaultSecretsUserRoleId)
   scope: keyVault
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
-    principalId: job.outputs.systemAssignedMIPrincipalId
+    principalId: jobPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource appConfigDataReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(appConfiguration.id, jobName, appConfigDataReaderRoleId)
+  scope: appConfiguration
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', appConfigDataReaderRoleId)
+    principalId: jobPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
 
 resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(containerRegistry.id, job.outputs.systemAssignedMIPrincipalId, acrPullRoleId)
+  name: guid(containerRegistry.id, jobName, acrPullRoleId)
   scope: containerRegistry
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', acrPullRoleId)
-    principalId: job.outputs.systemAssignedMIPrincipalId
+    principalId: jobPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
 
 output jobId string = job.outputs.resourceId
 output jobName string = job.outputs.name
-output jobPrincipalId string = job.outputs.systemAssignedMIPrincipalId
+output jobPrincipalId string = jobPrincipalId

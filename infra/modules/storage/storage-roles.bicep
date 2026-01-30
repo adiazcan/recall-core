@@ -42,7 +42,7 @@ resource queueRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01
   }
 }
 
-output roleAssignmentIds array = [
-  if (assignBlobContributor) blobRoleAssignment.id
-  if (assignQueueContributor) queueRoleAssignment.id
-]
+var blobRoleIds = assignBlobContributor ? [blobRoleAssignment.id] : []
+var queueRoleIds = assignQueueContributor ? [queueRoleAssignment.id] : []
+
+output roleAssignmentIds array = concat(blobRoleIds, queueRoleIds)

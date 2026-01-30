@@ -185,7 +185,6 @@
 
 ### Implementation for User Story 8
 
-- [ ] T052 [US8] Create infrastructure deployment workflow in .github/workflows/infra-deploy.yml
 - [X] T052 [US8] Create infrastructure deployment workflow in .github/workflows/infra-deploy.yml
 - [X] T053 [P] [US8] Create API deployment workflow in .github/workflows/api-deploy.yml
 - [X] T054 [P] [US8] Create enrichment deployment workflow in .github/workflows/enrichment-deploy.yml
@@ -211,15 +210,14 @@
 
 ### Review Follow-ups (AI)
 
-- [ ] [AI-Review][High] Create the `recall` database during DocumentDB provisioning to satisfy FR-021 [infra/modules/database/documentdb.bicep:38-76]
-- [ ] [AI-Review][High] Add App Configuration integration and role assignment for the enrichment job (App Configuration endpoint env + Data Reader role) to satisfy FR-035/FR-039 [infra/modules/container/container-app-job.bicep:131-188]
-- [ ] [AI-Review][High] Define API Container App scale rules (not just min/max replicas) to satisfy FR-009 [infra/modules/container/container-app-api.bicep:150-156]
+- [X] [AI-Review][High] Create the `recall` database during DocumentDB provisioning to satisfy FR-021 [infra/modules/database/documentdb.bicep:38-76]
+- [X] [AI-Review][High] Add App Configuration integration and role assignment for the enrichment job (App Configuration endpoint env + Data Reader role) to satisfy FR-035/FR-039 [infra/modules/container/container-app-job.bicep:131-188]
+- [X] [AI-Review][High] Define API Container App scale rules (not just min/max replicas) to satisfy FR-009 [infra/modules/container/container-app-api.bicep:150-156]
 - [ ] [AI-Review][High] Add secret rotation procedures to the runbook to satisfy FR-048 [docs/infra/runbook.md:26-29]
 - [ ] [AI-Review][Medium] Document upgrade path for Private Link, VNet integration, and multi-region to satisfy FR-050 [docs/infra/overview.md]
 - [ ] [AI-Review][Medium] Add alerts for latency/dependency failure/job failure to better align with FR-028 [infra/modules/core/alerts.bicep]
 - [ ] [AI-Review][Medium] Resolve storage shared-key auth discrepancy (either disable shared key or update docs/job auth pattern) [docs/infra/overview.md, infra/modules/storage/storage-account.bicep]
-- [ ] [AI-Review][Medium] Align OpenTelemetry/Azure Monitor package versions with repo guidance (OpenTelemetry 1.10.0) [src/Recall.Core.ServiceDefaults/Recall.Core.ServiceDefaults.csproj, src/Recall.Core.Api/Recall.Core.Api.csproj]
-- [ ] [AI-Review][Medium] Fix duplicate task entry for T052 to remove ambiguity [specs/007-infra-azure/tasks.md:186-188]
+- [X] [AI-Review][Medium] Align OpenTelemetry/Azure Monitor package versions with repo guidance (OpenTelemetry 1.10.0) [src/Recall.Core.ServiceDefaults/Recall.Core.ServiceDefaults.csproj, src/Recall.Core.Api/Recall.Core.Api.csproj]
 - [ ] [AI-Review][Medium] Add Dev Agent Record file list to document changed files for traceability [specs/007-infra-azure/tasks.md]
 
 ---

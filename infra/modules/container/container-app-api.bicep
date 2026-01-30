@@ -44,7 +44,7 @@ var appName = 'aca-recall-api-${environmentName}'
 var registryServer = '${containerRegistryName}.azurecr.io'
 var imageName = '${registryServer}/recall-api:${containerImageTag}'
 var activeRevisionsMode = environmentName == 'prod' ? 'Multiple' : 'Single'
-var keyVaultUri = 'https://${keyVaultName}.vault.azure.net'
+var keyVaultUri = 'https://${keyVaultName}.${environment().suffixes.keyvaultDns}'
 var documentDbSecretName = 'DocumentDbConnectionString'
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
@@ -87,7 +87,7 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
         name: 'recall-api'
         image: imageName
         resources: {
-          cpu: cpu
+          cpu: json(cpu)
           memory: memory
         }
         env: [
@@ -106,6 +106,10 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
           {
             name: 'AzureAppConfiguration__Endpoint'
             value: 'https://${appConfigurationName}.azconfig.io'
+          }
+          {
+            name: 'Storage__AccountName'
+            value: storageAccountName
           }
           {
             name: 'ConnectionStrings__recalldb'
@@ -153,41 +157,53 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
     scaleSettings: {
       minReplicas: minReplicas
       maxReplicas: maxReplicas
+      rules: [
+        {
+          name: 'http-scale'
+          http: {
+            metadata: {
+              concurrentRequests: '100'
+            }
+          }
+        }
+      ]
     }
     enableTelemetry: false
   }
 }
+
+var apiPrincipalId = apiApp.outputs.?systemAssignedMIPrincipalId ?? ''
 
 var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
 var appConfigDataReaderRoleId = '516239f1-63e1-4d78-a4de-a74fb236a071'
 var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 
 resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(keyVault.id, apiApp.outputs.systemAssignedMIPrincipalId, keyVaultSecretsUserRoleId)
+  name: guid(keyVault.id, appName, keyVaultSecretsUserRoleId)
   scope: keyVault
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
-    principalId: apiApp.outputs.systemAssignedMIPrincipalId
+    principalId: apiPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
 
 resource appConfigDataReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(appConfiguration.id, apiApp.outputs.systemAssignedMIPrincipalId, appConfigDataReaderRoleId)
+  name: guid(appConfiguration.id, appName, appConfigDataReaderRoleId)
   scope: appConfiguration
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', appConfigDataReaderRoleId)
-    principalId: apiApp.outputs.systemAssignedMIPrincipalId
+    principalId: apiPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
 
 resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(containerRegistry.id, apiApp.outputs.systemAssignedMIPrincipalId, acrPullRoleId)
+  name: guid(containerRegistry.id, appName, acrPullRoleId)
   scope: containerRegistry
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', acrPullRoleId)
-    principalId: apiApp.outputs.systemAssignedMIPrincipalId
+    principalId: apiPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
@@ -195,4 +211,4 @@ resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
 output apiAppId string = apiApp.outputs.resourceId
 output apiAppName string = apiApp.outputs.name
 output apiAppFqdn string = apiApp.outputs.fqdn
-output apiPrincipalId string = apiApp.outputs.systemAssignedMIPrincipalId
+output apiPrincipalId string = apiPrincipalId

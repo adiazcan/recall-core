@@ -55,7 +55,6 @@ output swaEndpoint string
 output acrLoginServer string
 output keyVaultName string
 output appConfigEndpoint string
-output documentDbEndpoint string
 output storageAccountName string
 output appInsightsConnectionString string
 ```
@@ -344,6 +343,9 @@ param containerImageTag string = 'latest'
 
 @description('Key Vault name')
 param keyVaultName string
+
+@description('App Configuration name')
+param appConfigurationName string
 
 @description('Application Insights connection string')
 param appInsightsConnectionString string

@@ -52,10 +52,10 @@ module staticSite 'br/public:avm/res/web/static-site:0.9.3' = {
 }
 
 resource staticSiteResource 'Microsoft.Web/staticSites@2024-04-01' existing = {
-  name: staticSite.outputs.name
+  name: staticSiteName
 }
 
-var deploymentToken = listSecrets(staticSiteResource.id, staticSiteResource.apiVersion).properties.apiKey
+var deploymentToken = staticSiteResource.listSecrets().properties.apiKey
 
 output swaId string = staticSite.outputs.resourceId
 output swaName string = staticSite.outputs.name

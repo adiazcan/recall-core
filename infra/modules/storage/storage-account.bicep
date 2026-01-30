@@ -27,18 +27,22 @@ param queues array = [
 
 var storageAccountName = toLower(replace('strecall${environmentName}', '-', ''))
 
+var blobContainersConfig = [for containerName in blobContainers: {
+  name: containerName
+  publicAccess: 'None'
+}]
+
+var queueConfigs = [for queueName in queues: {
+  name: queueName
+  metadata: {}
+}]
+
 var blobServiceConfig = {
-  containers: [for containerName in blobContainers: {
-    name: containerName
-    publicAccess: 'None'
-  }]
+  containers: blobContainersConfig
 }
 
 var queueServiceConfig = {
-  queues: [for queueName in queues: {
-    name: queueName
-    metadata: {}
-  }]
+  queues: queueConfigs
 }
 
 module storageAccount 'br/public:avm/res/storage/storage-account:0.31.0' = {

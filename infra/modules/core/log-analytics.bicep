@@ -23,7 +23,7 @@ module workspace 'br/public:avm/res/operational-insights/workspace:0.15.0' = {
 }
 
 resource workspaceResource 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
-  name: workspace.outputs.name
+  name: workspaceName
 }
 
 output workspaceId string = workspace.outputs.resourceId

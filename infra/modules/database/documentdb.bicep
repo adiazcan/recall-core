@@ -102,14 +102,13 @@ resource createDatabaseScript 'Microsoft.Resources/deploymentScripts@2020-10-01'
     scriptContent: '''
       set -euo pipefail
 
-      apt-get update -y >/dev/null
-      apt-get install -y curl gnupg >/dev/null
-      curl -fsSL https://pgp.mongodb.com/server-7.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg
-      echo "deb [signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg] https://repo.mongodb.org/apt/debian bookworm/mongodb-org/7.0 main" > /etc/apt/sources.list.d/mongodb-org-7.0.list
-      apt-get update -y >/dev/null
-      apt-get install -y mongodb-mongosh >/dev/null
-
-      mongosh "$MONGO_CONN" --quiet --eval "const dbName = process.env.DB_NAME || 'recall'; const db = db.getSiblingDB(dbName); if (!db.getCollectionNames().includes('_init')) { db.createCollection('_init'); }"
+      # Download and extract mongosh
+      curl -fsSL https://downloads.mongodb.com/compass/mongosh-2.6.0-linux-x64.tgz -o /tmp/mongosh.tgz
+      tar -xzf /tmp/mongosh.tgz -C /tmp
+      chmod +x /tmp/mongosh-2.6.0-linux-x64/bin/mongosh
+      
+      # Use mongosh to create database
+      /tmp/mongosh-2.6.0-linux-x64/bin/mongosh "$MONGO_CONN" --quiet --eval "const dbName = process.env.DB_NAME || 'recall'; const db = db.getSiblingDB(dbName); if (!db.getCollectionNames().includes('_init')) { db.createCollection('_init'); }"
     '''
   }
 }

@@ -53,6 +53,9 @@ module mongoCluster 'br/public:avm/res/document-db/mongo-cluster:0.4.2' = {
 
 resource mongoClusterResource 'Microsoft.DocumentDB/mongoClusters@2024-02-15-preview' existing = {
   name: clusterName
+  dependsOn: [
+    mongoCluster
+  ]
 }
 
 resource allowAzureServicesFirewallRule 'Microsoft.DocumentDB/mongoClusters/firewallRules@2024-02-15-preview' = {

@@ -102,14 +102,37 @@ resource createDatabaseScript 'Microsoft.Resources/deploymentScripts@2020-10-01'
     scriptContent: '''
       set -euo pipefail
 
-      apt-get update -y >/dev/null
-      apt-get install -y curl gnupg >/dev/null
-      curl -fsSL https://pgp.mongodb.com/server-7.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg
-      echo "deb [signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg] https://repo.mongodb.org/apt/debian bookworm/mongodb-org/7.0 main" > /etc/apt/sources.list.d/mongodb-org-7.0.list
-      apt-get update -y >/dev/null
-      apt-get install -y mongodb-mongosh >/dev/null
+      # mongosh version and download details
+      MONGOSH_VERSION="2.6.0"
+      MONGOSH_URL="https://downloads.mongodb.com/compass/mongosh-${MONGOSH_VERSION}-linux-x64.tgz"
+      MONGOSH_SHA256="7d4e9d96613fe6c2b88514114e8fba924fd6e0628def8693455281ca1c77bd45"
+      MONGOSH_TGZ="/tmp/mongosh.tgz"
+      MONGOSH_DIR="/tmp/mongosh-${MONGOSH_VERSION}-linux-x64"
+      MONGOSH_BIN="${MONGOSH_DIR}/bin/mongosh"
 
-      mongosh "$MONGO_CONN" --quiet --eval "const dbName = process.env.DB_NAME || 'recall'; const db = db.getSiblingDB(dbName); if (!db.getCollectionNames().includes('_init')) { db.createCollection('_init'); }"
+      # Download mongosh
+      echo "Downloading mongosh ${MONGOSH_VERSION}..."
+      curl -fsSL "${MONGOSH_URL}" -o "${MONGOSH_TGZ}"
+      
+      # Verify checksum
+      echo "${MONGOSH_SHA256}  ${MONGOSH_TGZ}" | sha256sum -c -
+      
+      # Extract mongosh
+      echo "Extracting mongosh..."
+      tar -xzf "${MONGOSH_TGZ}" -C /tmp
+      
+      # Validate extraction
+      if [ ! -f "${MONGOSH_BIN}" ]; then
+        echo "Error: mongosh binary not found at ${MONGOSH_BIN}"
+        exit 1
+      fi
+      
+      chmod +x "${MONGOSH_BIN}"
+      
+      # Use mongosh to create database
+      echo "Creating database..."
+      "${MONGOSH_BIN}" "$MONGO_CONN" --quiet --eval "const dbName = process.env.DB_NAME || 'recall'; const db = db.getSiblingDB(dbName); if (!db.getCollectionNames().includes('_init')) { db.createCollection('_init'); }"
+      echo "Database creation completed successfully."
     '''
   }
 }

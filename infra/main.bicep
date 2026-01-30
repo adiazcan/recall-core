@@ -63,6 +63,9 @@ module logAnalytics 'modules/core/log-analytics.bicep' = {
     tags: tags
     retentionInDays: logRetentionDays
   }
+  dependsOn: [
+    resourceGroupModule
+  ]
 }
 
 module appInsights 'modules/core/app-insights.bicep' = {
@@ -74,6 +77,9 @@ module appInsights 'modules/core/app-insights.bicep' = {
     logAnalyticsWorkspaceId: logAnalytics.outputs.workspaceId
     retentionInDays: logRetentionDays
   }
+  dependsOn: [
+    resourceGroupModule
+  ]
 }
 
 module alerts 'modules/core/alerts.bicep' = if (isProd) {
@@ -86,6 +92,9 @@ module alerts 'modules/core/alerts.bicep' = if (isProd) {
     tags: tags
     enableAlerts: true
   }
+  dependsOn: [
+    resourceGroupModule
+  ]
 }
 
 module keyVault 'modules/core/key-vault.bicep' = {
@@ -97,6 +106,9 @@ module keyVault 'modules/core/key-vault.bicep' = {
     enablePurgeProtection: isProd
     softDeleteRetentionInDays: keyVaultSoftDeleteRetentionDays
   }
+  dependsOn: [
+    resourceGroupModule
+  ]
 }
 
 module appConfiguration 'modules/core/app-configuration.bicep' = {
@@ -107,6 +119,9 @@ module appConfiguration 'modules/core/app-configuration.bicep' = {
     tags: tags
     sku: appConfigSku
   }
+  dependsOn: [
+    resourceGroupModule
+  ]
 }
 
 module containerRegistry 'modules/container/container-registry.bicep' = {
@@ -117,6 +132,9 @@ module containerRegistry 'modules/container/container-registry.bicep' = {
     tags: tags
     sku: containerRegistrySku
   }
+  dependsOn: [
+    resourceGroupModule
+  ]
 }
 
 module storageAccount 'modules/storage/storage-account.bicep' = {
@@ -127,6 +145,9 @@ module storageAccount 'modules/storage/storage-account.bicep' = {
     tags: tags
     sku: storageSku
   }
+  dependsOn: [
+    resourceGroupModule
+  ]
 }
 
 module documentDb 'modules/database/documentdb.bicep' = {
@@ -142,6 +163,9 @@ module documentDb 'modules/database/documentdb.bicep' = {
     enableHa: isProd
     diskSizeGB: documentDbDiskSize
   }
+  dependsOn: [
+    resourceGroupModule
+  ]
 }
 
 module containerAppsEnvironment 'modules/container/container-apps-env.bicep' = {
@@ -153,6 +177,9 @@ module containerAppsEnvironment 'modules/container/container-apps-env.bicep' = {
     logAnalyticsWorkspaceId: logAnalytics.outputs.workspaceId
     zoneRedundant: isProd
   }
+  dependsOn: [
+    resourceGroupModule
+  ]
 }
 
 module apiApp 'modules/container/container-app-api.bicep' = {
@@ -170,6 +197,9 @@ module apiApp 'modules/container/container-app-api.bicep' = {
     minReplicas: apiMinReplicas
     maxReplicas: apiMaxReplicas
   }
+  dependsOn: [
+    resourceGroupModule
+  ]
 }
 
 module enrichmentJob 'modules/container/container-app-job.bicep' = {
@@ -185,6 +215,9 @@ module enrichmentJob 'modules/container/container-app-job.bicep' = {
     appInsightsConnectionString: appInsights.outputs.connectionString
     storageAccountName: storageAccount.outputs.storageAccountName
   }
+  dependsOn: [
+    resourceGroupModule
+  ]
 }
 
 module storageRolesApi 'modules/storage/storage-roles.bicep' = {
@@ -194,6 +227,9 @@ module storageRolesApi 'modules/storage/storage-roles.bicep' = {
     principalId: apiApp.outputs.apiPrincipalId
     principalType: 'ServicePrincipal'
   }
+  dependsOn: [
+    resourceGroupModule
+  ]
 }
 
 module storageRolesJob 'modules/storage/storage-roles.bicep' = {
@@ -203,6 +239,9 @@ module storageRolesJob 'modules/storage/storage-roles.bicep' = {
     principalId: enrichmentJob.outputs.jobPrincipalId
     principalType: 'ServicePrincipal'
   }
+  dependsOn: [
+    resourceGroupModule
+  ]
 }
 
 module staticWebApp 'modules/web/static-web-app.bicep' = {
@@ -218,6 +257,9 @@ module staticWebApp 'modules/web/static-web-app.bicep' = {
     apiContainerAppResourceId: enableLinkedBackend ? apiApp.outputs.apiAppId : ''
     enableLinkedBackend: enableLinkedBackend
   }
+  dependsOn: [
+    resourceGroupModule
+  ]
 }
 
 output resourceGroupName string = resourceGroupName

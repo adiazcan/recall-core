@@ -32,9 +32,11 @@ jobs:
 
       - name: Deploy Bicep
         uses: azure/arm-deploy@v2
+        env:
+          DOCUMENTDB_ADMIN_PASSWORD: ${{ secrets.DOCUMENTDB_ADMIN_PASSWORD }}
         with:
           scope: subscription
           region: westeurope
           template: ./infra/main.bicep
-          parameters: ./infra/parameters/${{ inputs.environment }}.bicepparam documentDbAdminPassword=${{ secrets.DOCUMENTDB_ADMIN_PASSWORD }}
+          parameters: ./infra/parameters/${{ inputs.environment }}.bicepparam
           deploymentName: recall-${{ inputs.environment }}-${{ github.run_number }}

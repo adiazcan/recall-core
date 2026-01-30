@@ -112,6 +112,14 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
             value: storageAccountName
           }
           {
+            name: 'Storage__BlobServiceUri'
+            value: 'https://${storageAccountName}.blob.${environment().suffixes.storage}'
+          }
+          {
+            name: 'Storage__QueueServiceUri'
+            value: 'https://${storageAccountName}.queue.${environment().suffixes.storage}'
+          }
+          {
             name: 'ConnectionStrings__recalldb'
             secretRef: 'documentdb-connection-string'
           }

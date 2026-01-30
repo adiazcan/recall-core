@@ -71,8 +71,6 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' existing 
   name: storageAccountName
 }
 
-var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
-
 module job 'br/public:avm/res/app/job:0.7.1' = {
   params: {
     name: jobName
@@ -93,14 +91,9 @@ module job 'br/public:avm/res/app/job:0.7.1' = {
             type: 'azure-queue'
             metadata: {
               queueName: queueName
-              storageAccountResourceId: storageAccount.id
+              accountName: storageAccountName
             }
-            auth: [
-              {
-                secretRef: 'storage-connection'
-                triggerParameter: 'connection'
-              }
-            ]
+            identity: 'system'
           }
         ]
       }
@@ -121,10 +114,6 @@ module job 'br/public:avm/res/app/job:0.7.1' = {
         name: 'documentdb-connection-string'
         keyVaultUrl: '${keyVaultUri}/secrets/${documentDbSecretName}'
         identity: 'system'
-      }
-      {
-        name: 'storage-connection'
-        value: storageConnectionString
       }
     ]
     containers: [
@@ -157,8 +146,12 @@ module job 'br/public:avm/res/app/job:0.7.1' = {
             secretRef: 'documentdb-connection-string'
           }
           {
-            name: 'ConnectionStrings__blobs'
-            secretRef: 'storage-connection'
+            name: 'Storage__BlobServiceUri'
+            value: 'https://${storageAccountName}.blob.${environment().suffixes.storage}'
+          }
+          {
+            name: 'Storage__QueueServiceUri'
+            value: 'https://${storageAccountName}.queue.${environment().suffixes.storage}'
           }
           {
             name: 'Storage__QueueName'

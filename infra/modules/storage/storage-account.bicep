@@ -52,6 +52,7 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.31.0' = {
     tags: tags
     skuName: sku
     allowBlobPublicAccess: false
+    allowSharedKeyAccess: false
     supportsHttpsTrafficOnly: true
     requireInfrastructureEncryption: true
     blobServices: blobServiceConfig
@@ -64,5 +65,3 @@ output storageAccountId string = storageAccount.outputs.resourceId
 output storageAccountName string = storageAccount.outputs.name
 output blobEndpoint string = storageAccount.outputs.primaryBlobEndpoint
 output queueEndpoint string = storageAccount.outputs.serviceEndpoints.?queue ?? ''
-@secure()
-output primaryKey string = storageAccount.outputs.primaryAccessKey

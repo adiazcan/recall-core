@@ -431,3 +431,7 @@ Thumbs.db
 *.msm
 *.msp
 src/Recall.Core.Api/appsettings.local.json
+
+# Bicep compiled ARM templates
+infra/**/*.json
+!infra/**/*.bicepparam

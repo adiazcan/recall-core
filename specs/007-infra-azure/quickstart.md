@@ -97,26 +97,26 @@ echo "AZURE_SUBSCRIPTION_ID: $SUB_ID"
 
 ### 2. Configure GitHub Repository
 
-Create GitHub environments and configure secrets/variables:
+Configure repository variables once (single subscription), then set environment-specific secrets:
 
 ```bash
 # Using GitHub CLI
-gh secret set DOCUMENTDB_ADMIN_PASSWORD --env dev
-gh variable set AZURE_CLIENT_ID --env dev --body "$APP_ID"
-gh variable set AZURE_TENANT_ID --env dev --body "$TENANT_ID"
-gh variable set AZURE_SUBSCRIPTION_ID --env dev --body "$SUB_ID"
+# Repository variables (shared across dev/prod)
+gh variable set AZURE_CLIENT_ID --body "$APP_ID"
+gh variable set AZURE_TENANT_ID --body "$TENANT_ID"
+gh variable set AZURE_SUBSCRIPTION_ID --body "$SUB_ID"
 
-# Repeat for prod with production-appropriate password
+# Environment secrets
+gh secret set DOCUMENTDB_ADMIN_PASSWORD --env dev
 gh secret set DOCUMENTDB_ADMIN_PASSWORD --env prod
-gh variable set AZURE_CLIENT_ID --env prod --body "$APP_ID"
-gh variable set AZURE_TENANT_ID --env prod --body "$TENANT_ID"
-gh variable set AZURE_SUBSCRIPTION_ID --env prod --body "$SUB_ID"
 ```
 
 Or configure via GitHub UI:
-1. Go to repository Settings → Environments
-2. Create `dev` and `prod` environments
-3. Add variables and secrets as listed above
+1. Go to repository Settings → Secrets and variables → Actions
+2. Add repository variables: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`
+3. Go to repository Settings → Environments
+4. Create `dev` and `prod` environments
+5. Add environment secrets: `DOCUMENTDB_ADMIN_PASSWORD` for each environment
 
 ---
 

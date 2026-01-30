@@ -72,12 +72,14 @@ az role assignment create \
 
 ## 4) Configure GitHub Environments
 
-Create `dev` and `prod` environments in repository settings. Add the following:
+Create `dev` and `prod` environments in repository settings, and set shared Azure variables at the repository level:
 
-**Environment variables**
+**Repository variables (shared across environments)**
 - `AZURE_CLIENT_ID`
 - `AZURE_TENANT_ID`
 - `AZURE_SUBSCRIPTION_ID`
+
+**Environment variables**
 - `VITE_API_BASE_URL` (for web deploy workflow)
 
 **Environment secrets**

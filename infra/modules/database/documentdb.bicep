@@ -105,6 +105,7 @@ resource createDatabaseScript 'Microsoft.Resources/deploymentScripts@2020-10-01'
       # mongosh version and download details
       MONGOSH_VERSION="2.6.0"
       MONGOSH_URL="https://downloads.mongodb.com/compass/mongosh-${MONGOSH_VERSION}-linux-x64.tgz"
+      # SHA256 checksum from https://downloads.mongodb.com/compass/mongosh.json
       MONGOSH_SHA256="7d4e9d96613fe6c2b88514114e8fba924fd6e0628def8693455281ca1c77bd45"
       MONGOSH_TGZ="/tmp/mongosh.tgz"
       MONGOSH_DIR="/tmp/mongosh-${MONGOSH_VERSION}-linux-x64"
@@ -131,7 +132,7 @@ resource createDatabaseScript 'Microsoft.Resources/deploymentScripts@2020-10-01'
       
       # Use mongosh to create database
       echo "Creating database..."
-      "${MONGOSH_BIN}" "$MONGO_CONN" --quiet --eval "const dbName = process.env.DB_NAME || 'recall'; const db = db.getSiblingDB(dbName); if (!db.getCollectionNames().includes('_init')) { db.createCollection('_init'); }"
+      "${MONGOSH_BIN}" "$MONGO_CONN" --quiet --eval "const dbName = process.env.DB_NAME || 'recall'; const targetDb = db.getSiblingDB(dbName); if (!targetDb.getCollectionNames().includes('_init')) { targetDb.createCollection('_init'); }"
       echo "Database creation completed successfully."
     '''
   }

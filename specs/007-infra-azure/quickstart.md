@@ -133,18 +133,17 @@ echo "DocumentDB Password: $DOCDB_PASSWORD"
 # IMPORTANT: Save this password securely!
 
 # Preview changes
+export DOCUMENTDB_ADMIN_PASSWORD="$DOCDB_PASSWORD"
 az deployment sub what-if \
   --location westeurope \
   --template-file infra/main.bicep \
-  --parameters infra/parameters/dev.bicepparam \
-  --parameters documentDbAdminPassword="$DOCDB_PASSWORD"
+  --parameters infra/parameters/dev.bicepparam
 
 # Deploy
 az deployment sub create \
   --location westeurope \
   --template-file infra/main.bicep \
   --parameters infra/parameters/dev.bicepparam \
-  --parameters documentDbAdminPassword="$DOCDB_PASSWORD" \
   --name recall-dev-$(date +%Y%m%d%H%M%S)
 ```
 

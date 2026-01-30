@@ -25,7 +25,26 @@ bash validate-permissions.sh
 
 ### Deploy Infrastructure
 
+You can deploy using the Azure CLI directly or use the provided deployment script:
+
+**Option 1: Using the deployment script (recommended)**
+
 ```bash
+# For dev environment
+bash scripts/deploy.sh dev <documentdb-password>
+
+# For prod environment
+bash scripts/deploy.sh prod <documentdb-password>
+```
+
+The deployment script automatically runs the validation check before deploying.
+
+**Option 2: Azure CLI directly**
+
+```bash
+# Export the DocumentDB password
+export DOCUMENTDB_ADMIN_PASSWORD="your-secure-password"
+
 # For dev environment
 az deployment sub create \
   --location westeurope \
@@ -121,6 +140,9 @@ infra/
 ├── parameters/
 │   ├── dev.bicepparam                  # Dev environment parameters
 │   └── prod.bicepparam                 # Prod environment parameters
+├── scripts/
+│   ├── deploy.sh                       # Deployment script with validation
+│   └── what-if.sh                      # Preview deployment changes
 ├── modules/
 │   ├── core/
 │   │   ├── resource-group.bicep        # Resource group

@@ -102,13 +102,37 @@ resource createDatabaseScript 'Microsoft.Resources/deploymentScripts@2020-10-01'
     scriptContent: '''
       set -euo pipefail
 
-      # Download and extract mongosh
-      curl -fsSL https://downloads.mongodb.com/compass/mongosh-2.6.0-linux-x64.tgz -o /tmp/mongosh.tgz
-      tar -xzf /tmp/mongosh.tgz -C /tmp
-      chmod +x /tmp/mongosh-2.6.0-linux-x64/bin/mongosh
+      # mongosh version and download details
+      MONGOSH_VERSION="2.6.0"
+      MONGOSH_URL="https://downloads.mongodb.com/compass/mongosh-${MONGOSH_VERSION}-linux-x64.tgz"
+      MONGOSH_SHA256="7d4e9d96613fe6c2b88514114e8fba924fd6e0628def8693455281ca1c77bd45"
+      MONGOSH_TGZ="/tmp/mongosh.tgz"
+      MONGOSH_DIR="/tmp/mongosh-${MONGOSH_VERSION}-linux-x64"
+      MONGOSH_BIN="${MONGOSH_DIR}/bin/mongosh"
+
+      # Download mongosh
+      echo "Downloading mongosh ${MONGOSH_VERSION}..."
+      curl -fsSL "${MONGOSH_URL}" -o "${MONGOSH_TGZ}"
+      
+      # Verify checksum
+      echo "${MONGOSH_SHA256}  ${MONGOSH_TGZ}" | sha256sum -c -
+      
+      # Extract mongosh
+      echo "Extracting mongosh..."
+      tar -xzf "${MONGOSH_TGZ}" -C /tmp
+      
+      # Validate extraction
+      if [ ! -f "${MONGOSH_BIN}" ]; then
+        echo "Error: mongosh binary not found at ${MONGOSH_BIN}"
+        exit 1
+      fi
+      
+      chmod +x "${MONGOSH_BIN}"
       
       # Use mongosh to create database
-      /tmp/mongosh-2.6.0-linux-x64/bin/mongosh "$MONGO_CONN" --quiet --eval "const dbName = process.env.DB_NAME || 'recall'; const db = db.getSiblingDB(dbName); if (!db.getCollectionNames().includes('_init')) { db.createCollection('_init'); }"
+      echo "Creating database..."
+      "${MONGOSH_BIN}" "$MONGO_CONN" --quiet --eval "const dbName = process.env.DB_NAME || 'recall'; const db = db.getSiblingDB(dbName); if (!db.getCollectionNames().includes('_init')) { db.createCollection('_init'); }"
+      echo "Database creation completed successfully."
     '''
   }
 }

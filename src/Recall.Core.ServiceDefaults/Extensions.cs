@@ -1,3 +1,4 @@
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Configuration;
@@ -35,6 +36,7 @@ public static class Extensions
     public static IHostApplicationBuilder ConfigureOpenTelemetry(this IHostApplicationBuilder builder)
     {
         var useOtlpExporter = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
+        var useAzureMonitor = !string.IsNullOrWhiteSpace(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
 
         builder.Logging.AddOpenTelemetry(logging =>
         {
@@ -47,7 +49,7 @@ public static class Extensions
             }
         });
 
-        builder.Services.AddOpenTelemetry()
+        var openTelemetry = builder.Services.AddOpenTelemetry()
             .ConfigureResource(resource => resource.AddService(builder.Environment.ApplicationName))
             .WithTracing(tracing =>
             {
@@ -70,6 +72,11 @@ public static class Extensions
                     metrics.AddOtlpExporter();
                 }
             });
+
+        if (useAzureMonitor)
+        {
+            openTelemetry.UseAzureMonitor();
+        }
 
         return builder;
     }

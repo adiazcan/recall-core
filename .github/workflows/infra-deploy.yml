@@ -1,0 +1,42 @@
+name: Deploy Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy Bicep
+        uses: azure/arm-deploy@v2
+        with:
+          scope: subscription
+          region: westeurope
+          template: ./infra/main.bicep
+          parameters: |
+            ./infra/parameters/${{ inputs.environment }}.bicepparam
+            documentDbAdminPassword=${{ secrets.DOCUMENTDB_ADMIN_PASSWORD }}
+          deploymentName: recall-${{ inputs.environment }}-${{ github.run_number }}

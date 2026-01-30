@@ -1,0 +1,51 @@
+name: Deploy API
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/reusable-docker-build.yml
+    with:
+      environment: ${{ inputs.environment }}
+      dockerfile: src/Recall.Core.Api/Dockerfile
+      context: src
+      image-name: recall-api
+
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    needs: build
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install Container Apps extension
+        run: az extension add --name containerapp --upgrade
+
+      - name: Update Container App
+        run: |
+          az containerapp update \
+            --name aca-recall-api-${{ inputs.environment }} \
+            --resource-group rg-recall-${{ inputs.environment }} \
+            --image crrecall${{ inputs.environment }}.azurecr.io/recall-api:${{ github.sha }}

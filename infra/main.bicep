@@ -15,6 +15,7 @@ param documentDbAdminLogin string = 'recallAdmin'
 
 @description('DocumentDB administrator password')
 @secure()
+@minLength(8)
 param documentDbAdminPassword string
 
 @description('GitHub repository URL for SWA')

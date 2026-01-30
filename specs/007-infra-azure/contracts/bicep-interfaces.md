@@ -570,7 +570,7 @@ using '../main.bicep'
 param environmentName = 'dev'
 param location = 'westeurope'
 param documentDbAdminLogin = 'recallAdmin'
-// documentDbAdminPassword provided via --parameters at deployment time
+param documentDbAdminPassword = readEnvironmentVariable('DOCUMENTDB_ADMIN_PASSWORD')
 param repositoryUrl = 'https://github.com/adiazcan/recall-core'
 param branch = 'main'
 ```
@@ -583,7 +583,7 @@ using '../main.bicep'
 param environmentName = 'prod'
 param location = 'westeurope'
 param documentDbAdminLogin = 'recallAdmin'
-// documentDbAdminPassword provided via --parameters at deployment time
+param documentDbAdminPassword = readEnvironmentVariable('DOCUMENTDB_ADMIN_PASSWORD')
 param repositoryUrl = 'https://github.com/adiazcan/recall-core'
 param branch = 'main'
 ```
@@ -595,33 +595,33 @@ param branch = 'main'
 ### Deploy to Dev
 
 ```bash
+export DOCUMENTDB_ADMIN_PASSWORD='<secure-password>'
 az deployment sub create \
   --location westeurope \
   --template-file infra/main.bicep \
   --parameters infra/parameters/dev.bicepparam \
-  --parameters documentDbAdminPassword='<secure-password>' \
   --name recall-dev-$(date +%Y%m%d%H%M%S)
 ```
 
 ### Deploy to Prod
 
 ```bash
+export DOCUMENTDB_ADMIN_PASSWORD='<secure-password>'
 az deployment sub create \
   --location westeurope \
   --template-file infra/main.bicep \
   --parameters infra/parameters/prod.bicepparam \
-  --parameters documentDbAdminPassword='<secure-password>' \
   --name recall-prod-$(date +%Y%m%d%H%M%S)
 ```
 
 ### Preview Changes (What-If)
 
 ```bash
+export DOCUMENTDB_ADMIN_PASSWORD='<secure-password>'
 az deployment sub what-if \
   --location westeurope \
   --template-file infra/main.bicep \
-  --parameters infra/parameters/dev.bicepparam \
-  --parameters documentDbAdminPassword='<secure-password>'
+  --parameters infra/parameters/dev.bicepparam
 ```
 
 ````

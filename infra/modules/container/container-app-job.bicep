@@ -19,6 +19,9 @@ param containerImageTag string = 'latest'
 @description('Key Vault name')
 param keyVaultName string
 
+@description('Key Vault URI')
+param keyVaultUri string
+
 @description('App Configuration name')
 param appConfigurationName string
 
@@ -52,8 +55,9 @@ param memory string = '2Gi'
 var jobName = 'acj-recall-enrichment-${environmentName}'
 var registryServer = '${containerRegistryName}.azurecr.io'
 var imageName = '${registryServer}/recall-enrichment:${containerImageTag}'
-var keyVaultUri = 'https://${keyVaultName}.${environment().suffixes.keyvaultDns}'
 var documentDbSecretName = 'DocumentDbConnectionString'
+// Construct Key Vault secret URL without trailing slash duplication
+var keyVaultSecretUrl = '${keyVaultUri}secrets/${documentDbSecretName}'
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
   name: keyVaultName
@@ -108,7 +112,7 @@ module job 'br/public:avm/res/app/job:0.7.1' = {
     secrets: [
       {
         name: toLower(documentDbSecretName)
-        keyVaultUrl: '${keyVaultUri}/secrets/${documentDbSecretName}'
+        keyVaultUrl: keyVaultSecretUrl
         identity: 'system'
       }
     ]

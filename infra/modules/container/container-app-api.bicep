@@ -19,6 +19,9 @@ param containerImageTag string = 'latest'
 @description('Key Vault name for secret references')
 param keyVaultName string
 
+@description('Key Vault URI')
+param keyVaultUri string
+
 @description('App Configuration name')
 param appConfigurationName string
 
@@ -44,8 +47,9 @@ var appName = 'aca-recall-api-${environmentName}'
 var registryServer = '${containerRegistryName}.azurecr.io'
 var imageName = '${registryServer}/recall-api:${containerImageTag}'
 var activeRevisionsMode = environmentName == 'prod' ? 'Multiple' : 'Single'
-var keyVaultUri = 'https://${keyVaultName}.${environment().suffixes.keyvaultDns}'
 var documentDbSecretName = 'DocumentDbConnectionString'
+// Construct Key Vault secret URL without trailing slash duplication
+var keyVaultSecretUrl = '${keyVaultUri}secrets/${documentDbSecretName}'
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
   name: keyVaultName
@@ -78,7 +82,7 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
     secrets: [
       {
         name: toLower(documentDbSecretName)
-        keyVaultUrl: '${keyVaultUri}/secrets/${documentDbSecretName}'
+        keyVaultUrl: keyVaultSecretUrl
         identity: 'system'
       }
     ]

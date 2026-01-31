@@ -19,6 +19,9 @@ param containerImageTag string = 'latest'
 @description('Key Vault name for secret references')
 param keyVaultName string
 
+@description('Key Vault URI')
+param keyVaultUri string
+
 @description('App Configuration name')
 param appConfigurationName string
 
@@ -44,7 +47,6 @@ var appName = 'aca-recall-api-${environmentName}'
 var registryServer = '${containerRegistryName}.azurecr.io'
 var imageName = '${registryServer}/recall-api:${containerImageTag}'
 var activeRevisionsMode = environmentName == 'prod' ? 'Multiple' : 'Single'
-var keyVaultUri = 'https://${keyVaultName}.${environment().suffixes.keyvaultDns}'
 var documentDbSecretName = 'DocumentDbConnectionString'
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {

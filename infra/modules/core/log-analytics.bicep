@@ -13,6 +13,7 @@ param retentionInDays int = 30
 var workspaceName = 'log-recall-${environmentName}'
 
 module workspace 'br/public:avm/res/operational-insights/workspace:0.15.0' = {
+  name: '${workspaceName}-deployment'
   params: {
     name: workspaceName
     location: location
@@ -22,10 +23,6 @@ module workspace 'br/public:avm/res/operational-insights/workspace:0.15.0' = {
   }
 }
 
-resource workspaceResource 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
-  name: workspaceName
-}
-
 output workspaceId string = workspace.outputs.resourceId
 output workspaceName string = workspace.outputs.name
-output customerId string = workspaceResource.properties.customerId
+output customerId string = workspace.outputs.logAnalyticsWorkspaceId

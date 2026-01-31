@@ -34,7 +34,6 @@ var clusterName = 'cosmos-recall-${environmentName}'
 var highAvailabilityMode = enableHa ? 'ZoneRedundantPreferred' : 'Disabled'
 var nodeCount = enableHa ? 3 : 1
 var documentDbSecretName = 'DocumentDbConnectionString'
-var databaseName = 'recall'
 
 module mongoCluster 'br/public:avm/res/document-db/mongo-cluster:0.4.2' = {
   params: {
@@ -79,63 +78,9 @@ resource documentDbSecret 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = {
   }
 }
 
-resource createDatabaseScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
-  name: 'create-${databaseName}-db-${environmentName}'
-  location: location
-  tags: tags
-  kind: 'AzureCLI'
-  properties: {
-    azCliVersion: '2.60.0'
-    timeout: 'PT30M'
-    cleanupPreference: 'OnSuccess'
-    retentionInterval: 'P1D'
-    environmentVariables: [
-      {
-        name: 'MONGO_CONN'
-        secureValue: mongoCluster.outputs.connectionString
-      }
-      {
-        name: 'DB_NAME'
-        value: databaseName
-      }
-    ]
-    scriptContent: '''
-      set -euo pipefail
-
-      # mongosh version and download details
-      MONGOSH_VERSION="2.6.0"
-      MONGOSH_URL="https://downloads.mongodb.com/compass/mongosh-${MONGOSH_VERSION}-linux-x64.tgz"
-      MONGOSH_SHA256="7d4e9d96613fe6c2b88514114e8fba924fd6e0628def8693455281ca1c77bd45"
-      MONGOSH_TGZ="/tmp/mongosh.tgz"
-      MONGOSH_DIR="/tmp/mongosh-${MONGOSH_VERSION}-linux-x64"
-      MONGOSH_BIN="${MONGOSH_DIR}/bin/mongosh"
-
-      # Download mongosh using wget (curl not available in AzureCLI container)
-      echo "Downloading mongosh ${MONGOSH_VERSION}..."
-      wget -q "${MONGOSH_URL}" -O "${MONGOSH_TGZ}"
-      
-      # Verify checksum
-      echo "${MONGOSH_SHA256}  ${MONGOSH_TGZ}" | sha256sum -c -
-      
-      # Extract mongosh
-      echo "Extracting mongosh..."
-      tar -xzf "${MONGOSH_TGZ}" -C /tmp
-      
-      # Validate extraction
-      if [ ! -f "${MONGOSH_BIN}" ]; then
-        echo "Error: mongosh binary not found at ${MONGOSH_BIN}"
-        exit 1
-      fi
-      
-      chmod +x "${MONGOSH_BIN}"
-      
-      # Use mongosh to create database
-      echo "Creating database..."
-      "${MONGOSH_BIN}" "$MONGO_CONN" --quiet --eval "const dbName = process.env.DB_NAME || 'recall'; const db = db.getSiblingDB(dbName); if (!db.getCollectionNames().includes('_init')) { db.createCollection('_init'); }"
-      echo "Database creation completed successfully."
-    '''
-  }
-}
+// NOTE: Database creation script removed - MongoDB creates databases on first use
+// when the application creates its first collection. This avoids Alpine/glibc
+// compatibility issues with mongosh in Azure CLI deployment scripts.
 
 output cosmosDbId string = mongoCluster.outputs.mongoClusterResourceId
 output cosmosDbName string = mongoCluster.outputs.name

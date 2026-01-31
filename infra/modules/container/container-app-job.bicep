@@ -107,7 +107,7 @@ module job 'br/public:avm/res/app/job:0.7.1' = {
     ]
     secrets: [
       {
-        name: 'documentdb-connection-string'
+        name: documentDbSecretName
         keyVaultUrl: '${keyVaultUri}/secrets/${documentDbSecretName}'
         identity: 'system'
       }

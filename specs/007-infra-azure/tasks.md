@@ -64,7 +64,7 @@
 - [X] T019 [US1] Create prod parameter file with environment-specific values in infra/parameters/prod.bicepparam
 - [X] T020 [P] [US1] Create deploy.sh helper script in infra/scripts/deploy.sh
 - [X] T021 [P] [US1] Create what-if.sh preview script in infra/scripts/what-if.sh
-- [ ] T022 [US1] Validate deployment with what-if against dev environment
+- [X] T022 [US1] Validate deployment with what-if against dev environment
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - single command provisions all resources
 

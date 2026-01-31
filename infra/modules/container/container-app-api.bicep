@@ -77,7 +77,7 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
     ]
     secrets: [
       {
-        name: documentDbSecretName
+        name: toLower(documentDbSecretName)
         keyVaultUrl: '${keyVaultUri}/secrets/${documentDbSecretName}'
         identity: 'system'
       }

@@ -107,7 +107,7 @@ module job 'br/public:avm/res/app/job:0.7.1' = {
     ]
     secrets: [
       {
-        name: documentDbSecretName
+        name: toLower(documentDbSecretName)
         keyVaultUrl: '${keyVaultUri}/secrets/${documentDbSecretName}'
         identity: 'system'
       }

@@ -110,9 +110,9 @@ resource createDatabaseScript 'Microsoft.Resources/deploymentScripts@2020-10-01'
       MONGOSH_DIR="/tmp/mongosh-${MONGOSH_VERSION}-linux-x64"
       MONGOSH_BIN="${MONGOSH_DIR}/bin/mongosh"
 
-      # Download mongosh
+      # Download mongosh using wget (curl not available in AzureCLI container)
       echo "Downloading mongosh ${MONGOSH_VERSION}..."
-      curl -fsSL "${MONGOSH_URL}" -o "${MONGOSH_TGZ}"
+      wget -q "${MONGOSH_URL}" -O "${MONGOSH_TGZ}"
       
       # Verify checksum
       echo "${MONGOSH_SHA256}  ${MONGOSH_TGZ}" | sha256sum -c -

@@ -191,6 +191,7 @@ module apiApp 'modules/container/container-app-api.bicep' = {
     containerAppsEnvironmentId: containerAppsEnvironment.outputs.environmentId
     containerRegistryName: containerRegistry.outputs.acrName
     keyVaultName: keyVault.outputs.keyVaultName
+    keyVaultUri: keyVault.outputs.keyVaultUri
     appConfigurationName: appConfiguration.outputs.appConfigName
     appInsightsConnectionString: appInsights.outputs.connectionString
     storageAccountName: storageAccount.outputs.storageAccountName
@@ -199,6 +200,7 @@ module apiApp 'modules/container/container-app-api.bicep' = {
   }
   dependsOn: [
     resourceGroupModule
+    documentDb // Ensure DocumentDB secret is created in KeyVault before container app tries to reference it
   ]
 }
 
@@ -211,12 +213,14 @@ module enrichmentJob 'modules/container/container-app-job.bicep' = {
     containerAppsEnvironmentId: containerAppsEnvironment.outputs.environmentId
     containerRegistryName: containerRegistry.outputs.acrName
     keyVaultName: keyVault.outputs.keyVaultName
+    keyVaultUri: keyVault.outputs.keyVaultUri
     appConfigurationName: appConfiguration.outputs.appConfigName
     appInsightsConnectionString: appInsights.outputs.connectionString
     storageAccountName: storageAccount.outputs.storageAccountName
   }
   dependsOn: [
     resourceGroupModule
+    documentDb // Ensure DocumentDB secret is created in KeyVault before container job tries to reference it
   ]
 }
 

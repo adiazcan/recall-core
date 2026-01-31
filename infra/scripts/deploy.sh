@@ -23,11 +23,14 @@ echo ""
 echo "✅ Validation passed. Proceeding with deployment..."
 echo ""
 
+# Determine the infra directory relative to this script
+INFRA_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 # Export the password as an environment variable for the Bicep parameter file to read
 export DOCUMENTDB_ADMIN_PASSWORD="$docdb_password"
 
 az deployment sub create \
   --location "$location" \
-  --template-file infra/main.bicep \
-  --parameters "infra/parameters/${environment}.bicepparam" \
+  --template-file "$INFRA_DIR/main.bicep" \
+  --parameters "$INFRA_DIR/parameters/${environment}.bicepparam" \
   --name "recall-${environment}-$(date +%Y%m%d%H%M%S)"

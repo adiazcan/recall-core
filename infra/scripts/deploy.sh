@@ -10,6 +10,19 @@ if [[ -z "$docdb_password" ]]; then
   exit 1
 fi
 
+# Validate permissions before deploying
+echo "🔍 Validating deployment permissions..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if ! bash "$SCRIPT_DIR/../validate-permissions.sh"; then
+  echo ""
+  echo "❌ Pre-deployment validation failed. Please fix the issues above before deploying."
+  exit 1
+fi
+
+echo ""
+echo "✅ Validation passed. Proceeding with deployment..."
+echo ""
+
 # Export the password as an environment variable for the Bicep parameter file to read
 export DOCUMENTDB_ADMIN_PASSWORD="$docdb_password"
 

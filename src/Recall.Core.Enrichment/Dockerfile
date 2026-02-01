@@ -11,6 +11,11 @@ RUN dotnet restore Recall.Core.Enrichment/Recall.Core.Enrichment.csproj
 COPY . .
 RUN dotnet publish Recall.Core.Enrichment/Recall.Core.Enrichment.csproj -c Release -o /app/publish /p:UseAppHost=false
 
+# Install Playwright browsers in build stage using dotnet tool
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN dotnet tool install --global Microsoft.Playwright.CLI --version 1.47.0 \
+    && /root/.dotnet/tools/playwright install chromium
+
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
@@ -51,7 +56,7 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/publish .
-RUN ./playwright.sh install
+COPY --from=build /ms-playwright /ms-playwright
 
 EXPOSE 8080
 

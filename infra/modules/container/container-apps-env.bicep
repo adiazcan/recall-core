@@ -30,6 +30,7 @@ module managedEnvironment 'br/public:avm/res/app/managed-environment:0.11.3' = {
     location: location
     tags: tags
     zoneRedundant: zoneRedundant
+    publicNetworkAccess: 'Enabled'
     appLogsConfiguration: {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {

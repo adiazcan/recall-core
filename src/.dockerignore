@@ -1,0 +1,28 @@
+# Node modules
+**/node_modules/
+extension/node_modules/
+web/node_modules/
+
+# Build outputs
+**/bin/
+**/obj/
+**/dist/
+**/build/
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.user
+
+# Tests
+**/tests/
+**/TestResults/
+
+# Git
+.git/
+.gitignore
+
+# Misc
+*.md
+*.log

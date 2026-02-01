@@ -83,7 +83,7 @@
 - [X] T025 [US2] Add Key Vault secret reference for DocumentDB connection in API module
 - [X] T026 [US2] Add App Configuration integration for API module
 - [X] T027 [US2] Add managed identity configuration and RBAC role assignments for API
-- [ ] T028 [US2] Verify API can be manually deployed to ACA and responds at /health endpoint
+- [X] T028 [US2] Verify API can be manually deployed to ACA and responds at /health endpoint
 
 **Checkpoint**: API Container App is deployable and accessible via HTTPS with health checks
 

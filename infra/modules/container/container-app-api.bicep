@@ -127,6 +127,10 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
             name: 'ConnectionStrings__recalldb'
             secretRef: toLower(documentDbSecretName)
           }
+          {
+            name: 'Authentication__TestMode'
+            value: environmentName == 'prod' ? 'false' : 'true'
+          }
         ]
         probes: [
           {

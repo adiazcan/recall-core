@@ -1,3 +1,4 @@
+using Azure.Identity;
 using Azure.Storage.Blobs;
 using Dapr.Client;
 using Microsoft.AspNetCore.Authentication;
@@ -21,10 +22,22 @@ if (string.IsNullOrWhiteSpace(mongoConnectionString))
     throw new InvalidOperationException("Missing MongoDB connection string: ConnectionStrings:recalldb");
 }
 
+// Support both connection string (local dev) and managed identity (Azure)
 var blobConnectionString = builder.Configuration.GetConnectionString("blobs");
-if (string.IsNullOrWhiteSpace(blobConnectionString))
+var blobServiceUri = builder.Configuration["Storage:BlobServiceUri"];
+BlobServiceClient blobServiceClient;
+
+if (!string.IsNullOrWhiteSpace(blobConnectionString))
 {
-    throw new InvalidOperationException("Missing Blob Storage connection string: ConnectionStrings:blobs");
+    blobServiceClient = new BlobServiceClient(blobConnectionString);
+}
+else if (!string.IsNullOrWhiteSpace(blobServiceUri))
+{
+    blobServiceClient = new BlobServiceClient(new Uri(blobServiceUri), new DefaultAzureCredential());
+}
+else
+{
+    throw new InvalidOperationException("Missing Blob Storage configuration: either ConnectionStrings:blobs or Storage:BlobServiceUri is required");
 }
 
 var mongoUrl = new MongoUrl(mongoConnectionString);
@@ -40,7 +53,7 @@ builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<ICollectionRepository, CollectionRepository>();
 builder.Services.AddScoped<ICollectionService, CollectionService>();
-builder.Services.AddSingleton<BlobServiceClient>(sp => new BlobServiceClient(blobConnectionString));
+builder.Services.AddSingleton(blobServiceClient);
 var enrichmentOptions = builder.Configuration.GetSection("Enrichment").Get<EnrichmentOptions>()
     ?? new EnrichmentOptions();
 builder.Services.AddSingleton(enrichmentOptions);

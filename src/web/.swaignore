@@ -1,0 +1,12 @@
+node_modules/
+src/
+tests/
+*.ts
+*.tsx
+*.config.ts
+*.config.js
+tsconfig*.json
+package.json
+pnpm-lock.yaml
+.env*
+*.md

@@ -13,7 +13,7 @@ RUN dotnet publish Recall.Core.Enrichment/Recall.Core.Enrichment.csproj -c Relea
 
 # Install Playwright browsers in build stage using dotnet tool
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-RUN dotnet tool install --global Microsoft.Playwright.CLI --version 1.2.3 \
+RUN dotnet tool install --global Microsoft.Playwright.CLI --version 1.47.0 \
     && /root/.dotnet/tools/playwright install chromium
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final

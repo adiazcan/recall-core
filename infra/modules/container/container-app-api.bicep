@@ -16,9 +16,6 @@ param containerRegistryName string
 @description('Container image tag')
 param containerImageTag string = 'latest'
 
-@description('Use placeholder image for initial deployment (before pushing real images to ACR)')
-param usePlaceholderImage bool = true
-
 @description('Key Vault name for secret references')
 param keyVaultName string
 
@@ -48,9 +45,7 @@ param memory string = '1Gi'
 
 var appName = 'aca-recall-api-${environmentName}'
 var registryServer = '${containerRegistryName}.azurecr.io'
-var acrImageName = '${registryServer}/recall-api:${containerImageTag}'
-var placeholderImage = 'mcr.microsoft.com/k8se/quickstart:latest'
-var imageName = usePlaceholderImage ? placeholderImage : acrImageName
+var imageName = '${registryServer}/recall-api:${containerImageTag}'
 var activeRevisionsMode = environmentName == 'prod' ? 'Multiple' : 'Single'
 var documentDbSecretName = 'DocumentDbConnectionString'
 // Construct Key Vault secret URL without trailing slash duplication
@@ -78,7 +73,7 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
     managedIdentities: {
       systemAssigned: true
     }
-    registries: usePlaceholderImage ? [] : [
+    registries: [
       {
         server: registryServer
         identity: 'system'
@@ -99,7 +94,7 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
           cpu: json(cpu)
           memory: memory
         }
-        env: usePlaceholderImage ? [] : [
+        env: [
           {
             name: 'ASPNETCORE_ENVIRONMENT'
             value: environmentName == 'prod' ? 'Production' : 'Development'
@@ -133,7 +128,7 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
             secretRef: toLower(documentDbSecretName)
           }
         ]
-        probes: usePlaceholderImage ? [] : [
+        probes: [
           {
             type: 'Startup'
             httpGet: {
@@ -170,7 +165,7 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
     ]
     ingressExternal: true
     ingressAllowInsecure: false
-    ingressTargetPort: usePlaceholderImage ? 80 : 8080
+    ingressTargetPort: 8080
     scaleSettings: {
       minReplicas: minReplicas
       maxReplicas: maxReplicas

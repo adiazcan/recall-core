@@ -16,9 +16,6 @@ param containerRegistryName string
 @description('Container image tag')
 param containerImageTag string = 'latest'
 
-@description('Use placeholder image for initial deployment (before pushing real images to ACR)')
-param usePlaceholderImage bool = true
-
 @description('Key Vault name')
 param keyVaultName string
 
@@ -57,9 +54,7 @@ param memory string = '2Gi'
 
 var jobName = 'acj-recall-enrichment-${environmentName}'
 var registryServer = '${containerRegistryName}.azurecr.io'
-var acrImageName = '${registryServer}/recall-enrichment:${containerImageTag}'
-var placeholderImage = 'mcr.microsoft.com/k8se/quickstart:latest'
-var imageName = usePlaceholderImage ? placeholderImage : acrImageName
+var imageName = '${registryServer}/recall-enrichment:${containerImageTag}'
 var documentDbSecretName = 'DocumentDbConnectionString'
 // Construct Key Vault secret URL without trailing slash duplication
 var keyVaultSecretUrl = '${keyVaultUri}secrets/${documentDbSecretName}'
@@ -108,7 +103,7 @@ module job 'br/public:avm/res/app/job:0.7.1' = {
     managedIdentities: {
       systemAssigned: true
     }
-    registries: usePlaceholderImage ? [] : [
+    registries: [
       {
         server: registryServer
         identity: 'system'
@@ -129,7 +124,7 @@ module job 'br/public:avm/res/app/job:0.7.1' = {
           cpu: cpu
           memory: memory
         }
-        env: usePlaceholderImage ? [] : [
+        env: [
           {
             name: 'ASPNETCORE_ENVIRONMENT'
             value: environmentName == 'prod' ? 'Production' : 'Development'

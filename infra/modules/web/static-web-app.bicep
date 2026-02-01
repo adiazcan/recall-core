@@ -51,14 +51,19 @@ module staticSite 'br/public:avm/res/web/static-site:0.9.3' = {
   }
 }
 
-resource staticSiteResource 'Microsoft.Web/staticSites@2024-04-01' existing = {
-  name: staticSiteName
+// Get deployment token after SWA is created
+module swaToken 'static-web-app-token.bicep' = {
+  name: '${staticSiteName}-token'
+  params: {
+    staticSiteName: staticSiteName
+  }
+  dependsOn: [
+    staticSite
+  ]
 }
-
-var deploymentToken = staticSiteResource.listSecrets().properties.apiKey
 
 output swaId string = staticSite.outputs.resourceId
 output swaName string = staticSite.outputs.name
 output swaDefaultHostname string = staticSite.outputs.defaultHostname
 @secure()
-output swaDeploymentToken string = deploymentToken
+output swaDeploymentToken string = swaToken.outputs.deploymentToken

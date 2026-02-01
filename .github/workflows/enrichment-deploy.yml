@@ -24,6 +24,7 @@ jobs:
       dockerfile: src/Recall.Core.Enrichment/Dockerfile
       context: src
       image-name: recall-enrichment
+    secrets: inherit
 
   deploy:
     runs-on: ubuntu-latest

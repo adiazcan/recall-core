@@ -24,6 +24,7 @@ jobs:
       dockerfile: src/Recall.Core.Api/Dockerfile
       context: src
       image-name: recall-api
+    secrets: inherit
 
   deploy:
     runs-on: ubuntu-latest

@@ -20,6 +20,10 @@ jobs:
     environment: ${{ inputs.environment }}
     env:
       VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+      VITE_AUTHORITY: ${{ vars.VITE_AUTHORITY }}
+      VITE_CLIENT_ID: ${{ vars.VITE_CLIENT_ID }}
+      VITE_API_SCOPE: ${{ vars.VITE_API_SCOPE }}
+      VITE_REDIRECT_URI: ${{ vars.VITE_REDIRECT_URI }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -26,7 +26,7 @@ param apiContainerAppResourceId string = ''
 param enableLinkedBackend bool = false
 
 var staticSiteName = 'swa-recall-${environmentName}'
-var sku = environmentName == 'prod' ? 'Standard' : 'Free'
+var sku = 'Standard'
 var linkedBackendConfig = enableLinkedBackend && apiContainerAppResourceId != '' ? {
   resourceId: apiContainerAppResourceId
   location: location

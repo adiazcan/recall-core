@@ -129,7 +129,7 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
           }
           {
             name: 'Authentication__TestMode'
-            value: environmentName == 'prod' ? 'false' : 'true'
+            value: 'false'
           }
         ]
         probes: [

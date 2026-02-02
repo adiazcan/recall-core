@@ -1,0 +1,28 @@
+apiVersion: dapr.io/v1alpha1
+kind: Resiliency
+metadata:
+  name: enrichment-resiliency
+spec:
+  policies:
+    retries:
+      pubsubRetry:
+        policy: exponential
+        maxInterval: 60s
+        maxRetries: 10
+        duration: 2s
+    timeouts:
+      general:
+        timeout: 30s
+    circuitBreakers:
+      pubsubCB:
+        maxRequests: 1
+        interval: 5s
+        timeout: 60s
+        trip: consecutiveFailures >= 3
+  targets:
+    components:
+      enrichment-pubsub:
+        outbound:
+          retry: pubsubRetry
+          timeout: general
+          circuitBreaker: pubsubCB

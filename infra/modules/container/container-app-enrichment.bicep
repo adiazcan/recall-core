@@ -16,7 +16,7 @@ param containerRegistryName string
 @description('Container image tag')
 param containerImageTag string = 'latest'
 
-@description('Key Vault name for secret references')
+@description('Key Vault name')
 param keyVaultName string
 
 @description('Key Vault URI')
@@ -34,18 +34,6 @@ param storageAccountName string
 @description('Service Bus namespace name')
 param serviceBusNamespaceName string
 
-@description('Azure AD Tenant ID')
-param azureAdTenantId string
-
-@description('Azure AD Client ID for API')
-param azureAdClientId string
-
-@description('Azure AD Audience (typically same as Client ID)')
-param azureAdAudience string
-
-@description('Azure AD Scopes')
-param azureAdScopes string = 'access_as_user'
-
 @description('Minimum replicas')
 param minReplicas int = 0
 
@@ -53,15 +41,14 @@ param minReplicas int = 0
 param maxReplicas int = 3
 
 @description('CPU allocation')
-param cpu string = '0.5'
+param cpu string = '1.0'
 
 @description('Memory allocation')
-param memory string = '1Gi'
+param memory string = '2Gi'
 
-var appName = 'aca-recall-api-${environmentName}'
+var appName = 'aca-recall-enrichment-${environmentName}'
 var registryServer = '${containerRegistryName}.azurecr.io'
-var imageName = '${registryServer}/recall-api:${containerImageTag}'
-var activeRevisionsMode = environmentName == 'prod' ? 'Multiple' : 'Single'
+var imageName = '${registryServer}/recall-enrichment:${containerImageTag}'
 var documentDbSecretName = 'DocumentDbConnectionString'
 // Construct Key Vault secret URL without trailing slash duplication
 var keyVaultSecretUrl = '${keyVaultUri}secrets/${documentDbSecretName}'
@@ -78,16 +65,16 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' e
   name: containerRegistryName
 }
 
-module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
+module enrichmentApp 'br/public:avm/res/app/container-app:0.20.0' = {
   params: {
     name: appName
     location: location
     tags: tags
     environmentResourceId: containerAppsEnvironmentId
-    activeRevisionsMode: activeRevisionsMode
+    activeRevisionsMode: 'Single'
     dapr: {
       enabled: true
-      appId: 'api'
+      appId: 'enrichment'
       appPort: 8080
       appProtocol: 'http'
       enableApiLogging: true
@@ -110,7 +97,7 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
     ]
     containers: [
       {
-        name: 'recall-api'
+        name: 'recall-enrichment'
         image: imageName
         resources: {
           cpu: json(cpu)
@@ -134,62 +121,23 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
             value: 'https://${appConfigurationName}.azconfig.io'
           }
           {
-            name: 'Storage__AccountName'
-            value: storageAccountName
+            name: 'ConnectionStrings__recalldb'
+            secretRef: toLower(documentDbSecretName)
           }
           {
             name: 'Storage__BlobServiceUri'
             value: 'https://${storageAccountName}.blob.${environment().suffixes.storage}'
           }
           {
-            name: 'Storage__QueueServiceUri'
-            value: 'https://${storageAccountName}.queue.${environment().suffixes.storage}'
+            name: 'Storage__AccountName'
+            value: storageAccountName
           }
           {
             name: 'ServiceBus__FullyQualifiedNamespace'
             value: '${serviceBusNamespaceName}.servicebus.windows.net'
           }
-          {
-            name: 'ConnectionStrings__recalldb'
-            secretRef: toLower(documentDbSecretName)
-          }
-          {
-            name: 'Authentication__TestMode'
-            value: 'false'
-          }
-          {
-            name: 'AzureAd__Instance'
-            value: 'https://login.microsoftonline.com/'
-          }
-          {
-            name: 'AzureAd__TenantId'
-            value: azureAdTenantId
-          }
-          {
-            name: 'AzureAd__ClientId'
-            value: azureAdClientId
-          }
-          {
-            name: 'AzureAd__Audience'
-            value: azureAdAudience
-          }
-          {
-            name: 'AzureAd__Scopes'
-            value: azureAdScopes
-          }
         ]
         probes: [
-          {
-            type: 'Startup'
-            httpGet: {
-              path: '/health'
-              port: 8080
-              scheme: 'HTTP'
-            }
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            failureThreshold: 3
-          }
           {
             type: 'Liveness'
             httpGet: {
@@ -213,19 +161,22 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
         ]
       }
     ]
-    ingressExternal: true
-    ingressAllowInsecure: false
+    ingressExternal: false
     ingressTargetPort: 8080
     scaleSettings: {
       minReplicas: minReplicas
       maxReplicas: maxReplicas
       rules: [
         {
-          name: 'http-scale'
-          http: {
+          name: 'servicebus-scale'
+          custom: {
+            type: 'azure-servicebus'
             metadata: {
-              concurrentRequests: '100'
+              topicName: 'enrichment-requested'
+              subscriptionName: 'enrichment-worker'
+              messageCount: '5'
             }
+            identity: 'system'
           }
         }
       ]
@@ -234,7 +185,7 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
   }
 }
 
-var apiPrincipalId = apiApp.outputs.?systemAssignedMIPrincipalId ?? ''
+var enrichmentPrincipalId = enrichmentApp.outputs.?systemAssignedMIPrincipalId ?? ''
 
 var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
 var appConfigDataReaderRoleId = '516239f1-63e1-4d78-a4de-a74fb236a071'
@@ -245,7 +196,7 @@ resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleAssignments@2022-0
   scope: keyVault
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
-    principalId: apiPrincipalId
+    principalId: enrichmentPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
@@ -255,7 +206,7 @@ resource appConfigDataReaderRole 'Microsoft.Authorization/roleAssignments@2022-0
   scope: appConfiguration
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', appConfigDataReaderRoleId)
-    principalId: apiPrincipalId
+    principalId: enrichmentPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
@@ -265,12 +216,12 @@ resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: containerRegistry
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', acrPullRoleId)
-    principalId: apiPrincipalId
+    principalId: enrichmentPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
 
-output apiAppId string = apiApp.outputs.resourceId
-output apiAppName string = apiApp.outputs.name
-output apiAppFqdn string = apiApp.outputs.fqdn
-output apiPrincipalId string = apiPrincipalId
+output enrichmentAppId string = enrichmentApp.outputs.resourceId
+output enrichmentAppName string = enrichmentApp.outputs.name
+output enrichmentPrincipalId string = enrichmentPrincipalId
+

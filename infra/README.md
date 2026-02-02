@@ -2,6 +2,18 @@
 
 This directory contains the Bicep infrastructure-as-code templates for deploying the Recall application to Azure.
 
+## Architecture Overview
+
+- **API**: Azure Container Apps with Dapr sidecar (pub/sub publisher)
+- **Enrichment**: Azure Container Apps with Dapr sidecar (pub/sub subscriber)
+- **Messaging**: Azure Service Bus Topics for Dapr pub/sub
+- **Frontend**: Azure Static Web Apps linked to API backend
+- **Database**: Azure DocumentDB (MongoDB vCore)
+- **Storage**: Azure Blob Storage (thumbnails)
+- **Observability**: Application Insights + Log Analytics
+
+See [dapr-components/README.md](./dapr-components/README.md) for Dapr configuration details.
+
 ## Prerequisites
 
 - Azure CLI installed and configured
@@ -40,8 +52,11 @@ The deployment script automatically runs the validation check before deploying.
 **Option 2: Azure CLI directly**
 
 ```bash
-# Export the DocumentDB password
+# Export required environment variables
 export DOCUMENTDB_ADMIN_PASSWORD="your-secure-password"
+export AZUREAD_TENANT_ID="your-tenant-id"
+export AZUREAD_API_CLIENT_ID="your-api-client-id"
+export AZUREAD_API_AUDIENCE="your-api-audience"
 
 # For dev environment
 az deployment sub create \
@@ -96,6 +111,19 @@ The infrastructure consists of:
 - **Metric Alerts** (prod only): Availability and performance monitoring
 
 ## Environment Configuration
+
+### Required Environment Variables
+
+The following environment variables must be set before deployment:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `DOCUMENTDB_ADMIN_PASSWORD` | MongoDB admin password | `SecureP@ssw0rd123!` |
+| `AZUREAD_TENANT_ID` | Azure AD tenant ID for authentication | `827e7342-7263-4692-b486-7d2a1633513b` |
+| `AZUREAD_API_CLIENT_ID` | Azure AD application (client) ID for API | `4d92a1c0-f21a-4c7a-b08d-65e4c57d4abf` |
+| `AZUREAD_API_AUDIENCE` | Azure AD audience (typically same as client ID) | `4d92a1c0-f21a-4c7a-b08d-65e4c57d4abf` |
+
+**Note**: Azure AD configuration is required for API authentication. See [docs/auth/external-id-setup.md](../docs/auth/external-id-setup.md) for setup instructions.
 
 ### Dev Environment
 - Free/Basic SKUs where available

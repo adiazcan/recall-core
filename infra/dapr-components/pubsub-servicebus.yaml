@@ -1,0 +1,23 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: enrichment-pubsub
+spec:
+  type: pubsub.azure.servicebus.topics
+  version: v1
+  metadata:
+    - name: namespaceName
+      value: "{serviceBusNamespace}.servicebus.windows.net"
+    - name: maxConcurrentHandlers
+      value: "5"
+    - name: timeoutInSec
+      value: "60"
+    - name: maxActiveMessages
+      value: "100"
+    - name: lockDurationInSec
+      value: "300"
+    - name: disableEntityManagement
+      # Set to true since we pre-create the topic/subscription in Bicep
+      value: "true"
+auth:
+  secretStore: azure-keyvault

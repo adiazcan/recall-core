@@ -77,29 +77,20 @@ module job 'br/public:avm/res/app/job:0.7.1' = {
     location: location
     tags: tags
     environmentResourceId: containerAppsEnvironmentId
-    triggerType: 'Event'
-    eventTriggerConfig: {
+    triggerType: 'Manual'
+    manualTriggerConfig: {
       parallelism: 1
       replicaCompletionCount: 1
-      scale: {
-        minExecutions: 0
-        maxExecutions: maxExecutions
-        pollingInterval: pollingInterval
-        rules: [
-          {
-            name: 'storage-queue'
-            type: 'azure-queue'
-            metadata: {
-              queueName: queueName
-              accountName: storageAccountName
-            }
-            identity: 'system'
-          }
-        ]
-      }
     }
     replicaRetryLimit: replicaRetryLimit
     replicaTimeout: replicaTimeout
+    dapr: {
+      enabled: true
+      appId: 'enrichment'
+      appPort: 8080
+      appProtocol: 'http'
+      enableApiLogging: true
+    }
     managedIdentities: {
       systemAssigned: true
     }

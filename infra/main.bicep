@@ -24,6 +24,18 @@ param repositoryUrl string = 'https://github.com/adiazcan/recall-core'
 @description('Git branch for SWA deployment')
 param branch string = 'main'
 
+@description('Azure AD Tenant ID for authentication')
+param azureAdTenantId string
+
+@description('Azure AD API Client ID')
+param azureAdApiClientId string
+
+@description('Azure AD API Audience (typically same as Client ID)')
+param azureAdApiAudience string = azureAdApiClientId
+
+@description('Azure AD API Scopes')
+param azureAdScopes string = 'access_as_user'
+
 @description('Tags for all resources')
 param tags object = {
   environment: environmentName
@@ -150,6 +162,19 @@ module storageAccount 'modules/storage/storage-account.bicep' = {
   ]
 }
 
+module serviceBus 'modules/messaging/service-bus.bicep' = {
+  scope: resourceGroup(resourceGroupName)
+  params: {
+    environmentName: environmentName
+    location: location
+    tags: tags
+    sku: isProd ? 'Standard' : 'Standard'
+  }
+  dependsOn: [
+    resourceGroupModule
+  ]
+}
+
 module documentDb 'modules/database/documentdb.bicep' = {
   scope: resourceGroup(resourceGroupName)
   params: {
@@ -176,9 +201,21 @@ module containerAppsEnvironment 'modules/container/container-apps-env.bicep' = {
     tags: tags
     logAnalyticsWorkspaceId: logAnalytics.outputs.workspaceId
     zoneRedundant: isProd
+    daprApplicationInsightsConnectionString: appInsights.outputs.connectionString
   }
   dependsOn: [
     resourceGroupModule
+  ]
+}
+
+module daprComponents 'modules/container/dapr-components.bicep' = {
+  scope: resourceGroup(resourceGroupName)
+  params: {
+    environmentName: environmentName
+    serviceBusNamespaceName: serviceBus.outputs.serviceBusNamespaceName
+  }
+  dependsOn: [
+    containerAppsEnvironment
   ]
 }
 
@@ -195,16 +232,22 @@ module apiApp 'modules/container/container-app-api.bicep' = {
     appConfigurationName: appConfiguration.outputs.appConfigName
     appInsightsConnectionString: appInsights.outputs.connectionString
     storageAccountName: storageAccount.outputs.storageAccountName
+    serviceBusNamespaceName: serviceBus.outputs.serviceBusNamespaceName
+    azureAdTenantId: azureAdTenantId
+    azureAdClientId: azureAdApiClientId
+    azureAdAudience: azureAdApiAudience
+    azureAdScopes: azureAdScopes
     minReplicas: apiMinReplicas
     maxReplicas: apiMaxReplicas
   }
   dependsOn: [
     resourceGroupModule
     documentDb // Ensure DocumentDB secret is created in KeyVault before container app tries to reference it
+    daprComponents // Ensure Dapr components are deployed before API starts
   ]
 }
 
-module enrichmentJob 'modules/container/container-app-job.bicep' = {
+module enrichmentJob 'modules/container/container-app-enrichment.bicep' = {
   scope: resourceGroup(resourceGroupName)
   params: {
     environmentName: environmentName
@@ -217,10 +260,12 @@ module enrichmentJob 'modules/container/container-app-job.bicep' = {
     appConfigurationName: appConfiguration.outputs.appConfigName
     appInsightsConnectionString: appInsights.outputs.connectionString
     storageAccountName: storageAccount.outputs.storageAccountName
+    serviceBusNamespaceName: serviceBus.outputs.serviceBusNamespaceName
   }
   dependsOn: [
     resourceGroupModule
     documentDb // Ensure DocumentDB secret is created in KeyVault before container job tries to reference it
+    daprComponents // Ensure Dapr components are deployed before enrichment starts
   ]
 }
 
@@ -240,7 +285,31 @@ module storageRolesJob 'modules/storage/storage-roles.bicep' = {
   scope: resourceGroup(resourceGroupName)
   params: {
     storageAccountName: storageAccount.outputs.storageAccountName
-    principalId: enrichmentJob.outputs.jobPrincipalId
+    principalId: enrichmentJob.outputs.enrichmentPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+  dependsOn: [
+    resourceGroupModule
+  ]
+}
+
+module serviceBusRolesApi 'modules/messaging/service-bus-roles.bicep' = {
+  scope: resourceGroup(resourceGroupName)
+  params: {
+    serviceBusNamespaceName: serviceBus.outputs.serviceBusNamespaceName
+    principalId: apiApp.outputs.apiPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+  dependsOn: [
+    resourceGroupModule
+  ]
+}
+
+module serviceBusRolesJob 'modules/messaging/service-bus-roles.bicep' = {
+  scope: resourceGroup(resourceGroupName)
+  params: {
+    serviceBusNamespaceName: serviceBus.outputs.serviceBusNamespaceName
+    principalId: enrichmentJob.outputs.enrichmentPrincipalId
     principalType: 'ServicePrincipal'
   }
   dependsOn: [
@@ -274,3 +343,5 @@ output keyVaultName string = keyVault.outputs.keyVaultName
 output appConfigEndpoint string = appConfiguration.outputs.appConfigEndpoint
 output storageAccountName string = storageAccount.outputs.storageAccountName
 output appInsightsConnectionString string = appInsights.outputs.connectionString
+output serviceBusNamespace string = serviceBus.outputs.serviceBusNamespaceName
+output enrichmentTopicName string = serviceBus.outputs.enrichmentTopicName

@@ -28,7 +28,7 @@ resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-01-preview
   properties: {
     minimumTlsVersion: '1.2'
     publicNetworkAccess: 'Enabled'
-    disableLocalAuth: false
+    disableLocalAuth: true
     zoneRedundant: sku == 'Premium'
   }
 }

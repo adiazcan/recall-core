@@ -261,6 +261,8 @@ module enrichmentJob 'modules/container/container-app-enrichment.bicep' = {
     appInsightsConnectionString: appInsights.outputs.connectionString
     storageAccountName: storageAccount.outputs.storageAccountName
     serviceBusNamespaceName: serviceBus.outputs.serviceBusNamespaceName
+    minReplicas: apiMinReplicas
+    maxReplicas: apiMaxReplicas
   }
   dependsOn: [
     resourceGroupModule

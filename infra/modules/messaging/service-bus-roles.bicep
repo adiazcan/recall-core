@@ -12,7 +12,7 @@ param principalId string
 ])
 param principalType string = 'ServicePrincipal'
 
-resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' existing = {
+resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' existing = {
   name: serviceBusNamespaceName
 }
 

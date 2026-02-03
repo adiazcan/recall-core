@@ -18,7 +18,7 @@ param enableSender bool = false
 @description('Enable Data Receiver role assignment')
 param enableReceiver bool = false
 
-resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' existing = {
+resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2024-01-01' existing = {
   name: serviceBusNamespaceName
 }
 

@@ -17,7 +17,7 @@ param sku string = 'Standard'
 
 var serviceBusNamespaceName = 'sb-recall-${environmentName}'
 
-resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = {
+resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2024-01-01' = {
   name: serviceBusNamespaceName
   location: location
   tags: tags
@@ -33,7 +33,7 @@ resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = {
   }
 }
 
-resource enrichmentTopic 'Microsoft.ServiceBus/namespaces/topics@2021-11-01' = {
+resource enrichmentTopic 'Microsoft.ServiceBus/namespaces/topics@2024-01-01' = {
   parent: serviceBusNamespace
   name: 'enrichment.requested'
   properties: {
@@ -46,7 +46,7 @@ resource enrichmentTopic 'Microsoft.ServiceBus/namespaces/topics@2021-11-01' = {
   }
 }
 
-resource enrichmentSubscription 'Microsoft.ServiceBus/namespaces/topics/subscriptions@2021-11-01' = {
+resource enrichmentSubscription 'Microsoft.ServiceBus/namespaces/topics/subscriptions@2024-01-01' = {
   parent: enrichmentTopic
   name: 'enrichment-worker'
   properties: {

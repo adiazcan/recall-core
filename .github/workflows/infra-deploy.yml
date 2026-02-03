@@ -34,6 +34,9 @@ jobs:
         uses: azure/arm-deploy@v2
         env:
           DOCUMENTDB_ADMIN_PASSWORD: ${{ secrets.DOCUMENTDB_ADMIN_PASSWORD }}
+          AZUREAD_TENANT_ID: ${{ secrets.AZUREAD_TENANT_ID }}
+          AZUREAD_API_CLIENT_ID: ${{ secrets.AZUREAD_API_CLIENT_ID }}
+          AZUREAD_API_AUDIENCE: ${{ secrets.AZUREAD_API_AUDIENCE }}
         with:
           scope: subscription
           region: westeurope

@@ -31,20 +31,14 @@ param appInsightsConnectionString string
 @description('Storage account name')
 param storageAccountName string
 
-@description('Queue name to trigger on')
-param queueName string = 'enrichment-queue'
+@description('Service Bus namespace name')
+param serviceBusNamespaceName string
 
-@description('Polling interval in seconds')
-param pollingInterval int = 30
+@description('Minimum replicas')
+param minReplicas int = 0
 
-@description('Max concurrent executions')
-param maxExecutions int = 5
-
-@description('Replica timeout in seconds')
-param replicaTimeout int = 300
-
-@description('Replica retry limit')
-param replicaRetryLimit int = 3
+@description('Maximum replicas')
+param maxReplicas int = 3
 
 @description('CPU allocation')
 param cpu string = '1.0'
@@ -52,7 +46,7 @@ param cpu string = '1.0'
 @description('Memory allocation')
 param memory string = '2Gi'
 
-var jobName = 'acj-recall-enrichment-${environmentName}'
+var appName = 'aca-recall-enrichment-${environmentName}'
 var registryServer = '${containerRegistryName}.azurecr.io'
 var imageName = '${registryServer}/recall-enrichment:${containerImageTag}'
 var documentDbSecretName = 'DocumentDbConnectionString'
@@ -71,19 +65,13 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' e
   name: containerRegistryName
 }
 
-module job 'br/public:avm/res/app/job:0.7.1' = {
+module enrichmentApp 'br/public:avm/res/app/container-app:0.20.0' = {
   params: {
-    name: jobName
+    name: appName
     location: location
     tags: tags
     environmentResourceId: containerAppsEnvironmentId
-    triggerType: 'Manual'
-    manualTriggerConfig: {
-      parallelism: 1
-      replicaCompletionCount: 1
-    }
-    replicaRetryLimit: replicaRetryLimit
-    replicaTimeout: replicaTimeout
+    activeRevisionsMode: 'Single'
     dapr: {
       enabled: true
       appId: 'enrichment'
@@ -112,7 +100,7 @@ module job 'br/public:avm/res/app/job:0.7.1' = {
         name: 'recall-enrichment'
         image: imageName
         resources: {
-          cpu: cpu
+          cpu: json(cpu)
           memory: memory
         }
         env: [
@@ -141,60 +129,100 @@ module job 'br/public:avm/res/app/job:0.7.1' = {
             value: 'https://${storageAccountName}.blob.${environment().suffixes.storage}'
           }
           {
-            name: 'Storage__QueueServiceUri'
-            value: 'https://${storageAccountName}.queue.${environment().suffixes.storage}'
-          }
-          {
-            name: 'Storage__QueueName'
-            value: queueName
-          }
-          {
             name: 'Storage__AccountName'
             value: storageAccountName
+          }
+          {
+            name: 'ServiceBus__FullyQualifiedNamespace'
+            value: '${serviceBusNamespaceName}.servicebus.windows.net'
+          }
+        ]
+        probes: [
+          {
+            type: 'Liveness'
+            httpGet: {
+              path: '/health'
+              port: 8080
+              scheme: 'HTTP'
+            }
+            periodSeconds: 30
+            failureThreshold: 3
+          }
+          {
+            type: 'Readiness'
+            httpGet: {
+              path: '/health'
+              port: 8080
+              scheme: 'HTTP'
+            }
+            periodSeconds: 10
+            failureThreshold: 3
           }
         ]
       }
     ]
+    ingressExternal: false
+    ingressTargetPort: 8080
+    scaleSettings: {
+      minReplicas: minReplicas
+      maxReplicas: maxReplicas
+      rules: [
+        {
+          name: 'servicebus-scale'
+          custom: {
+            type: 'azure-servicebus'
+            metadata: {
+              topicName: 'enrichment-requested'
+              subscriptionName: 'enrichment-worker'
+              messageCount: '5'
+              namespace: '${serviceBusNamespaceName}.servicebus.windows.net'
+            }
+            identity: 'system'
+          }
+        }
+      ]
+    }
     enableTelemetry: false
   }
 }
 
-var jobPrincipalId = job.outputs.?systemAssignedMIPrincipalId ?? ''
+var enrichmentPrincipalId = enrichmentApp.outputs.?systemAssignedMIPrincipalId ?? ''
 
 var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
 var appConfigDataReaderRoleId = '516239f1-63e1-4d78-a4de-a74fb236a071'
 var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 
 resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(keyVault.id, jobName, keyVaultSecretsUserRoleId)
+  name: guid(keyVault.id, appName, keyVaultSecretsUserRoleId)
   scope: keyVault
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
-    principalId: jobPrincipalId
+    principalId: enrichmentPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
 
 resource appConfigDataReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(appConfiguration.id, jobName, appConfigDataReaderRoleId)
+  name: guid(appConfiguration.id, appName, appConfigDataReaderRoleId)
   scope: appConfiguration
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', appConfigDataReaderRoleId)
-    principalId: jobPrincipalId
+    principalId: enrichmentPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
 
 resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(containerRegistry.id, jobName, acrPullRoleId)
+  name: guid(containerRegistry.id, appName, acrPullRoleId)
   scope: containerRegistry
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', acrPullRoleId)
-    principalId: jobPrincipalId
+    principalId: enrichmentPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
 
-output jobId string = job.outputs.resourceId
-output jobName string = job.outputs.name
-output jobPrincipalId string = jobPrincipalId
+output enrichmentAppId string = enrichmentApp.outputs.resourceId
+output enrichmentAppName string = enrichmentApp.outputs.name
+output enrichmentPrincipalId string = enrichmentPrincipalId
+

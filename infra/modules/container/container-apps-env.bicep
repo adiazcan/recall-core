@@ -13,6 +13,9 @@ param logAnalyticsWorkspaceId string
 @description('Enable zone redundancy (prod only)')
 param zoneRedundant bool = false
 
+@description('Dapr Application Insights connection string for telemetry')
+param daprApplicationInsightsConnectionString string = ''
+
 var environmentNameValue = 'cae-recall-${environmentName}'
 var logAnalyticsResourceGroupName = split(logAnalyticsWorkspaceId, '/')[4]
 var logAnalyticsWorkspaceName = split(logAnalyticsWorkspaceId, '/')[8]
@@ -38,6 +41,8 @@ module managedEnvironment 'br/public:avm/res/app/managed-environment:0.11.3' = {
         sharedKey: logAnalyticsSharedKey
       }
     }
+    daprAIConnectionString: daprApplicationInsightsConnectionString
+    daprAIInstrumentationKey: ''
     enableTelemetry: false
   }
 }

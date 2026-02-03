@@ -31,6 +31,21 @@ param appInsightsConnectionString string
 @description('Storage account name')
 param storageAccountName string
 
+@description('Service Bus namespace name')
+param serviceBusNamespaceName string
+
+@description('Azure AD Tenant ID')
+param azureAdTenantId string
+
+@description('Azure AD Client ID for API')
+param azureAdClientId string
+
+@description('Azure AD Audience (typically same as Client ID)')
+param azureAdAudience string
+
+@description('Azure AD Scopes')
+param azureAdScopes string = 'access_as_user'
+
 @description('Minimum replicas')
 param minReplicas int = 0
 
@@ -70,6 +85,13 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
     tags: tags
     environmentResourceId: containerAppsEnvironmentId
     activeRevisionsMode: activeRevisionsMode
+    dapr: {
+      enabled: true
+      appId: 'api'
+      appPort: 8080
+      appProtocol: 'http'
+      enableApiLogging: true
+    }
     managedIdentities: {
       systemAssigned: true
     }
@@ -124,12 +146,36 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
             value: 'https://${storageAccountName}.queue.${environment().suffixes.storage}'
           }
           {
+            name: 'ServiceBus__FullyQualifiedNamespace'
+            value: '${serviceBusNamespaceName}.servicebus.windows.net'
+          }
+          {
             name: 'ConnectionStrings__recalldb'
             secretRef: toLower(documentDbSecretName)
           }
           {
             name: 'Authentication__TestMode'
             value: 'false'
+          }
+          {
+            name: 'AzureAd__Instance'
+            value: 'https://ciamlogin.com/'
+          }
+          {
+            name: 'AzureAd__TenantId'
+            value: azureAdTenantId
+          }
+          {
+            name: 'AzureAd__ClientId'
+            value: azureAdClientId
+          }
+          {
+            name: 'AzureAd__Audience'
+            value: azureAdAudience
+          }
+          {
+            name: 'AzureAd__Scopes'
+            value: azureAdScopes
           }
         ]
         probes: [

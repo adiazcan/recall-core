@@ -159,7 +159,7 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
           }
           {
             name: 'AzureAd__Instance'
-            value: 'https://login.microsoftonline.com/'
+            value: 'https://ciamlogin.com/'
           }
           {
             name: 'AzureAd__TenantId'

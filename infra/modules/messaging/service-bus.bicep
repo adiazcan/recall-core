@@ -17,7 +17,7 @@ param sku string = 'Standard'
 
 var serviceBusNamespaceName = 'sb-recall-${environmentName}'
 
-resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' = {
+resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = {
   name: serviceBusNamespaceName
   location: location
   tags: tags
@@ -33,9 +33,9 @@ resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-01-preview
   }
 }
 
-resource enrichmentTopic 'Microsoft.ServiceBus/namespaces/topics@2022-10-01-preview' = {
+resource enrichmentTopic 'Microsoft.ServiceBus/namespaces/topics@2021-11-01' = {
   parent: serviceBusNamespace
-  name: 'enrichment-requested'
+  name: 'enrichment.requested'
   properties: {
     maxMessageSizeInKilobytes: 256
     defaultMessageTimeToLive: 'P1D'
@@ -46,7 +46,7 @@ resource enrichmentTopic 'Microsoft.ServiceBus/namespaces/topics@2022-10-01-prev
   }
 }
 
-resource enrichmentSubscription 'Microsoft.ServiceBus/namespaces/topics/subscriptions@2022-10-01-preview' = {
+resource enrichmentSubscription 'Microsoft.ServiceBus/namespaces/topics/subscriptions@2021-11-01' = {
   parent: enrichmentTopic
   name: 'enrichment-worker'
   properties: {

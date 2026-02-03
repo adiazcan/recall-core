@@ -26,7 +26,8 @@ The application uses Dapr for asynchronous messaging between the API and Enrichm
 ### 2. Subscription Component (`subscription.yaml`)
 
 **Component Name**: `enrichment-subscription`  
-**Purpose**: Dapr subscription routing for the enrichment service
+**Purpose**: Dapr subscription routing for the enrichment service  
+**Deployment**: Application-level configuration (not deployed as managed component)
 
 **Configuration**:
 - **Pub/Sub Name**: `enrichment-pubsub`
@@ -35,15 +36,20 @@ The application uses Dapr for asynchronous messaging between the API and Enrichm
 - **Dead Letter Topic**: `enrichment.deadletter`
 - **Scopes**: `enrichment` (only enrichment service receives messages)
 
+**Note**: This component is used for application-level subscription routing and is not deployed as a managed Dapr component in Azure Container Apps. The subscription configuration is handled by the Dapr runtime within the enrichment service container.
+
 ### 3. Resiliency Component (`resiliency.yaml`)
 
 **Component Name**: `enrichment-resiliency`  
-**Purpose**: Retry, timeout, and circuit breaker policies for pub/sub
+**Purpose**: Retry, timeout, and circuit breaker policies for pub/sub  
+**Deployment**: Application-level configuration (not deployed as managed component)
 
 **Policies**:
 - **Retry**: Exponential backoff, max 10 retries, 2s-60s intervals
 - **Timeout**: 30s for general operations
 - **Circuit Breaker**: Trips after 3 consecutive failures, 60s timeout
+
+**Note**: This component is used for application-level resiliency configuration and is not deployed as a managed Dapr component in Azure Container Apps. The resiliency policies are handled by the Dapr runtime within the application containers.
 
 ## Deployment
 
@@ -55,7 +61,9 @@ cd infra
 ./scripts/deploy.sh dev
 ```
 
-The Dapr components are deployed to the Container Apps Environment **before** the container apps start, ensuring the pub/sub infrastructure is ready.
+The **pub/sub component** is deployed to the Container Apps Environment as a managed Dapr component **before** the container apps start, ensuring the pub/sub infrastructure is ready. 
+
+The **subscription and resiliency components** are application-level configurations that are used by the Dapr runtime within the application containers and are not deployed as managed Dapr components in Azure Container Apps.
 
 ## Local Development
 
@@ -86,10 +94,10 @@ For local development with Aspire, Dapr uses **Redis** as the pub/sub backing st
 
 ## Managed Identity Permissions
 
-Both the API and Enrichment services are granted the following Azure roles on the Service Bus namespace:
+The API and Enrichment services are granted minimal required Azure roles on the Service Bus namespace following the principle of least privilege:
 
-- **Azure Service Bus Data Sender** (API)
-- **Azure Service Bus Data Receiver** (Enrichment)
+- **API Service**: `Azure Service Bus Data Sender` (send-only)
+- **Enrichment Service**: `Azure Service Bus Data Receiver` (receive-only)
 
 These roles are assigned in `infra/main.bicep` via the `service-bus-roles.bicep` module.
 

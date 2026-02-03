@@ -301,6 +301,8 @@ module serviceBusRolesApi 'modules/messaging/service-bus-roles.bicep' = {
     serviceBusNamespaceName: serviceBus.outputs.serviceBusNamespaceName
     principalId: apiApp.outputs.apiPrincipalId
     principalType: 'ServicePrincipal'
+    enableSender: true
+    enableReceiver: false
   }
   dependsOn: [
     resourceGroupModule
@@ -313,6 +315,8 @@ module serviceBusRolesJob 'modules/messaging/service-bus-roles.bicep' = {
     serviceBusNamespaceName: serviceBus.outputs.serviceBusNamespaceName
     principalId: enrichmentJob.outputs.enrichmentPrincipalId
     principalType: 'ServicePrincipal'
+    enableSender: false
+    enableReceiver: true
   }
   dependsOn: [
     resourceGroupModule

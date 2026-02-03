@@ -12,6 +12,12 @@ param principalId string
 ])
 param principalType string = 'ServicePrincipal'
 
+@description('Enable Data Sender role assignment')
+param enableSender bool = false
+
+@description('Enable Data Receiver role assignment')
+param enableReceiver bool = false
+
 resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' existing = {
   name: serviceBusNamespaceName
 }
@@ -19,7 +25,7 @@ resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' existi
 var serviceBusDataSenderRoleId = '69a216fc-b8fb-44d8-bc22-1f3c2cd27a39'
 var serviceBusDataReceiverRoleId = '4f6d3b9b-027b-4f4c-9142-0e5a2a2247e0'
 
-resource dataReceiverRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource dataReceiverRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (enableReceiver) {
   name: guid(serviceBusNamespace.id, principalId, serviceBusDataReceiverRoleId)
   scope: serviceBusNamespace
   properties: {
@@ -29,7 +35,7 @@ resource dataReceiverRoleAssignment 'Microsoft.Authorization/roleAssignments@202
   }
 }
 
-resource dataSenderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource dataSenderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (enableSender) {
   name: guid(serviceBusNamespace.id, principalId, serviceBusDataSenderRoleId)
   scope: serviceBusNamespace
   properties: {

@@ -175,6 +175,7 @@ module enrichmentApp 'br/public:avm/res/app/container-app:0.20.0' = {
               topicName: 'enrichment-requested'
               subscriptionName: 'enrichment-worker'
               messageCount: '5'
+              namespace: '${serviceBusNamespaceName}.servicebus.windows.net'
             }
             identity: 'system'
           }

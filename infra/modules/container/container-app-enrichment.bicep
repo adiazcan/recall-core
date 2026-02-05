@@ -65,6 +65,50 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' e
   name: containerRegistryName
 }
 
+// Create User-Assigned Managed Identity to assign roles before Container App creation
+resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: 'id-${appName}'
+  location: location
+  tags: tags
+}
+
+// Define role IDs
+var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
+var appConfigDataReaderRoleId = '516239f1-63e1-4d78-a4de-a74fb236a071'
+var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
+
+// Assign roles BEFORE creating the Container App to avoid pull errors
+resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(keyVault.id, appName, keyVaultSecretsUserRoleId)
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
+    principalId: userAssignedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource appConfigDataReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(appConfiguration.id, appName, appConfigDataReaderRoleId)
+  scope: appConfiguration
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', appConfigDataReaderRoleId)
+    principalId: userAssignedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(containerRegistry.id, appName, acrPullRoleId)
+  scope: containerRegistry
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', acrPullRoleId)
+    principalId: userAssignedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Create Container App with User-Assigned Managed Identity (roles already assigned)
 module enrichmentApp 'br/public:avm/res/app/container-app:0.20.0' = {
   params: {
     name: appName
@@ -80,19 +124,21 @@ module enrichmentApp 'br/public:avm/res/app/container-app:0.20.0' = {
       enableApiLogging: true
     }
     managedIdentities: {
-      systemAssigned: true
+      userAssignedResourceIds: [
+        userAssignedIdentity.id
+      ]
     }
     registries: [
       {
         server: registryServer
-        identity: 'system'
+        identity: userAssignedIdentity.id
       }
     ]
     secrets: [
       {
         name: toLower(documentDbSecretName)
         keyVaultUrl: keyVaultSecretUrl
-        identity: 'system'
+        identity: userAssignedIdentity.id
       }
     ]
     containers: [
@@ -177,50 +223,21 @@ module enrichmentApp 'br/public:avm/res/app/container-app:0.20.0' = {
               messageCount: '5'
               namespace: '${serviceBusNamespaceName}.servicebus.windows.net'
             }
-            identity: 'system'
+            identity: userAssignedIdentity.id
           }
         }
       ]
     }
     enableTelemetry: false
   }
+  dependsOn: [
+    keyVaultSecretsUserRole
+    appConfigDataReaderRole
+    acrPullRole
+  ]
 }
 
-var enrichmentPrincipalId = enrichmentApp.outputs.?systemAssignedMIPrincipalId ?? ''
-
-var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
-var appConfigDataReaderRoleId = '516239f1-63e1-4d78-a4de-a74fb236a071'
-var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
-
-resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(keyVault.id, appName, keyVaultSecretsUserRoleId)
-  scope: keyVault
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
-    principalId: enrichmentPrincipalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-resource appConfigDataReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(appConfiguration.id, appName, appConfigDataReaderRoleId)
-  scope: appConfiguration
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', appConfigDataReaderRoleId)
-    principalId: enrichmentPrincipalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(containerRegistry.id, appName, acrPullRoleId)
-  scope: containerRegistry
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', acrPullRoleId)
-    principalId: enrichmentPrincipalId
-    principalType: 'ServicePrincipal'
-  }
-}
+var enrichmentPrincipalId = userAssignedIdentity.properties.principalId
 
 output enrichmentAppId string = enrichmentApp.outputs.resourceId
 output enrichmentAppName string = enrichmentApp.outputs.name

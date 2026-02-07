@@ -48,7 +48,7 @@ resource enrichmentTopic 'Microsoft.ServiceBus/namespaces/topics@2024-01-01' = {
 
 resource enrichmentSubscription 'Microsoft.ServiceBus/namespaces/topics/subscriptions@2024-01-01' = {
   parent: enrichmentTopic
-  name: 'enrichment-worker'
+  name: 'enrichment'
   properties: {
     maxDeliveryCount: 10
     defaultMessageTimeToLive: 'P1D'
@@ -58,8 +58,35 @@ resource enrichmentSubscription 'Microsoft.ServiceBus/namespaces/topics/subscrip
   }
 }
 
+// Dead letter topic for failed enrichment messages
+resource deadLetterTopic 'Microsoft.ServiceBus/namespaces/topics@2024-01-01' = {
+  parent: serviceBusNamespace
+  name: 'enrichment.deadletter'
+  properties: {
+    maxMessageSizeInKilobytes: 256
+    defaultMessageTimeToLive: 'P7D'
+    maxSizeInMegabytes: 1024
+    requiresDuplicateDetection: false
+    enablePartitioning: false
+    supportOrdering: true
+  }
+}
+
+resource deadLetterSubscription 'Microsoft.ServiceBus/namespaces/topics/subscriptions@2024-01-01' = {
+  parent: deadLetterTopic
+  name: 'enrichment'
+  properties: {
+    maxDeliveryCount: 3
+    defaultMessageTimeToLive: 'P7D'
+    lockDuration: 'PT5M'
+    deadLetteringOnMessageExpiration: false
+    deadLetteringOnFilterEvaluationExceptions: false
+  }
+}
+
 output serviceBusNamespaceId string = serviceBusNamespace.id
 output serviceBusNamespaceName string = serviceBusNamespace.name
 output serviceBusEndpoint string = serviceBusNamespace.properties.serviceBusEndpoint
 output enrichmentTopicName string = enrichmentTopic.name
+output deadLetterTopicName string = deadLetterTopic.name
 

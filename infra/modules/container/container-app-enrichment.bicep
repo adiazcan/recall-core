@@ -65,6 +65,14 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' e
   name: containerRegistryName
 }
 
+resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2024-01-01' existing = {
+  name: serviceBusNamespaceName
+}
+
+resource storageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' existing = {
+  name: storageAccountName
+}
+
 // Create User-Assigned Managed Identity to assign roles before Container App creation
 resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: 'id-${appName}'
@@ -76,6 +84,8 @@ resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@
 var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
 var appConfigDataReaderRoleId = '516239f1-63e1-4d78-a4de-a74fb236a071'
 var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
+var serviceBusDataReceiverRoleId = '4f6d3b9b-027b-4f4c-9142-0e5a2a2247e0'
+var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 
 // Assign roles BEFORE creating the Container App to avoid pull errors
 resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
@@ -103,6 +113,28 @@ resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: containerRegistry
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', acrPullRoleId)
+    principalId: userAssignedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Service Bus Data Receiver role must be assigned BEFORE container app creation for scaler validation
+resource serviceBusDataReceiverRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(serviceBusNamespace.id, appName, serviceBusDataReceiverRoleId)
+  scope: serviceBusNamespace
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', serviceBusDataReceiverRoleId)
+    principalId: userAssignedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Storage Blob Data Contributor role must be assigned BEFORE container app creation
+resource storageBlobDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, appName, storageBlobDataContributorRoleId)
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataContributorRoleId)
     principalId: userAssignedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
@@ -167,6 +199,10 @@ module enrichmentApp 'br/public:avm/res/app/container-app:0.20.0' = {
             value: 'https://${appConfigurationName}.azconfig.io'
           }
           {
+            name: 'AZURE_CLIENT_ID'
+            value: userAssignedIdentity.properties.clientId
+          }
+          {
             name: 'ConnectionStrings__recalldb'
             secretRef: toLower(documentDbSecretName)
           }
@@ -184,6 +220,18 @@ module enrichmentApp 'br/public:avm/res/app/container-app:0.20.0' = {
           }
         ]
         probes: [
+          {
+            type: 'Startup'
+            httpGet: {
+              path: '/health'
+              port: 8080
+              scheme: 'HTTP'
+            }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 30
+            timeoutSeconds: 5
+          }
           {
             type: 'Liveness'
             httpGet: {
@@ -218,7 +266,7 @@ module enrichmentApp 'br/public:avm/res/app/container-app:0.20.0' = {
           custom: {
             type: 'azure-servicebus'
             metadata: {
-              topicName: 'enrichment-requested'
+              topicName: 'enrichment.requested'
               subscriptionName: 'enrichment-worker'
               messageCount: '5'
               namespace: '${serviceBusNamespaceName}.servicebus.windows.net'
@@ -234,6 +282,8 @@ module enrichmentApp 'br/public:avm/res/app/container-app:0.20.0' = {
     keyVaultSecretsUserRole
     appConfigDataReaderRole
     acrPullRole
+    serviceBusDataReceiverRole
+    storageBlobDataContributorRole
   ]
 }
 

@@ -186,9 +186,10 @@ module apiApp 'br/public:avm/res/app/container-app:0.20.0' = {
               port: 8080
               scheme: 'HTTP'
             }
-            initialDelaySeconds: 5
+            initialDelaySeconds: 10
             periodSeconds: 10
-            failureThreshold: 3
+            failureThreshold: 30
+            timeoutSeconds: 5
           }
           {
             type: 'Liveness'

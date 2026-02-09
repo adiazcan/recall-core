@@ -57,6 +57,12 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.31.0' = {
     requireInfrastructureEncryption: true
     blobServices: blobServiceConfig
     queueServices: queueServiceConfig
+    // Allow access from Azure services using managed identity
+    // Network rules default to Deny which blocks Container Apps
+    networkAcls: {
+      defaultAction: 'Allow'
+      bypass: 'AzureServices'
+    }
     enableTelemetry: false
   }
 }

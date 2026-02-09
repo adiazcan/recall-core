@@ -283,17 +283,8 @@ module storageRolesApi 'modules/storage/storage-roles.bicep' = {
   ]
 }
 
-module storageRolesJob 'modules/storage/storage-roles.bicep' = {
-  scope: resourceGroup(resourceGroupName)
-  params: {
-    storageAccountName: storageAccount.outputs.storageAccountName
-    principalId: enrichmentJob.outputs.enrichmentPrincipalId
-    principalType: 'ServicePrincipal'
-  }
-  dependsOn: [
-    resourceGroupModule
-  ]
-}
+// Storage roles for enrichment are assigned inside the enrichment module
+// to ensure they are available before the container app starts
 
 module serviceBusRolesApi 'modules/messaging/service-bus-roles.bicep' = {
   scope: resourceGroup(resourceGroupName)
@@ -309,19 +300,8 @@ module serviceBusRolesApi 'modules/messaging/service-bus-roles.bicep' = {
   ]
 }
 
-module serviceBusRolesJob 'modules/messaging/service-bus-roles.bicep' = {
-  scope: resourceGroup(resourceGroupName)
-  params: {
-    serviceBusNamespaceName: serviceBus.outputs.serviceBusNamespaceName
-    principalId: enrichmentJob.outputs.enrichmentPrincipalId
-    principalType: 'ServicePrincipal'
-    enableSender: false
-    enableReceiver: true
-  }
-  dependsOn: [
-    resourceGroupModule
-  ]
-}
+// Service Bus receiver role for enrichment is assigned within the enrichment module
+// to ensure it's available before the container app scaler validation
 
 module staticWebApp 'modules/web/static-web-app.bicep' = {
   scope: resourceGroup(resourceGroupName)

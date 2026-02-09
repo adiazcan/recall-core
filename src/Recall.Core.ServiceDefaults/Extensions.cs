@@ -83,14 +83,12 @@ public static class Extensions
 
     public static WebApplication MapDefaultEndpoints(this WebApplication app)
     {
-        if (app.Environment.IsDevelopment())
+        // Health endpoints must be available in all environments for container orchestration
+        app.MapHealthChecks("/health");
+        app.MapHealthChecks("/alive", new HealthCheckOptions
         {
-            app.MapHealthChecks("/health");
-            app.MapHealthChecks("/alive", new HealthCheckOptions
-            {
-                Predicate = check => check.Tags.Contains("live")
-            });
-        }
+            Predicate = check => check.Tags.Contains("live")
+        });
 
         return app;
     }

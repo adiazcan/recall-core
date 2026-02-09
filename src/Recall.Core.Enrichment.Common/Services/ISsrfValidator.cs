@@ -1,4 +1,4 @@
-namespace Recall.Core.Enrichment.Services;
+namespace Recall.Core.Enrichment.Common.Services;
 
 public interface ISsrfValidator
 {

@@ -1,14 +1,15 @@
 using AngleSharp;
 using AngleSharp.Dom;
+using Recall.Core.Enrichment.Common.Models;
 
-namespace Recall.Core.Enrichment.Services;
+namespace Recall.Core.Enrichment.Common.Services;
 
 public sealed class MetadataExtractor : IMetadataExtractor
 {
-    public async Task<PageMetadata> ExtractAsync(string html, CancellationToken cancellationToken = default)
+    public async Task<PageMetadata> ExtractAsync(string html)
     {
-        var context = BrowsingContext.New(Configuration.Default);
-        var document = await context.OpenAsync(request => request.Content(html), cancellationToken);
+        var context = BrowsingContext.New(AngleSharp.Configuration.Default);
+        var document = await context.OpenAsync(request => request.Content(html));
 
         var title = GetMetaContent(document, "meta[property='og:title']")
             ?? document.QuerySelector("title")?.TextContent?.Trim()

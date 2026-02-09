@@ -17,14 +17,14 @@
 
 **Purpose**: Create the new shared enrichment library project and wire it into the solution
 
-- [ ] T001 Create new class library project `src/Recall.Core.Enrichment.Common/Recall.Core.Enrichment.Common.csproj` targeting `net10.0` with AngleSharp 1.1.2 and Microsoft.Extensions.Http dependencies
-- [ ] T002 Add `Recall.Core.Enrichment.Common` project to `src/RecallCore.sln` via `dotnet sln add`
-- [ ] T003 [P] Add `<ProjectReference>` to `Recall.Core.Enrichment.Common` in `src/Recall.Core.Api/Recall.Core.Api.csproj`
-- [ ] T004 [P] Add `<ProjectReference>` to `Recall.Core.Enrichment.Common` in `src/Recall.Core.Enrichment/Recall.Core.Enrichment.csproj`
-- [ ] T005 Create directory structure for shared library: `src/Recall.Core.Enrichment.Common/Models/`, `src/Recall.Core.Enrichment.Common/Services/`, `src/Recall.Core.Enrichment.Common/Configuration/`
-- [ ] T006 Create new test project `src/tests/Recall.Core.Enrichment.Common.Tests/Recall.Core.Enrichment.Common.Tests.csproj` with xUnit 2.6.6 targeting `net10.0`, referencing `Recall.Core.Enrichment.Common`
-- [ ] T007 Add `Recall.Core.Enrichment.Common.Tests` project to `src/RecallCore.sln` via `dotnet sln add`
-- [ ] T008 Verify solution builds cleanly with `dotnet build src/RecallCore.sln`
+- [x] T001 Create new class library project `src/Recall.Core.Enrichment.Common/Recall.Core.Enrichment.Common.csproj` targeting `net10.0` with AngleSharp 1.1.2 and Microsoft.Extensions.Http dependencies
+- [x] T002 Add `Recall.Core.Enrichment.Common` project to `src/RecallCore.sln` via `dotnet sln add`
+- [x] T003 [P] Add `<ProjectReference>` to `Recall.Core.Enrichment.Common` in `src/Recall.Core.Api/Recall.Core.Api.csproj`
+- [x] T004 [P] Add `<ProjectReference>` to `Recall.Core.Enrichment.Common` in `src/Recall.Core.Enrichment/Recall.Core.Enrichment.csproj`
+- [x] T005 Create directory structure for shared library: `src/Recall.Core.Enrichment.Common/Models/`, `src/Recall.Core.Enrichment.Common/Services/`, `src/Recall.Core.Enrichment.Common/Configuration/`
+- [x] T006 Create new test project `src/tests/Recall.Core.Enrichment.Common.Tests/Recall.Core.Enrichment.Common.Tests.csproj` with xUnit 2.6.6 targeting `net10.0`, referencing `Recall.Core.Enrichment.Common`
+- [x] T007 Add `Recall.Core.Enrichment.Common.Tests` project to `src/RecallCore.sln` via `dotnet sln add`
+- [x] T008 Verify solution builds cleanly with `dotnet build src/RecallCore.sln`
 
 ---
 
@@ -36,55 +36,55 @@
 
 ### Models (shared library)
 
-- [ ] T009 [P] Create `PageMetadata` record (Title, Excerpt, OgImageUrl) in `src/Recall.Core.Enrichment.Common/Models/PageMetadata.cs` — moved from top-level record in `src/Recall.Core.Enrichment/Services/IMetadataExtractor.cs`
-- [ ] T010 [P] Create `SyncEnrichmentResult` record (Title, Excerpt, PreviewImageUrl, NeedsAsyncFallback, Error, Duration) in `src/Recall.Core.Enrichment.Common/Models/SyncEnrichmentResult.cs`
-- [ ] T011 [P] Extract `SsrfBlockedException` exception class from the bottom of `src/Recall.Core.Enrichment/Services/HtmlFetcher.cs` into its own file at `src/Recall.Core.Enrichment.Common/Models/SsrfBlockedException.cs`
+- [x] T009 [P] Create `PageMetadata` record (Title, Excerpt, OgImageUrl) in `src/Recall.Core.Enrichment.Common/Models/PageMetadata.cs` — moved from top-level record in `src/Recall.Core.Enrichment/Services/IMetadataExtractor.cs`
+- [x] T010 [P] Create `SyncEnrichmentResult` record (Title, Excerpt, PreviewImageUrl, NeedsAsyncFallback, Error, Duration) in `src/Recall.Core.Enrichment.Common/Models/SyncEnrichmentResult.cs`
+- [x] T011 [P] Extract `SsrfBlockedException` exception class from the bottom of `src/Recall.Core.Enrichment/Services/HtmlFetcher.cs` into its own file at `src/Recall.Core.Enrichment.Common/Models/SsrfBlockedException.cs`
 
 ### Configuration (shared library)
 
-- [ ] T012 Create unified `EnrichmentOptions` class in `src/Recall.Core.Enrichment.Common/Configuration/EnrichmentOptions.cs` with all shared properties (ThumbnailContainer, MaxResponseSizeBytes, FetchTimeoutSeconds=3, MasterTimeoutSeconds=4, MaxRedirects=3, ConnectTimeoutSeconds=10, ReadTimeoutSeconds=30, UserAgent) — consolidating from `src/Recall.Core.Api/Services/EnrichmentOptions.cs` and `src/Recall.Core.Enrichment/Services/EnrichmentOptions.cs`. Note: defaults are tuned for sync path (3s fetch); the Enrichment worker MUST override via its own `appsettings.json` `Enrichment` section (e.g., FetchTimeoutSeconds=30 for async)
+- [x] T012 Create unified `EnrichmentOptions` class in `src/Recall.Core.Enrichment.Common/Configuration/EnrichmentOptions.cs` with all shared properties (ThumbnailContainer, MaxResponseSizeBytes, FetchTimeoutSeconds=3, MasterTimeoutSeconds=4, MaxRedirects=3, ConnectTimeoutSeconds=10, ReadTimeoutSeconds=30, UserAgent) — consolidating from `src/Recall.Core.Api/Services/EnrichmentOptions.cs` and `src/Recall.Core.Enrichment/Services/EnrichmentOptions.cs`. Note: defaults are tuned for sync path (3s fetch); the Enrichment worker MUST override via its own `appsettings.json` `Enrichment` section (e.g., FetchTimeoutSeconds=30 for async)
 
 ### Interfaces (shared library)
 
-- [ ] T013 [P] Create `ISsrfValidator` interface in `src/Recall.Core.Enrichment.Common/Services/ISsrfValidator.cs` with `ValidateAsync(string url, CancellationToken)` method returning `SsrfValidationResult` — matches existing interface signature from `src/Recall.Core.Enrichment/Services/ISsrfValidator.cs`. Also move the `SsrfValidationResult` record into this file.
-- [ ] T014 [P] Create `IHtmlFetcher` interface in `src/Recall.Core.Enrichment.Common/Services/IHtmlFetcher.cs` with `FetchHtmlAsync(string url, CancellationToken)` method
-- [ ] T015 [P] Create `IMetadataExtractor` interface in `src/Recall.Core.Enrichment.Common/Services/IMetadataExtractor.cs` with `ExtractAsync(string html)` method
-- [ ] T016 [P] Create `ISyncEnrichmentService` interface in `src/Recall.Core.Enrichment.Common/Services/ISyncEnrichmentService.cs` with `EnrichAsync(string url, string userId, string itemId, CancellationToken)` method
+- [x] T013 [P] Create `ISsrfValidator` interface in `src/Recall.Core.Enrichment.Common/Services/ISsrfValidator.cs` with `ValidateAsync(string url, CancellationToken)` method returning `SsrfValidationResult` — matches existing interface signature from `src/Recall.Core.Enrichment/Services/ISsrfValidator.cs`. Also move the `SsrfValidationResult` record into this file.
+- [x] T014 [P] Create `IHtmlFetcher` interface in `src/Recall.Core.Enrichment.Common/Services/IHtmlFetcher.cs` with `FetchHtmlAsync(string url, CancellationToken)` method
+- [x] T015 [P] Create `IMetadataExtractor` interface in `src/Recall.Core.Enrichment.Common/Services/IMetadataExtractor.cs` with `ExtractAsync(string html)` method
+- [x] T016 [P] Create `ISyncEnrichmentService` interface in `src/Recall.Core.Enrichment.Common/Services/ISyncEnrichmentService.cs` with `EnrichAsync(string url, string userId, string itemId, CancellationToken)` method
 
 ### Implementations (moved to shared library)
 
-- [ ] T017 Move `SsrfValidator` implementation to `src/Recall.Core.Enrichment.Common/Services/SsrfValidator.cs` — update namespace from `Recall.Core.Enrichment.Services` to `Recall.Core.Enrichment.Common.Services`, implement `ISsrfValidator` from shared library
-- [ ] T018 Move `HtmlFetcher` implementation to `src/Recall.Core.Enrichment.Common/Services/HtmlFetcher.cs` — update namespace, use `IHttpClientFactory` with named client `enrichment-fetch` instead of direct `HttpClient` construction, implement `IHtmlFetcher` from shared library, remove `IDisposable` implementation (handler lifetime managed by `IHttpClientFactory`). Note: only `FetchHtmlAsync` moves to shared library; `FetchBytesAsync` (used for image download) remains exclusive to the async worker and should be kept in `Recall.Core.Enrichment` or re-implemented there
-- [ ] T019 Move `MetadataExtractor` implementation to `src/Recall.Core.Enrichment.Common/Services/MetadataExtractor.cs` — update namespace, use `PageMetadata` from `Recall.Core.Enrichment.Common.Models`, implement `IMetadataExtractor` from shared library
+- [x] T017 Move `SsrfValidator` implementation to `src/Recall.Core.Enrichment.Common/Services/SsrfValidator.cs` — update namespace from `Recall.Core.Enrichment.Services` to `Recall.Core.Enrichment.Common.Services`, implement `ISsrfValidator` from shared library
+- [x] T018 Move `HtmlFetcher` implementation to `src/Recall.Core.Enrichment.Common/Services/HtmlFetcher.cs` — update namespace, use `IHttpClientFactory` with named client `enrichment-fetch` instead of direct `HttpClient` construction, implement `IHtmlFetcher` from shared library, remove `IDisposable` implementation (handler lifetime managed by `IHttpClientFactory`). Note: only `FetchHtmlAsync` moves to shared library; `FetchBytesAsync` (used for image download) remains exclusive to the async worker and should be kept in `Recall.Core.Enrichment` or re-implemented there
+- [x] T019 Move `MetadataExtractor` implementation to `src/Recall.Core.Enrichment.Common/Services/MetadataExtractor.cs` — update namespace, use `PageMetadata` from `Recall.Core.Enrichment.Common.Models`, implement `IMetadataExtractor` from shared library
 
 ### Cleanup old files
 
-- [ ] T020 [P] Remove old `ISsrfValidator.cs`, `SsrfValidator.cs`, `IHtmlFetcher.cs`, `HtmlFetcher.cs`, `IMetadataExtractor.cs`, `MetadataExtractor.cs` from `src/Recall.Core.Enrichment/Services/` — update ALL remaining Enrichment code (including `EnrichmentService.cs`) to use `Recall.Core.Enrichment.Common.Services` and `Recall.Core.Enrichment.Common.Models` namespaces. This must be thorough so the Enrichment project builds cleanly at the end of Phase 2. Note: `FetchBytesAsync` remains in the Enrichment project — re-implement it locally or keep a local `IImageFetcher` if needed.
-- [ ] T021 [P] Remove old `EnrichmentOptions.cs` from `src/Recall.Core.Api/Services/` — update API code to use `Recall.Core.Enrichment.Common.Configuration` namespace
-- [ ] T022 [P] Remove old `EnrichmentOptions.cs` from `src/Recall.Core.Enrichment/Services/` — update Enrichment code to use `Recall.Core.Enrichment.Common.Configuration` namespace
+- [x] T020 [P] Remove old `ISsrfValidator.cs`, `SsrfValidator.cs`, `IHtmlFetcher.cs`, `HtmlFetcher.cs`, `IMetadataExtractor.cs`, `MetadataExtractor.cs` from `src/Recall.Core.Enrichment/Services/` — update ALL remaining Enrichment code (including `EnrichmentService.cs`) to use `Recall.Core.Enrichment.Common.Services` and `Recall.Core.Enrichment.Common.Models` namespaces. This must be thorough so the Enrichment project builds cleanly at the end of Phase 2. Note: `FetchBytesAsync` remains in the Enrichment project — re-implement it locally or keep a local `IImageFetcher` if needed.
+- [x] T021 [P] Remove old `EnrichmentOptions.cs` from `src/Recall.Core.Api/Services/` — update API code to use `Recall.Core.Enrichment.Common.Configuration` namespace
+- [x] T022 [P] Remove old `EnrichmentOptions.cs` from `src/Recall.Core.Enrichment/Services/` — update Enrichment code to use `Recall.Core.Enrichment.Common.Configuration` namespace
 
 ### DI Registration (shared library services)
 
-- [ ] T023 Create `ServiceCollectionExtensions.cs` in `src/Recall.Core.Enrichment.Common/` with `AddEnrichmentCommon(this IServiceCollection)` extension method — registers `ISsrfValidator`, `IHtmlFetcher`, `IMetadataExtractor`, `ISyncEnrichmentService`, named HttpClient `enrichment-fetch`, and binds `EnrichmentOptions` from config section `"Enrichment"`
-- [ ] T024 Update `src/Recall.Core.Api/Program.cs` to call `builder.Services.AddEnrichmentCommon()` and remove old enrichment DI registrations
-- [ ] T025 Update `src/Recall.Core.Enrichment/Program.cs` to call `builder.Services.AddEnrichmentCommon()` and remove old enrichment DI registrations
+- [x] T023 Create `ServiceCollectionExtensions.cs` in `src/Recall.Core.Enrichment.Common/` with `AddEnrichmentCommon(this IServiceCollection)` extension method — registers `ISsrfValidator`, `IHtmlFetcher`, `IMetadataExtractor`, `ISyncEnrichmentService`, named HttpClient `enrichment-fetch`, and binds `EnrichmentOptions` from config section `"Enrichment"`
+- [x] T024 Update `src/Recall.Core.Api/Program.cs` to call `builder.Services.AddEnrichmentCommon()` and remove old enrichment DI registrations
+- [x] T025 Update `src/Recall.Core.Enrichment/Program.cs` to call `builder.Services.AddEnrichmentCommon()` and remove old enrichment DI registrations
 
 ### Entity Updates
 
-- [ ] T026 Add `PreviewImageUrl` nullable string property with `[BsonElement("previewImageUrl")]` to `Item` entity in `src/Recall.Core.Api/Entities/Item.cs`
+- [x] T026 Add `PreviewImageUrl` nullable string property with `[BsonElement("previewImageUrl")]` to `Item` entity in `src/Recall.Core.Api/Entities/Item.cs`
 
 ### DTO Updates
 
-- [ ] T027 [P] Add `PreviewImageUrl` property to `ItemDto` in `src/Recall.Core.Api/Models/ItemDto.cs` and update `FromEntity` mapping logic to include the new field. Also verify endpoint-level serialization in `src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs` includes the field in API responses — ensure alignment with `contracts/openapi.yaml`
-- [ ] T028 Verify `dotnet build src/RecallCore.sln` succeeds after all foundational changes
+- [x] T027 [P] Add `PreviewImageUrl` property to `ItemDto` in `src/Recall.Core.Api/Models/ItemDto.cs` and update `FromEntity` mapping logic to include the new field. Also verify endpoint-level serialization in `src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs` includes the field in API responses — ensure alignment with `contracts/openapi.yaml`
+- [x] T028 Verify `dotnet build src/RecallCore.sln` succeeds after all foundational changes
 
 **Checkpoint**: Shared library extracted, solution builds, all existing tests still pass. No behavioral changes yet — sync enrichment service not yet implemented.
 
 ### Shared Library Unit Tests (written alongside Phase 2 implementations)
 
-- [ ] T050 [P] Write unit tests for `SsrfValidator` — validate blocking of private IPs (10.x, 172.16-31.x, 192.168.x), localhost, loopback (127.x, ::1), link-local (169.254.x), non-http(s) schemes. Verify DNS-resolved IPs are checked (domain resolving to 127.0.0.1 is blocked). Verify valid public URLs pass. Per FR-017, FR-018
-- [ ] T051 [P] Write unit tests for `MetadataExtractor` — verify title priority (`og:title` → `<title>` → `<h1>`), excerpt priority (`og:description` → `meta[name=description]` → first paragraph), og:image/twitter:image extraction. Verify null handling for missing tags. Per FR-003
-- [ ] T052 [P] Write unit tests for `HtmlFetcher` — verify streaming with size limit (>5MB rejected), timeout behavior, redirect following (max 3), SSRF validation on redirect targets. Per FR-019, FR-020
+- [x] T050 [P] Write unit tests for `SsrfValidator` — validate blocking of private IPs (10.x, 172.16-31.x, 192.168.x), localhost, loopback (127.x, ::1), link-local (169.254.x), non-http(s) schemes. Verify DNS-resolved IPs are checked (domain resolving to 127.0.0.1 is blocked). Verify valid public URLs pass. Per FR-017, FR-018
+- [x] T051 [P] Write unit tests for `MetadataExtractor` — verify title priority (`og:title` → `<title>` → `<h1>`), excerpt priority (`og:description` → `meta[name=description]` → first paragraph), og:image/twitter:image extraction. Verify null handling for missing tags. Per FR-003
+- [x] T052 [P] Write unit tests for `HtmlFetcher` — verify streaming with size limit (>5MB rejected), timeout behavior, redirect following (max 3), SSRF validation on redirect targets. Per FR-019, FR-020
 
 ---
 

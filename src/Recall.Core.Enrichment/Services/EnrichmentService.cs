@@ -5,6 +5,8 @@ using System.Text.RegularExpressions;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
+using Recall.Core.Enrichment.Common.Models;
+using Recall.Core.Enrichment.Common.Services;
 using Recall.Core.Enrichment.Models;
 using Recall.Core.Enrichment.Storage;
 
@@ -69,7 +71,7 @@ public sealed class EnrichmentService : IEnrichmentService
         try
         {
             var html = await _htmlFetcher.FetchHtmlAsync(job.Url, cancellationToken);
-            var metadata = await _metadataExtractor.ExtractAsync(html, cancellationToken);
+            var metadata = await _metadataExtractor.ExtractAsync(html);
 
             var title = item.Title ?? SanitizeText(metadata.Title, TitleMaxLength);
             var excerpt = item.Excerpt ?? SanitizeText(metadata.Excerpt, ExcerptMaxLength);

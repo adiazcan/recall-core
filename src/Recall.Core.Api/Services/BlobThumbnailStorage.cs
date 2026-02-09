@@ -1,4 +1,5 @@
 using Azure.Storage.Blobs;
+using Recall.Core.Enrichment.Common.Configuration;
 
 namespace Recall.Core.Api.Services;
 

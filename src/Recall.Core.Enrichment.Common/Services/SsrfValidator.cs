@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 
-namespace Recall.Core.Enrichment.Services;
+namespace Recall.Core.Enrichment.Common.Services;
 
 public sealed class SsrfValidator : ISsrfValidator
 {

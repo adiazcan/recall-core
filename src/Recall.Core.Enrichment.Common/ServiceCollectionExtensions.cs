@@ -29,8 +29,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISsrfValidator, SsrfValidator>();
         services.AddSingleton<IHtmlFetcher, HtmlFetcher>();
         services.AddSingleton<IMetadataExtractor, MetadataExtractor>();
-        services.AddScoped<ISyncEnrichmentService>(_ =>
-            throw new InvalidOperationException("ISyncEnrichmentService is not implemented yet."));
+        services.AddScoped<ISyncEnrichmentService, SyncEnrichmentService>();
 
         return services;
     }

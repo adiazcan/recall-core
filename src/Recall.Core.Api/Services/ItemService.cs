@@ -3,10 +3,14 @@ using MongoDB.Driver;
 using Recall.Core.Api.Entities;
 using Recall.Core.Api.Models;
 using Recall.Core.Api.Repositories;
+using Recall.Core.Enrichment.Common.Services;
 
 namespace Recall.Core.Api.Services;
 
-public sealed class ItemService(IItemRepository repository, ICollectionRepository collections) : IItemService
+public sealed class ItemService(
+    IItemRepository repository,
+    ICollectionRepository collections,
+    ISyncEnrichmentService syncEnrichmentService) : IItemService
 {
     public async Task<SaveItemResult> SaveItemAsync(string userId, CreateItemRequest request, CancellationToken cancellationToken = default)
     {
@@ -16,7 +20,7 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
         var existing = await repository.FindByNormalizedUrlAsync(userId, normalizedUrl, cancellationToken);
         if (existing is not null)
         {
-            return new SaveItemResult(existing, false);
+            return new SaveItemResult(existing, false, false);
         }
 
         var now = DateTime.UtcNow;
@@ -41,14 +45,78 @@ public sealed class ItemService(IItemRepository repository, ICollectionRepositor
         try
         {
             await repository.InsertAsync(userId, item, cancellationToken);
-            return new SaveItemResult(item, true);
+
+            var enrichmentResult = await syncEnrichmentService.EnrichAsync(
+                item.Url,
+                userId,
+                item.Id.ToString(),
+                cancellationToken);
+
+            var status = enrichmentResult.Error is not null && !enrichmentResult.NeedsAsyncFallback
+                ? "failed"
+                : enrichmentResult.NeedsAsyncFallback
+                    ? "pending"
+                    : "succeeded";
+
+            var error = status == "failed" ? enrichmentResult.Error : null;
+            DateTime? enrichedAt = status == "succeeded" ? DateTime.UtcNow : null;
+
+            var updates = new List<UpdateDefinition<Item>>
+            {
+                Builders<Item>.Update.Set(item => item.EnrichmentStatus, status),
+                Builders<Item>.Update.Set(item => item.EnrichmentError, error),
+                Builders<Item>.Update.Set(item => item.EnrichedAt, enrichedAt),
+                Builders<Item>.Update.Set(item => item.UpdatedAt, DateTime.UtcNow)
+            };
+
+            if (item.Title is null && enrichmentResult.Title is not null)
+            {
+                updates.Add(Builders<Item>.Update.Set(item => item.Title, enrichmentResult.Title));
+            }
+
+            if (item.Excerpt is null && enrichmentResult.Excerpt is not null)
+            {
+                updates.Add(Builders<Item>.Update.Set(item => item.Excerpt, enrichmentResult.Excerpt));
+            }
+
+            if (enrichmentResult.PreviewImageUrl is not null)
+            {
+                updates.Add(Builders<Item>.Update.Set(item => item.PreviewImageUrl, enrichmentResult.PreviewImageUrl));
+            }
+
+            var update = Builders<Item>.Update.Combine(updates);
+            var updated = await repository.UpdateAsync(userId, item.Id, update, cancellationToken);
+            if (updated is not null)
+            {
+                item = updated;
+            }
+            else
+            {
+                if (item.Title is null && enrichmentResult.Title is not null)
+                {
+                    item.Title = enrichmentResult.Title;
+                }
+
+                if (item.Excerpt is null && enrichmentResult.Excerpt is not null)
+                {
+                    item.Excerpt = enrichmentResult.Excerpt;
+                }
+
+                item.PreviewImageUrl = enrichmentResult.PreviewImageUrl;
+                item.EnrichmentStatus = status;
+                item.EnrichmentError = error;
+                item.EnrichedAt = enrichedAt;
+                item.UpdatedAt = DateTime.UtcNow;
+            }
+
+            return new SaveItemResult(item, true, status == "pending");
         }
         catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
         {
             var duplicate = await repository.FindByNormalizedUrlAsync(userId, normalizedUrl, cancellationToken);
             if (duplicate is not null)
             {
-                return new SaveItemResult(duplicate, false);
+                return new SaveItemResult(duplicate, false, false);
             }
 
             throw;

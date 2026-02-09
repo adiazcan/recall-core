@@ -22,4 +22,4 @@ public interface IItemService
     Task<bool> DeleteItemAsync(string userId, string id, CancellationToken cancellationToken = default);
 }
 
-public sealed record SaveItemResult(Item Item, bool Created);
+public sealed record SaveItemResult(Item Item, bool Created, bool NeedsAsyncFallback);

@@ -1,9 +1,16 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Net.Sockets;
+using System.IO;
 using System.Text.Json;
+using Dapr.Client;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using MongoDB.Bson;
 using Recall.Core.Api.Models;
+using Recall.Core.Enrichment.Common.Models;
+using Recall.Core.Enrichment.Common.Services;
 using Recall.Core.Api.Tests.TestFixtures;
 using Xunit;
 
@@ -39,6 +46,91 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         Assert.Equal("https://example.com/article", payload!.Url);
         Assert.Equal("unread", payload.Status);
         Assert.Contains("tech", payload.Tags);
+    }
+
+    [Fact]
+    public async Task CreateItem_ReturnsEnrichedItemWhenPreviewImageFound()
+    {
+        var enrichmentResult = new SyncEnrichmentResult(
+            "Meta Title",
+            "Meta Excerpt",
+            "https://example.com/og.png",
+            false,
+            null,
+            TimeSpan.FromMilliseconds(25));
+
+        using var testClient = CreateClient(_ => enrichmentResult);
+        var client = testClient.Client;
+
+        var response = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        {
+            Url = "https://example.com/enriched"
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var payload = await response.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(payload);
+        Assert.Equal("Meta Title", payload!.Title);
+        Assert.Equal("Meta Excerpt", payload.Excerpt);
+        Assert.Equal("https://example.com/og.png", payload.PreviewImageUrl);
+        Assert.Equal("succeeded", payload.EnrichmentStatus);
+    }
+
+    [Fact]
+    public async Task CreateItem_ReturnsPendingWhenPreviewImageMissing()
+    {
+        var enrichmentResult = new SyncEnrichmentResult(
+            "Meta Title",
+            "Meta Excerpt",
+            null,
+            true,
+            null,
+            TimeSpan.FromMilliseconds(25));
+
+        using var testClient = CreateClient(_ => enrichmentResult);
+        var client = testClient.Client;
+
+        var response = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        {
+            Url = "https://example.com/no-image"
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var payload = await response.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(payload);
+        Assert.Equal("Meta Title", payload!.Title);
+        Assert.Equal("Meta Excerpt", payload.Excerpt);
+        Assert.Null(payload.PreviewImageUrl);
+        Assert.True(payload.EnrichmentStatus is "pending" or "failed");
+    }
+
+    [Fact]
+    public async Task CreateItem_PreservesUserTitleOverEnrichment()
+    {
+        var enrichmentResult = new SyncEnrichmentResult(
+            "Enriched Title",
+            "Meta Excerpt",
+            "https://example.com/og.png",
+            false,
+            null,
+            TimeSpan.FromMilliseconds(25));
+
+        using var testClient = CreateClient(_ => enrichmentResult);
+        var client = testClient.Client;
+
+        var response = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        {
+            Url = "https://example.com/user-title",
+            Title = "User Title"
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var payload = await response.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(payload);
+        Assert.Equal("User Title", payload!.Title);
     }
 
     [Fact]
@@ -332,10 +424,8 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         var payload = await enrichResponse.Content.ReadFromJsonAsync<EnrichResponse>();
         Assert.NotNull(payload);
         Assert.Equal(item.Id, payload!.ItemId);
-        
-        // In test environment without Dapr sidecar, PublishEventAsync fails and status becomes "failed"
-        // This actually tests the publish-failure error handling path
-        Assert.True(payload.Status == "pending" || payload.Status == "failed");
+
+        Assert.True(payload.Status is "pending" or "failed");
     }
 
     [Fact]
@@ -352,10 +442,12 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         Assert.Equal("not_found", error!.Error.Code);
     }
 
-    private TestClientWrapper CreateClient()
+    private TestClientWrapper CreateClient(Func<string, SyncEnrichmentResult>? enrichmentHandler = null)
     {
         var databaseName = $"recalldb-tests-{Guid.NewGuid():N}";
         var connectionString = MongoDbFixture.BuildConnectionString(_mongo.ConnectionString, databaseName);
+        var handler = enrichmentHandler ?? (_ => new SyncEnrichmentResult(null, null, null, true, null, TimeSpan.Zero));
+        var daprServer = new FakeDaprServer();
 
         var factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
@@ -363,29 +455,122 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
                 builder.UseSetting("ConnectionStrings:recalldb", connectionString);
                 builder.UseSetting("ConnectionStrings:blobs", "UseDevelopmentStorage=true");
                 builder.UseSetting("Authentication:TestMode", "true");
+                builder.ConfigureServices(services =>
+                {
+                    services.RemoveAll<ISyncEnrichmentService>();
+                    services.AddScoped<ISyncEnrichmentService>(_ => new FakeSyncEnrichmentService(handler));
+                    services.RemoveAll<DaprClient>();
+                    services.AddSingleton<DaprClient>(_ =>
+                        new DaprClientBuilder().UseHttpEndpoint(daprServer.Endpoint).Build());
+                });
             });
 
         var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add("X-Test-UserId", TestUserId);
 
-        return new TestClientWrapper(factory, client);
+        return new TestClientWrapper(factory, client, daprServer);
     }
 
     private sealed class TestClientWrapper : IDisposable
     {
         private readonly WebApplicationFactory<Program> _factory;
+        private readonly FakeDaprServer _daprServer;
         public HttpClient Client { get; }
 
-        public TestClientWrapper(WebApplicationFactory<Program> factory, HttpClient client)
+        public TestClientWrapper(WebApplicationFactory<Program> factory, HttpClient client, FakeDaprServer daprServer)
         {
             _factory = factory;
             Client = client;
+            _daprServer = daprServer;
         }
 
         public void Dispose()
         {
             Client.Dispose();
             _factory.Dispose();
+            _daprServer.Dispose();
+        }
+    }
+
+    private sealed class FakeSyncEnrichmentService : ISyncEnrichmentService
+    {
+        private readonly Func<string, SyncEnrichmentResult> _handler;
+
+        public FakeSyncEnrichmentService(Func<string, SyncEnrichmentResult> handler)
+        {
+            _handler = handler;
+        }
+
+        public Task<SyncEnrichmentResult> EnrichAsync(
+            string url,
+            string userId,
+            string itemId,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(_handler(url));
+        }
+    }
+
+    private sealed class FakeDaprServer : IDisposable
+    {
+        private readonly HttpListener _listener;
+        private readonly Task _handlerTask;
+
+        public FakeDaprServer()
+        {
+            var port = GetFreePort();
+            Endpoint = $"http://localhost:{port}";
+            _listener = new HttpListener();
+            _listener.Prefixes.Add($"{Endpoint}/");
+            _listener.Start();
+            _handlerTask = Task.Run(HandleAsync);
+        }
+
+        public string Endpoint { get; }
+
+        private async Task HandleAsync()
+        {
+            while (_listener.IsListening)
+            {
+                HttpListenerContext? context = null;
+                try
+                {
+                    context = await _listener.GetContextAsync();
+                }
+                catch (HttpListenerException)
+                {
+                    break;
+                }
+                catch (ObjectDisposedException)
+                {
+                    break;
+                }
+
+                if (context is null)
+                {
+                    continue;
+                }
+
+                await context.Request.InputStream.CopyToAsync(Stream.Null);
+                context.Response.StatusCode = (int)HttpStatusCode.NoContent;
+                context.Response.Close();
+            }
+        }
+
+        public void Dispose()
+        {
+            _listener.Stop();
+            _listener.Close();
+            _handlerTask.GetAwaiter().GetResult();
+        }
+
+        private static int GetFreePort()
+        {
+            var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+            var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+            listener.Stop();
+            return port;
         }
     }
 }

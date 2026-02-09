@@ -1,9 +1,24 @@
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
+import { copyFileSync } from 'fs';
+import { resolve } from 'path';
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    {
+      name: 'copy-staticwebapp-config',
+      closeBundle() {
+        // Copy staticwebapp.config.json to dist for Azure Static Web Apps
+        copyFileSync(
+          resolve(__dirname, 'staticwebapp.config.json'),
+          resolve(__dirname, 'dist', 'staticwebapp.config.json')
+        );
+      },
+    },
+  ],
   server: {
     proxy: {
       '/api': {

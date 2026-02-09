@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Net.Sockets;
 using System.IO;
 using System.Text.Json;
+using System.Threading;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -442,6 +443,35 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         Assert.Equal("not_found", error!.Error.Code);
     }
 
+    [Fact]
+    public async Task CreateItem_SsrfBlockedReturnsFailedAndDoesNotQueueAsyncFallback()
+    {
+        var enrichmentResult = new SyncEnrichmentResult(
+            null,
+            null,
+            null,
+            false,
+            "URL blocked.",
+            TimeSpan.FromMilliseconds(5));
+
+        using var testClient = CreateClient(_ => enrichmentResult);
+        var client = testClient.Client;
+
+        var response = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        {
+            Url = "http://192.168.1.1/admin"
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var payload = await response.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(payload);
+        Assert.Equal("failed", payload!.EnrichmentStatus);
+        Assert.Equal("URL blocked.", payload.EnrichmentError);
+        Assert.Null(payload.PreviewImageUrl);
+        Assert.Equal(0, testClient.PublishedCount);
+    }
+
     private TestClientWrapper CreateClient(Func<string, SyncEnrichmentResult>? enrichmentHandler = null)
     {
         var databaseName = $"recalldb-tests-{Guid.NewGuid():N}";
@@ -476,6 +506,7 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         private readonly WebApplicationFactory<Program> _factory;
         private readonly FakeDaprServer _daprServer;
         public HttpClient Client { get; }
+        public int PublishedCount => _daprServer.RequestCount;
 
         public TestClientWrapper(WebApplicationFactory<Program> factory, HttpClient client, FakeDaprServer daprServer)
         {
@@ -515,6 +546,7 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
     {
         private readonly HttpListener _listener;
         private readonly Task _handlerTask;
+        private int _requestCount;
 
         public FakeDaprServer()
         {
@@ -527,6 +559,7 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         }
 
         public string Endpoint { get; }
+        public int RequestCount => Volatile.Read(ref _requestCount);
 
         private async Task HandleAsync()
         {
@@ -551,6 +584,7 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
                     continue;
                 }
 
+                Interlocked.Increment(ref _requestCount);
                 await context.Request.InputStream.CopyToAsync(Stream.Null);
                 context.Response.StatusCode = (int)HttpStatusCode.NoContent;
                 context.Response.Close();

@@ -121,8 +121,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T033 [US3] Verify timeout handling in `SyncEnrichmentService` in `src/Recall.Core.Enrichment.Common/Services/SyncEnrichmentService.cs` — ensure `OperationCanceledException` from master CTS is caught, returns `SyncEnrichmentResult` with all fields null, `NeedsAsyncFallback=true`, `Error=null` (timeout is not an error, just degraded)
-- [ ] T034 [US3] Verify `ItemService.SaveItemAsync` in `src/Recall.Core.Api/Services/ItemService.cs` persists the item BEFORE calling sync enrichment — ensures the item is never lost even if enrichment times out or the process crashes mid-enrichment
+- [x] T033 [US3] Verify timeout handling in `SyncEnrichmentService` in `src/Recall.Core.Enrichment.Common/Services/SyncEnrichmentService.cs` — ensure `OperationCanceledException` from master CTS is caught, returns `SyncEnrichmentResult` with all fields null, `NeedsAsyncFallback=true`, `Error=null` (timeout is not an error, just degraded)
+- [x] T034 [US3] Verify `ItemService.SaveItemAsync` in `src/Recall.Core.Api/Services/ItemService.cs` persists the item BEFORE calling sync enrichment — ensures the item is never lost even if enrichment times out or the process crashes mid-enrichment
 
 **Checkpoint**: Save a URL to a slow page → response returns within timeout, item saved with enrichmentStatus=pending, async fallback queued.
 
@@ -136,14 +136,14 @@
 
 ### Implementation for User Story 6
 
-- [ ] T035 [US6] Verify `SyncEnrichmentService` in `src/Recall.Core.Enrichment.Common/Services/SyncEnrichmentService.cs` catches `SsrfBlockedException` and returns `SyncEnrichmentResult` with `Error="URL blocked."`, `NeedsAsyncFallback=false` — no async fallback for security blocks per enrichment state machine
-- [ ] T036 [US6] Verify `ItemService.SaveItemAsync` in `src/Recall.Core.Api/Services/ItemService.cs` sets `enrichmentStatus=failed` and `enrichmentError` from result when `result.Error` is set and `result.NeedsAsyncFallback=false`, and does NOT publish async fallback job
+- [x] T035 [US6] Verify `SyncEnrichmentService` in `src/Recall.Core.Enrichment.Common/Services/SyncEnrichmentService.cs` catches `SsrfBlockedException` and returns `SyncEnrichmentResult` with `Error="URL blocked."`, `NeedsAsyncFallback=false` — no async fallback for security blocks per enrichment state machine
+- [x] T036 [US6] Verify `ItemService.SaveItemAsync` in `src/Recall.Core.Api/Services/ItemService.cs` sets `enrichmentStatus=failed` and `enrichmentError` from result when `result.Error` is set and `result.NeedsAsyncFallback=false`, and does NOT publish async fallback job
 
 **Checkpoint**: Save a SSRF-blocked URL → enrichmentStatus=failed, enrichmentError populated, no async job published.
 
 ### Tests for User Story 6 (written alongside Phase 5 implementation)
 
-- [ ] T057 [P] Write integration test: POST /api/v1/items with SSRF-blocked URL (http://192.168.1.1) → verify enrichmentStatus=failed, enrichmentError populated, no async job published. Per US6
+- [x] T057 [P] Write integration test: POST /api/v1/items with SSRF-blocked URL (http://192.168.1.1) → verify enrichmentStatus=failed, enrichmentError populated, no async job published. Per US6
 
 ---
 

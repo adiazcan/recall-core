@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Logging;
 using Recall.Core.Enrichment.Common.Configuration;
 using Recall.Core.Enrichment.Common.Models;
@@ -77,6 +79,79 @@ public sealed class SyncEnrichmentServiceTests
         Assert.False(htmlFetcher.WasCalled);
     }
 
+    [Fact]
+    public async Task EnrichAsync_SanitizesTextAndUrl()
+    {
+        var longTitle = "<b>Title</b> " + new string('x', 220);
+        var longExcerpt = "<p>Excerpt</p> " + new string('y', 520);
+        var longUrl = "  https://example.com/" + new string('a', 600) + "  ";
+
+        var service = CreateService(
+            ssrfValidator: new AllowAllSsrfValidator(),
+            htmlFetcher: new FixedHtmlFetcher("<html></html>"),
+            metadataExtractor: new FixedMetadataExtractor(new PageMetadata(longTitle, longExcerpt, longUrl)));
+
+        var result = await service.EnrichAsync("https://example.com", "user-1", "item-1");
+
+        Assert.NotNull(result.Title);
+        Assert.DoesNotContain("<b>", result.Title!);
+        Assert.EndsWith("...", result.Title, StringComparison.Ordinal);
+        Assert.Equal(203, result.Title.Length);
+        Assert.NotNull(result.Excerpt);
+        Assert.DoesNotContain("<p>", result.Excerpt!);
+        Assert.EndsWith("...", result.Excerpt, StringComparison.Ordinal);
+        Assert.Equal(503, result.Excerpt.Length);
+        Assert.NotNull(result.PreviewImageUrl);
+        Assert.StartsWith("https://example.com/", result.PreviewImageUrl, StringComparison.Ordinal);
+        Assert.Equal(500, result.PreviewImageUrl.Length);
+        Assert.False(result.NeedsAsyncFallback);
+    }
+
+    [Fact]
+    public async Task EnrichAsync_ReturnsFallbackWhenNoMetadataAndNoImage()
+    {
+        var service = CreateService(
+            ssrfValidator: new AllowAllSsrfValidator(),
+            htmlFetcher: new FixedHtmlFetcher("<html></html>"),
+            metadataExtractor: new FixedMetadataExtractor(new PageMetadata("  ", null, "   ")));
+
+        var result = await service.EnrichAsync("https://example.com", "user-1", "item-1");
+
+        Assert.Null(result.Title);
+        Assert.Null(result.Excerpt);
+        Assert.Null(result.PreviewImageUrl);
+        Assert.True(result.NeedsAsyncFallback);
+        Assert.Null(result.Error);
+    }
+
+    [Fact]
+    public async Task EnrichAsync_ReturnsFallbackWhenFetcherCanceled()
+    {
+        var service = CreateService(
+            ssrfValidator: new AllowAllSsrfValidator(),
+            htmlFetcher: new CanceledHtmlFetcher(),
+            metadataExtractor: new FixedMetadataExtractor(new PageMetadata("Title", "Excerpt", "https://example.com/og.png")));
+
+        var result = await service.EnrichAsync("https://example.com", "user-1", "item-1");
+
+        Assert.True(result.NeedsAsyncFallback);
+        Assert.Null(result.Error);
+    }
+
+    [Fact]
+    public async Task EnrichAsync_ReturnsFallbackOnUnexpectedException()
+    {
+        var service = CreateService(
+            ssrfValidator: new AllowAllSsrfValidator(),
+            htmlFetcher: new FixedHtmlFetcher("<html></html>"),
+            metadataExtractor: new ThrowingMetadataExtractor(new InvalidOperationException("boom")));
+
+        var result = await service.EnrichAsync("https://example.com", "user-1", "item-1");
+
+        Assert.True(result.NeedsAsyncFallback);
+        Assert.Null(result.Error);
+    }
+
     private static SyncEnrichmentService CreateService(
         ISsrfValidator ssrfValidator,
         IHtmlFetcher htmlFetcher,
@@ -91,7 +166,25 @@ public sealed class SyncEnrichmentServiceTests
             htmlFetcher,
             metadataExtractor,
             options,
-            loggerFactory.CreateLogger<SyncEnrichmentService>());
+            loggerFactory.CreateLogger<SyncEnrichmentService>(),
+            new TestMeterFactory());
+    }
+
+    private sealed class TestMeterFactory : IMeterFactory
+    {
+        public Meter Create(MeterOptions options)
+        {
+            return new Meter(options);
+        }
+
+        public Meter Create(string name, string? version = null, IEnumerable<KeyValuePair<string, object?>>? tags = null)
+        {
+            return new Meter(name, version, tags);
+        }
+
+        public void Dispose()
+        {
+        }
     }
 
     private sealed class FixedHtmlFetcher : IHtmlFetcher
@@ -142,6 +235,21 @@ public sealed class SyncEnrichmentServiceTests
         }
     }
 
+    private sealed class ThrowingMetadataExtractor : IMetadataExtractor
+    {
+        private readonly Exception _exception;
+
+        public ThrowingMetadataExtractor(Exception exception)
+        {
+            _exception = exception;
+        }
+
+        public Task<PageMetadata> ExtractAsync(string html)
+        {
+            throw _exception;
+        }
+    }
+
     private sealed class AllowAllSsrfValidator : ISsrfValidator
     {
         public Task<SsrfValidationResult> ValidateAsync(string url, CancellationToken cancellationToken = default)
@@ -155,6 +263,14 @@ public sealed class SyncEnrichmentServiceTests
         public Task<SsrfValidationResult> ValidateAsync(string url, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(new SsrfValidationResult(false, "URL blocked."));
+        }
+    }
+
+    private sealed class CanceledHtmlFetcher : IHtmlFetcher
+    {
+        public Task<string> FetchHtmlAsync(string url, CancellationToken cancellationToken = default)
+        {
+            throw new OperationCanceledException();
         }
     }
 }

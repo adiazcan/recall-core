@@ -60,6 +60,7 @@ builder.Services.AddSingleton<IThumbnailStorage, BlobThumbnailStorage>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, HttpUserContext>();
 builder.Services.AddDaprClient();
+builder.Services.AddScoped<IEnrichmentJobPublisher, DaprEnrichmentJobPublisher>();
 var useTestAuth = !builder.Environment.IsProduction()
     && builder.Configuration.GetValue<bool>("Authentication:TestMode");
 

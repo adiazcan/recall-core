@@ -155,8 +155,8 @@
 
 ### Implementation for User Story 2
 
-- [ ] T037 [US2] Narrow `EnrichmentService.EnrichAsync` in `src/Recall.Core.Enrichment/Services/EnrichmentService.cs` — when item already has title AND excerpt (populated by sync enrichment), skip HTML fetch/parse and go directly to Playwright screenshot capture. When title/excerpt are null (full sync failure), perform full enrichment (HTML fetch + parse + screenshot) as before
-- [ ] T038 [US2] Update `EnrichmentService.EnrichAsync` in `src/Recall.Core.Enrichment/Services/EnrichmentService.cs` — after successful screenshot, if title/excerpt were already populated, set `enrichmentStatus=succeeded`. If screenshot fails but title/excerpt exist, still set `enrichmentStatus=succeeded` (metadata is sufficient). Only set `enrichmentStatus=failed` when both metadata extraction and screenshot fail
+- [x] T037 [US2] Narrow `EnrichmentService.EnrichAsync` in `src/Recall.Core.Enrichment/Services/EnrichmentService.cs` — when item already has title AND excerpt (populated by sync enrichment), skip HTML fetch/parse and go directly to Playwright screenshot capture. When title/excerpt are null (full sync failure), perform full enrichment (HTML fetch + parse + screenshot) as before
+- [x] T038 [US2] Update `EnrichmentService.EnrichAsync` in `src/Recall.Core.Enrichment/Services/EnrichmentService.cs` — after successful screenshot, if title/excerpt were already populated, set `enrichmentStatus=succeeded`. If screenshot fails but title/excerpt exist, still set `enrichmentStatus=succeeded` (metadata is sufficient). Only set `enrichmentStatus=failed` when both metadata extraction and screenshot fail
 
 > **Note**: T039 was merged into T020 (Phase 2). The `EnrichmentService.cs` import updates to use `Recall.Core.Enrichment.Common.Services` namespace are handled in T020 to ensure the project builds continuously.
 
@@ -172,13 +172,13 @@
 
 ### Implementation for User Story 4
 
-- [ ] T040 [US4] Verify `ItemService.SaveItemAsync` in `src/Recall.Core.Api/Services/ItemService.cs` — when deduplication detects existing item, return it immediately WITHOUT calling `ISyncEnrichmentService.EnrichAsync` and WITHOUT publishing async fallback job per FR-015
+- [x] T040 [US4] Verify `ItemService.SaveItemAsync` in `src/Recall.Core.Api/Services/ItemService.cs` — when deduplication detects existing item, return it immediately WITHOUT calling `ISyncEnrichmentService.EnrichAsync` and WITHOUT publishing async fallback job per FR-015
 
 **Checkpoint**: Save same URL twice → second response is 200 with existing item, no enrichment triggered.
 
 ### Tests for User Story 4 (written alongside Phase 7 implementation)
 
-- [ ] T058 [P] Write integration test: POST /api/v1/items with duplicate URL → verify 200 response with existing item, no enrichment triggered. Per US4, FR-015
+- [x] T058 [P] Write integration test: POST /api/v1/items with duplicate URL → verify 200 response with existing item, no enrichment triggered. Per US4, FR-015
 
 ---
 
@@ -190,15 +190,15 @@
 
 ### Implementation for User Story 5
 
-- [ ] T041 [US5] Update re-enrichment logic in `src/Recall.Core.Api/Services/ItemService.cs` (or the endpoint handler in `src/Recall.Core.Api/Endpoints/`) — reset `enrichmentStatus=pending`, call `ISyncEnrichmentService.EnrichAsync()`, apply results (title/excerpt refreshed, previewImageUrl updated), return result so endpoint can decide on async fallback
-- [ ] T041b [US5] Update re-enrichment handler in `src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs` — modify the POST `/api/v1/items/{id}/enrich` handler to publish Dapr async fallback job ONLY when `NeedsAsyncFallback=true`, otherwise skip publish. Set `enrichmentStatus=succeeded` if sync enrichment obtained a preview image per FR-016. Remove the current unconditional publish.
-- [ ] T042 [US5] Update `EnrichResponse` in `src/Recall.Core.Api/Models/EnrichResponse.cs` if needed — ensure `status` field reflects post-sync enrichment state (can be `succeeded` if og:image found, `pending` if async fallback queued)
+- [x] T041 [US5] Update re-enrichment logic in `src/Recall.Core.Api/Services/ItemService.cs` (or the endpoint handler in `src/Recall.Core.Api/Endpoints/`) — reset `enrichmentStatus=pending`, call `ISyncEnrichmentService.EnrichAsync()`, apply results (title/excerpt refreshed, previewImageUrl updated), return result so endpoint can decide on async fallback
+- [x] T041b [US5] Update re-enrichment handler in `src/Recall.Core.Api/Endpoints/ItemsEndpoints.cs` — modify the POST `/api/v1/items/{id}/enrich` handler to publish Dapr async fallback job ONLY when `NeedsAsyncFallback=true`, otherwise skip publish. Set `enrichmentStatus=succeeded` if sync enrichment obtained a preview image per FR-016. Remove the current unconditional publish.
+- [x] T042 [US5] Update `EnrichResponse` in `src/Recall.Core.Api/Models/EnrichResponse.cs` if needed — ensure `status` field reflects post-sync enrichment state (can be `succeeded` if og:image found, `pending` if async fallback queued)
 
 **Checkpoint**: Trigger re-enrichment → title/excerpt refreshed synchronously. If og:image found → succeeded immediately. If not → pending with async fallback queued.
 
 ### Tests for User Story 5 (written alongside Phase 8 implementation)
 
-- [ ] T059 Write integration test: POST /api/v1/items/{id}/enrich → verify sync enrichment runs, title/excerpt refreshed, async fallback queued only when no og:image. Per US5, FR-016
+- [x] T059 Write integration test: POST /api/v1/items/{id}/enrich → verify sync enrichment runs, title/excerpt refreshed, async fallback queued only when no og:image. Per US5, FR-016
 
 ---
 
@@ -206,12 +206,12 @@
 
 **Purpose**: Observability, configuration alignment, and validation
 
-- [ ] T043 [P] Add `Enrichment` configuration section to `src/Recall.Core.Enrichment/appsettings.json` — ensure async worker overrides sync-tuned defaults (e.g., FetchTimeoutSeconds=30) and reads from unified `EnrichmentOptions` in shared library
-- [ ] T044 [P] Add OTel metrics for sync enrichment to `SyncEnrichmentService` in `src/Recall.Core.Enrichment.Common/Services/SyncEnrichmentService.cs` — counters: `enrichment.sync.succeeded`, `enrichment.sync.partial` (no image), `enrichment.sync.failed`, `enrichment.sync.ssrf_blocked`; histogram: `enrichment.sync.duration` per FR-025
-- [ ] T045 [P] Verify async enrichment metrics in `src/Recall.Core.Enrichment/Services/EnrichmentService.cs` continue to emit per FR-026 after narrowing changes
+- [x] T043 [P] Add `Enrichment` configuration section to `src/Recall.Core.Enrichment/appsettings.json` — ensure async worker overrides sync-tuned defaults (e.g., FetchTimeoutSeconds=30) and reads from unified `EnrichmentOptions` in shared library
+- [x] T044 [P] Add OTel metrics for sync enrichment to `SyncEnrichmentService` in `src/Recall.Core.Enrichment.Common/Services/SyncEnrichmentService.cs` — counters: `enrichment.sync.succeeded`, `enrichment.sync.partial` (no image), `enrichment.sync.failed`, `enrichment.sync.ssrf_blocked`; histogram: `enrichment.sync.duration` per FR-025
+- [x] T045 [P] Verify async enrichment metrics in `src/Recall.Core.Enrichment/Services/EnrichmentService.cs` continue to emit per FR-026 after narrowing changes
 - [ ] T046 _(Merged into T027 — DTO mapping and endpoint serialization alignment now handled together.)_
-- [ ] T047 Code cleanup — remove any remaining dead imports or unused `using` statements across modified files in `src/Recall.Core.Api/`, `src/Recall.Core.Enrichment/`, and `src/Recall.Core.Enrichment.Common/`
-- [ ] T048 Run `dotnet build src/RecallCore.sln` and `dotnet test` across all test projects to verify no regressions
+- [x] T047 Code cleanup — remove any remaining dead imports or unused `using` statements across modified files in `src/Recall.Core.Api/`, `src/Recall.Core.Enrichment/`, and `src/Recall.Core.Enrichment.Common/`
+- [x] T048 Run `dotnet build src/RecallCore.sln` and `dotnet test` across all test projects to verify no regressions
 - [ ] T049 Run quickstart.md validation — execute all 8 curl scenarios from `specs/008-sync-enrichment/quickstart.md` against running AppHost and verify expected results
 
 ---
@@ -222,8 +222,8 @@
 
 > **Constitution §IV Alignment**: Unit tests (T050–T053) are written alongside their Phase 2/3 implementations. Integration tests (T054–T059) are written alongside their respective user story phases. This phase runs all tests together and validates overall coverage.
 
-- [ ] T060 Run `dotnet test` across all test projects — verify T050–T059 tests all pass together with no regressions
-- [ ] T061 Review test coverage for sync enrichment path — ensure shared library unit tests cover >90% branch coverage per Constitution §IV
+- [x] T060 Run `dotnet test` across all test projects — verify T050–T059 tests all pass together with no regressions
+- [x] T061 Review test coverage for sync enrichment path — ensure shared library unit tests cover >90% branch coverage per Constitution §IV
 
 **Checkpoint**: All unit and integration tests pass. Coverage for shared library services, sync enrichment happy path, SSRF blocking, user-provided value preservation, deduplication, and re-enrichment.
 

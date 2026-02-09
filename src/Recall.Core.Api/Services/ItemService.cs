@@ -237,6 +237,95 @@ public sealed class ItemService(
         return await repository.UpdateAsync(userId, objectId, update, cancellationToken);
     }
 
+    public async Task<EnrichItemResult?> EnrichItemAsync(string userId, string id, CancellationToken cancellationToken = default)
+    {
+        var objectId = ParseObjectId(id, "ItemId must be a valid ObjectId.");
+        var item = await repository.GetByIdAsync(userId, objectId, cancellationToken);
+        if (item is null)
+        {
+            return null;
+        }
+
+        var pendingUpdate = Builders<Item>.Update.Combine(
+            Builders<Item>.Update.Set(target => target.EnrichmentStatus, "pending"),
+            Builders<Item>.Update.Set(target => target.EnrichmentError, null),
+            Builders<Item>.Update.Set(target => target.EnrichedAt, null),
+            Builders<Item>.Update.Set(target => target.UpdatedAt, DateTime.UtcNow));
+        var pendingItem = await repository.UpdateAsync(userId, objectId, pendingUpdate, cancellationToken);
+        if (pendingItem is not null)
+        {
+            item = pendingItem;
+        }
+        else
+        {
+            item.EnrichmentStatus = "pending";
+            item.EnrichmentError = null;
+            item.EnrichedAt = null;
+            item.UpdatedAt = DateTime.UtcNow;
+        }
+
+        var enrichmentResult = await syncEnrichmentService.EnrichAsync(
+            item.Url,
+            userId,
+            item.Id.ToString(),
+            cancellationToken);
+
+        var status = enrichmentResult.Error is not null && !enrichmentResult.NeedsAsyncFallback
+            ? "failed"
+            : enrichmentResult.NeedsAsyncFallback
+                ? "pending"
+                : "succeeded";
+
+        var error = status == "failed" ? enrichmentResult.Error : null;
+        DateTime? enrichedAt = status == "succeeded" ? DateTime.UtcNow : null;
+
+        var updates = new List<UpdateDefinition<Item>>
+        {
+            Builders<Item>.Update.Set(target => target.EnrichmentStatus, status),
+            Builders<Item>.Update.Set(target => target.EnrichmentError, error),
+            Builders<Item>.Update.Set(target => target.EnrichedAt, enrichedAt),
+            Builders<Item>.Update.Set(target => target.PreviewImageUrl, enrichmentResult.PreviewImageUrl),
+            Builders<Item>.Update.Set(target => target.UpdatedAt, DateTime.UtcNow)
+        };
+
+        if (enrichmentResult.Title is not null)
+        {
+            updates.Add(Builders<Item>.Update.Set(target => target.Title, enrichmentResult.Title));
+        }
+
+        if (enrichmentResult.Excerpt is not null)
+        {
+            updates.Add(Builders<Item>.Update.Set(target => target.Excerpt, enrichmentResult.Excerpt));
+        }
+
+        var update = Builders<Item>.Update.Combine(updates);
+        var updated = await repository.UpdateAsync(userId, item.Id, update, cancellationToken);
+        if (updated is not null)
+        {
+            item = updated;
+        }
+        else
+        {
+            if (enrichmentResult.Title is not null)
+            {
+                item.Title = enrichmentResult.Title;
+            }
+
+            if (enrichmentResult.Excerpt is not null)
+            {
+                item.Excerpt = enrichmentResult.Excerpt;
+            }
+
+            item.PreviewImageUrl = enrichmentResult.PreviewImageUrl;
+            item.EnrichmentStatus = status;
+            item.EnrichmentError = error;
+            item.EnrichedAt = enrichedAt;
+            item.UpdatedAt = DateTime.UtcNow;
+        }
+
+        return new EnrichItemResult(item, status, status == "pending");
+    }
+
     public async Task<bool> DeleteItemAsync(string userId, string id, CancellationToken cancellationToken = default)
     {
         var objectId = ParseObjectId(id, "ItemId must be a valid ObjectId.");

@@ -4,12 +4,12 @@ using System.Net.Sockets;
 using System.IO;
 using System.Text.Json;
 using System.Threading;
-using Dapr.Client;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MongoDB.Bson;
 using Recall.Core.Api.Models;
+using Recall.Core.Api.Services;
 using Recall.Core.Enrichment.Common.Models;
 using Recall.Core.Enrichment.Common.Services;
 using Recall.Core.Api.Tests.TestFixtures;
@@ -137,7 +137,20 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task CreateItem_DuplicateUrlReturnsOkWithExistingItem()
     {
-        using var testClient = CreateClient();
+        var enrichmentCalls = 0;
+        var enrichmentResult = new SyncEnrichmentResult(
+            "Meta Title",
+            "Meta Excerpt",
+            null,
+            true,
+            null,
+            TimeSpan.FromMilliseconds(10));
+
+        using var testClient = CreateClient(_ =>
+        {
+            enrichmentCalls++;
+            return enrichmentResult;
+        });
         var client = testClient.Client;
 
         var first = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
@@ -160,6 +173,8 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         var secondItem = await second.Content.ReadFromJsonAsync<ItemDto>();
         Assert.NotNull(secondItem);
         Assert.Equal(firstItem!.Id, secondItem!.Id);
+        Assert.Equal(1, enrichmentCalls);
+        Assert.Equal(1, testClient.PublishedCount);
     }
 
     [Fact]
@@ -407,7 +422,15 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
     [Fact]
     public async Task EnrichItem_ReturnsAcceptedWithStatus()
     {
-        using var testClient = CreateClient();
+        var enrichmentResult = new SyncEnrichmentResult(
+            "Enriched Title",
+            "Enriched Excerpt",
+            "https://example.com/og.png",
+            false,
+            null,
+            TimeSpan.FromMilliseconds(25));
+
+        using var testClient = CreateClient(_ => enrichmentResult);
         var client = testClient.Client;
 
         var createResponse = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
@@ -425,8 +448,62 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         var payload = await enrichResponse.Content.ReadFromJsonAsync<EnrichResponse>();
         Assert.NotNull(payload);
         Assert.Equal(item.Id, payload!.ItemId);
+        Assert.Equal("succeeded", payload.Status);
+        Assert.Equal(0, testClient.PublishedCount);
+    }
 
-        Assert.True(payload.Status is "pending" or "failed");
+    [Fact]
+    public async Task EnrichItem_QueuesFallbackOnlyWhenPreviewMissing()
+    {
+        var results = new Queue<SyncEnrichmentResult>(
+        [
+            new SyncEnrichmentResult(
+                "Initial Title",
+                "Initial Excerpt",
+                null,
+                true,
+                null,
+                TimeSpan.FromMilliseconds(25)),
+            new SyncEnrichmentResult(
+                "Refreshed Title",
+                "Refreshed Excerpt",
+                "https://example.com/og-refreshed.png",
+                false,
+                null,
+                TimeSpan.FromMilliseconds(25))
+        ]);
+
+        using var testClient = CreateClient(_ => results.Dequeue());
+        var client = testClient.Client;
+
+        var createResponse = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        {
+            Url = "https://example.com/enrich-queue",
+            Title = "Original"
+        });
+
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = await createResponse.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(created);
+        Assert.Equal(1, testClient.PublishedCount);
+
+        var enrichResponse = await client.PostAsync($"/api/v1/items/{created!.Id}/enrich", null);
+        Assert.Equal(HttpStatusCode.Accepted, enrichResponse.StatusCode);
+
+        var payload = await enrichResponse.Content.ReadFromJsonAsync<EnrichResponse>();
+        Assert.NotNull(payload);
+        Assert.Equal("succeeded", payload!.Status);
+        Assert.Equal(1, testClient.PublishedCount);
+
+        var getResponse = await client.GetAsync($"/api/v1/items/{created.Id}");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+
+        var refreshed = await getResponse.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(refreshed);
+        Assert.Equal("Refreshed Title", refreshed!.Title);
+        Assert.Equal("Refreshed Excerpt", refreshed.Excerpt);
+        Assert.Equal("https://example.com/og-refreshed.png", refreshed.PreviewImageUrl);
+        Assert.Equal("succeeded", refreshed.EnrichmentStatus);
     }
 
     [Fact]
@@ -477,7 +554,7 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         var databaseName = $"recalldb-tests-{Guid.NewGuid():N}";
         var connectionString = MongoDbFixture.BuildConnectionString(_mongo.ConnectionString, databaseName);
         var handler = enrichmentHandler ?? (_ => new SyncEnrichmentResult(null, null, null, true, null, TimeSpan.Zero));
-        var daprServer = new FakeDaprServer();
+        var publisher = new FakeEnrichmentJobPublisher();
 
         var factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
@@ -489,37 +566,35 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
                 {
                     services.RemoveAll<ISyncEnrichmentService>();
                     services.AddScoped<ISyncEnrichmentService>(_ => new FakeSyncEnrichmentService(handler));
-                    services.RemoveAll<DaprClient>();
-                    services.AddSingleton<DaprClient>(_ =>
-                        new DaprClientBuilder().UseHttpEndpoint(daprServer.Endpoint).Build());
+                    services.RemoveAll<IEnrichmentJobPublisher>();
+                    services.AddSingleton<IEnrichmentJobPublisher>(_ => publisher);
                 });
             });
 
         var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add("X-Test-UserId", TestUserId);
 
-        return new TestClientWrapper(factory, client, daprServer);
+        return new TestClientWrapper(factory, client, publisher);
     }
 
     private sealed class TestClientWrapper : IDisposable
     {
         private readonly WebApplicationFactory<Program> _factory;
-        private readonly FakeDaprServer _daprServer;
+        private readonly FakeEnrichmentJobPublisher _publisher;
         public HttpClient Client { get; }
-        public int PublishedCount => _daprServer.RequestCount;
+        public int PublishedCount => _publisher.PublishedCount;
 
-        public TestClientWrapper(WebApplicationFactory<Program> factory, HttpClient client, FakeDaprServer daprServer)
+        public TestClientWrapper(WebApplicationFactory<Program> factory, HttpClient client, FakeEnrichmentJobPublisher publisher)
         {
             _factory = factory;
             Client = client;
-            _daprServer = daprServer;
+            _publisher = publisher;
         }
 
         public void Dispose()
         {
             Client.Dispose();
             _factory.Dispose();
-            _daprServer.Dispose();
         }
     }
 
@@ -542,69 +617,15 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         }
     }
 
-    private sealed class FakeDaprServer : IDisposable
+    private sealed class FakeEnrichmentJobPublisher : IEnrichmentJobPublisher
     {
-        private readonly HttpListener _listener;
-        private readonly Task _handlerTask;
-        private int _requestCount;
+        private int _publishedCount;
+        public int PublishedCount => Volatile.Read(ref _publishedCount);
 
-        public FakeDaprServer()
+        public Task PublishAsync(EnrichmentJob job, CancellationToken cancellationToken = default)
         {
-            var port = GetFreePort();
-            Endpoint = $"http://localhost:{port}";
-            _listener = new HttpListener();
-            _listener.Prefixes.Add($"{Endpoint}/");
-            _listener.Start();
-            _handlerTask = Task.Run(HandleAsync);
-        }
-
-        public string Endpoint { get; }
-        public int RequestCount => Volatile.Read(ref _requestCount);
-
-        private async Task HandleAsync()
-        {
-            while (_listener.IsListening)
-            {
-                HttpListenerContext? context = null;
-                try
-                {
-                    context = await _listener.GetContextAsync();
-                }
-                catch (HttpListenerException)
-                {
-                    break;
-                }
-                catch (ObjectDisposedException)
-                {
-                    break;
-                }
-
-                if (context is null)
-                {
-                    continue;
-                }
-
-                Interlocked.Increment(ref _requestCount);
-                await context.Request.InputStream.CopyToAsync(Stream.Null);
-                context.Response.StatusCode = (int)HttpStatusCode.NoContent;
-                context.Response.Close();
-            }
-        }
-
-        public void Dispose()
-        {
-            _listener.Stop();
-            _listener.Close();
-            _handlerTask.GetAwaiter().GetResult();
-        }
-
-        private static int GetFreePort()
-        {
-            var listener = new TcpListener(IPAddress.Loopback, 0);
-            listener.Start();
-            var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-            listener.Stop();
-            return port;
+            Interlocked.Increment(ref _publishedCount);
+            return Task.CompletedTask;
         }
     }
 }

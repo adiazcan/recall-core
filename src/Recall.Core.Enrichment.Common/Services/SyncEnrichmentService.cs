@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Net;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
@@ -18,19 +19,32 @@ public sealed class SyncEnrichmentService : ISyncEnrichmentService
     private readonly IMetadataExtractor _metadataExtractor;
     private readonly EnrichmentOptions _options;
     private readonly ILogger<SyncEnrichmentService> _logger;
+    private readonly Counter<long> _syncSucceeded;
+    private readonly Counter<long> _syncPartial;
+    private readonly Counter<long> _syncFailed;
+    private readonly Counter<long> _syncSsrfBlocked;
+    private readonly Histogram<double> _syncDuration;
 
     public SyncEnrichmentService(
         ISsrfValidator ssrfValidator,
         IHtmlFetcher htmlFetcher,
         IMetadataExtractor metadataExtractor,
         EnrichmentOptions options,
-        ILogger<SyncEnrichmentService> logger)
+        ILogger<SyncEnrichmentService> logger,
+        IMeterFactory meterFactory)
     {
         _ssrfValidator = ssrfValidator;
         _htmlFetcher = htmlFetcher;
         _metadataExtractor = metadataExtractor;
         _options = options;
         _logger = logger;
+
+        var meter = meterFactory.Create("Recall.Core.Enrichment");
+        _syncSucceeded = meter.CreateCounter<long>("enrichment.sync.succeeded");
+        _syncPartial = meter.CreateCounter<long>("enrichment.sync.partial");
+        _syncFailed = meter.CreateCounter<long>("enrichment.sync.failed");
+        _syncSsrfBlocked = meter.CreateCounter<long>("enrichment.sync.ssrf_blocked");
+        _syncDuration = meter.CreateHistogram<double>("enrichment.sync.duration", "ms");
     }
 
     public async Task<SyncEnrichmentResult> EnrichAsync(
@@ -67,6 +81,7 @@ public sealed class SyncEnrichmentService : ISyncEnrichmentService
             var excerpt = SanitizeText(metadata.Excerpt, ExcerptMaxLength);
             var previewImageUrl = SanitizeUrl(metadata.OgImageUrl);
             var needsAsyncFallback = string.IsNullOrWhiteSpace(previewImageUrl);
+            var hasMetadata = !string.IsNullOrWhiteSpace(title) || !string.IsNullOrWhiteSpace(excerpt);
 
             if (needsAsyncFallback)
             {
@@ -76,6 +91,15 @@ public sealed class SyncEnrichmentService : ISyncEnrichmentService
                     userId,
                     url,
                     stopwatch.Elapsed.TotalMilliseconds);
+
+                if (hasMetadata)
+                {
+                    _syncPartial.Add(1);
+                }
+                else
+                {
+                    _syncFailed.Add(1);
+                }
             }
             else
             {
@@ -85,6 +109,7 @@ public sealed class SyncEnrichmentService : ISyncEnrichmentService
                     userId,
                     url,
                     stopwatch.Elapsed.TotalMilliseconds);
+                _syncSucceeded.Add(1);
             }
 
             return new SyncEnrichmentResult(
@@ -103,6 +128,8 @@ public sealed class SyncEnrichmentService : ISyncEnrichmentService
                 userId,
                 url);
 
+            _syncSsrfBlocked.Add(1);
+
             return new SyncEnrichmentResult(
                 null,
                 null,
@@ -119,6 +146,8 @@ public sealed class SyncEnrichmentService : ISyncEnrichmentService
                 userId,
                 url,
                 stopwatch.Elapsed.TotalMilliseconds);
+
+            _syncFailed.Add(1);
 
             return new SyncEnrichmentResult(
                 null,
@@ -137,6 +166,8 @@ public sealed class SyncEnrichmentService : ISyncEnrichmentService
                 url,
                 stopwatch.Elapsed.TotalMilliseconds);
 
+            _syncFailed.Add(1);
+
             return new SyncEnrichmentResult(
                 null,
                 null,
@@ -154,6 +185,8 @@ public sealed class SyncEnrichmentService : ISyncEnrichmentService
                 userId,
                 url);
 
+            _syncFailed.Add(1);
+
             return new SyncEnrichmentResult(
                 null,
                 null,
@@ -165,6 +198,7 @@ public sealed class SyncEnrichmentService : ISyncEnrichmentService
         finally
         {
             stopwatch.Stop();
+            _syncDuration.Record(stopwatch.Elapsed.TotalMilliseconds);
         }
     }
 

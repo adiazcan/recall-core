@@ -54,7 +54,10 @@ public sealed class EnrichmentService : IEnrichmentService
     {
         if (!ObjectId.TryParse(job.ItemId, out var itemId))
         {
-            _logger.LogWarning("Enrichment job has invalid item id. ItemId={ItemId} UserId={UserId}", job.ItemId, job.UserId);
+            _logger.LogWarning(
+                "Enrichment job has invalid item id. ItemId={ItemId} UserId={UserId}",
+                job.ItemId,
+                job.UserId);
             return;
         }
 
@@ -63,40 +66,95 @@ public sealed class EnrichmentService : IEnrichmentService
         var item = await _items.Find(filter).FirstOrDefaultAsync(cancellationToken);
         if (item is null)
         {
-            _logger.LogWarning("Enrichment job item not found. ItemId={ItemId} UserId={UserId}", job.ItemId, job.UserId);
+            _logger.LogWarning(
+                "Enrichment job item not found. ItemId={ItemId} UserId={UserId}",
+                job.ItemId,
+                job.UserId);
             return;
         }
 
         var stopwatch = Stopwatch.StartNew();
+        var resultWritten = false;
+
         try
         {
-            var html = await _htmlFetcher.FetchHtmlAsync(job.Url, cancellationToken);
-            var metadata = await _metadataExtractor.ExtractAsync(html);
+            var title = item.Title;
+            var excerpt = item.Excerpt;
+            string? ogImageUrl = null;
+            string? fetchError = null;
 
-            var title = item.Title ?? SanitizeText(metadata.Title, TitleMaxLength);
-            var excerpt = item.Excerpt ?? SanitizeText(metadata.Excerpt, ExcerptMaxLength);
+            var hasInlineMetadata = !string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(excerpt);
+            if (!hasInlineMetadata)
+            {
+                try
+                {
+                    var html = await _htmlFetcher.FetchHtmlAsync(job.Url, cancellationToken);
+                    var metadata = await _metadataExtractor.ExtractAsync(html);
+
+                    title ??= SanitizeText(metadata.Title, TitleMaxLength);
+                    excerpt ??= SanitizeText(metadata.Excerpt, ExcerptMaxLength);
+                    ogImageUrl = metadata.OgImageUrl;
+                }
+                catch (Exception ex)
+                {
+                    fetchError = SanitizeError(ex);
+                    _logger.LogWarning(
+                        ex,
+                        "Metadata fetch failed. ItemId={ItemId} UserId={UserId}",
+                        job.ItemId,
+                        job.UserId);
+                }
+            }
 
             string? thumbnailKey = null;
-            var thumbnailBytes = await _thumbnailGenerator.GenerateAsync(job.Url, metadata.OgImageUrl, cancellationToken);
+            var thumbnailBytes = await _thumbnailGenerator.GenerateAsync(job.Url, ogImageUrl, cancellationToken);
             if (thumbnailBytes is not null)
             {
                 thumbnailKey = await _thumbnailStorage.SaveThumbnailAsync(job.UserId, job.ItemId, thumbnailBytes, cancellationToken);
             }
 
-            await UpdateResultAsync(
-                job.UserId,
-                itemId,
-                title,
-                excerpt,
-                thumbnailKey,
-                "succeeded",
-                null,
-                DateTime.UtcNow,
-                cancellationToken);
+            var hasMetadata = !string.IsNullOrWhiteSpace(title) || !string.IsNullOrWhiteSpace(excerpt);
+            var hasScreenshot = thumbnailKey is not null;
 
-            _jobsSucceeded.Add(1);
+            if (hasMetadata || hasScreenshot)
+            {
+                await UpdateResultAsync(
+                    job.UserId,
+                    itemId,
+                    title,
+                    excerpt,
+                    thumbnailKey,
+                    "succeeded",
+                    null,
+                    DateTime.UtcNow,
+                    cancellationToken);
+                resultWritten = true;
+                _jobsSucceeded.Add(1);
+            }
+            else
+            {
+                var error = fetchError ?? "Enrichment failed.";
+                await UpdateResultAsync(
+                    job.UserId,
+                    itemId,
+                    null,
+                    null,
+                    null,
+                    "failed",
+                    error,
+                    null,
+                    cancellationToken);
+                resultWritten = true;
+                _jobsFailed.Add(1);
+                _logger.LogWarning(
+                    "Enrichment failed. ItemId={ItemId} UserId={UserId} Error={Error}",
+                    job.ItemId,
+                    job.UserId,
+                    error);
+                throw new InvalidOperationException(error);
+            }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!resultWritten)
         {
             var error = SanitizeError(ex);
             await UpdateResultAsync(

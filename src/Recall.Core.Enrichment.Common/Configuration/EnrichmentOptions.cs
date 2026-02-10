@@ -4,8 +4,8 @@ public sealed class EnrichmentOptions
 {
     public string ThumbnailContainer { get; init; } = "thumbnails";
     public long MaxResponseSizeBytes { get; init; } = 5 * 1024 * 1024;
-    public int FetchTimeoutSeconds { get; init; } = 3;
-    public int MasterTimeoutSeconds { get; init; } = 4;
+    public int FetchTimeoutSeconds { get; init; } = 5;
+    public int MasterTimeoutSeconds { get; init; } = 7;
     public int MaxRedirects { get; init; } = 3;
     public int ConnectTimeoutSeconds { get; init; } = 10;
     public int ReadTimeoutSeconds { get; init; } = 30;

@@ -1,4 +1,4 @@
-name: Deploy Enrichment Job
+name: Deploy Enrichment Service
 
 on:
   workflow_dispatch:
@@ -44,9 +44,9 @@ jobs:
       - name: Install Container Apps extension
         run: az extension add --name containerapp --upgrade
 
-      - name: Update Container Apps Job
+      - name: Update Container App
         run: |
-          az containerapp job update \
-            --name acj-recall-enrichment-${{ inputs.environment }} \
+          az containerapp update \
+            --name aca-recall-enrichment-${{ inputs.environment }} \
             --resource-group rg-recall-${{ inputs.environment }} \
             --image crrecall${{ inputs.environment }}.azurecr.io/recall-enrichment:${{ github.sha }}

@@ -42,6 +42,9 @@ public class Item
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; }
 
+    [BsonElement("previewImageUrl")]
+    public string? PreviewImageUrl { get; set; }
+
     [BsonElement("thumbnailStorageKey")]
     public string? ThumbnailStorageKey { get; set; }
 

@@ -1,6 +1,6 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using Recall.Core.Enrichment.Services;
+using Recall.Core.Enrichment.Common.Configuration;
 
 namespace Recall.Core.Enrichment.Storage;
 

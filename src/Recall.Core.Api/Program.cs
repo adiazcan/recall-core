@@ -11,6 +11,7 @@ using Recall.Core.Api.Endpoints;
 using Recall.Core.Api.Models;
 using Recall.Core.Api.Repositories;
 using Recall.Core.Api.Services;
+using Recall.Core.Enrichment.Common;
 using Recall.Core.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -54,13 +55,12 @@ builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<ICollectionRepository, CollectionRepository>();
 builder.Services.AddScoped<ICollectionService, CollectionService>();
 builder.Services.AddSingleton(blobServiceClient);
-var enrichmentOptions = builder.Configuration.GetSection("Enrichment").Get<EnrichmentOptions>()
-    ?? new EnrichmentOptions();
-builder.Services.AddSingleton(enrichmentOptions);
+builder.Services.AddEnrichmentCommon();
 builder.Services.AddSingleton<IThumbnailStorage, BlobThumbnailStorage>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, HttpUserContext>();
 builder.Services.AddDaprClient();
+builder.Services.AddScoped<IEnrichmentJobPublisher, DaprEnrichmentJobPublisher>();
 var useTestAuth = !builder.Environment.IsProduction()
     && builder.Configuration.GetValue<bool>("Authentication:TestMode");
 

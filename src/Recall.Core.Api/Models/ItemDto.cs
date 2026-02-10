@@ -15,6 +15,7 @@ public sealed record ItemDto
     public IReadOnlyList<string> Tags { get; init; } = Array.Empty<string>();
     public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; init; }
+    public string? PreviewImageUrl { get; init; }
     public string? ThumbnailUrl { get; init; }
     public string EnrichmentStatus { get; init; } = "pending";
     public string? EnrichmentError { get; init; }
@@ -39,6 +40,7 @@ public sealed record ItemDto
             Tags = item.Tags.AsReadOnly(),
             CreatedAt = item.CreatedAt,
             UpdatedAt = item.UpdatedAt,
+            PreviewImageUrl = item.PreviewImageUrl,
             ThumbnailUrl = item.ThumbnailStorageKey is null
                 ? null
                 : $"{prefix}/api/v1/items/{item.Id}/thumbnail",

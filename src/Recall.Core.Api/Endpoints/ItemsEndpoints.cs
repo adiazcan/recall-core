@@ -1,4 +1,3 @@
-using Dapr.Client;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Recall.Core.Api.Auth;
@@ -23,7 +22,7 @@ public static class ItemsEndpoints
             IUserContext userContext,
             IItemService service,
             IItemRepository repository,
-            DaprClient daprClient,
+            IEnrichmentJobPublisher enrichmentPublisher,
             ILoggerFactory loggerFactory,
             CancellationToken cancellationToken)
                 =>
@@ -36,53 +35,52 @@ public static class ItemsEndpoints
 
                         if (result.Created)
                         {
-                            var job = new EnrichmentJob
-                            {
-                                ItemId = dto.Id,
-                                UserId = userContext.UserId,
-                                Url = result.Item.Url,
-                                EnqueuedAt = DateTime.UtcNow
-                            };
-
                             logger.LogInformation(
                                 "Item created. ItemId={ItemId} UserId={UserId}",
                                 dto.Id,
                                 userContext.UserId);
 
-                            try
+                            if (result.NeedsAsyncFallback)
                             {
-                                await daprClient.PublishEventAsync(
-                                    "enrichment-pubsub",
-                                    "enrichment.requested",
-                                    job,
-                                    cancellationToken);
-                                logger.LogInformation(
-                                    "Enrichment job queued. ItemId={ItemId} UserId={UserId}",
-                                    dto.Id,
-                                    userContext.UserId);
-                            }
-                            catch (Exception ex)
-                            {
-                                logger.LogWarning(
-                                    ex,
-                                    "Failed to enqueue enrichment job. ItemId={ItemId} UserId={UserId}",
-                                    dto.Id,
-                                    userContext.UserId);
+                                var job = new EnrichmentJob
+                                {
+                                    ItemId = dto.Id,
+                                    UserId = userContext.UserId,
+                                    Url = result.Item.Url,
+                                    EnqueuedAt = DateTime.UtcNow
+                                };
 
-                                // Set enrichment status to failed immediately if publishing fails
-                                await repository.UpdateEnrichmentResultAsync(
-                                    userContext.UserId,
-                                    result.Item.Id,
-                                    title: null,
-                                    excerpt: null,
-                                    thumbnailStorageKey: null,
-                                    status: "failed",
-                                    error: EnrichmentFailureMessage,
-                                    enrichedAt: DateTime.UtcNow,
-                                    cancellationToken);
+                                try
+                                {
+                                    await enrichmentPublisher.PublishAsync(job, cancellationToken);
+                                    logger.LogInformation(
+                                        "Enrichment job queued. ItemId={ItemId} UserId={UserId}",
+                                        dto.Id,
+                                        userContext.UserId);
+                                }
+                                catch (Exception ex)
+                                {
+                                    logger.LogWarning(
+                                        ex,
+                                        "Failed to enqueue enrichment job. ItemId={ItemId} UserId={UserId}",
+                                        dto.Id,
+                                        userContext.UserId);
 
-                                // Update the DTO to reflect the failed status
-                                dto = dto with { EnrichmentStatus = "failed", EnrichmentError = EnrichmentFailureMessage, EnrichedAt = DateTime.UtcNow };
+                                    // Set enrichment status to failed immediately if publishing fails
+                                    await repository.UpdateEnrichmentResultAsync(
+                                        userContext.UserId,
+                                        result.Item.Id,
+                                        title: null,
+                                        excerpt: null,
+                                        thumbnailStorageKey: null,
+                                        status: "failed",
+                                        error: EnrichmentFailureMessage,
+                                        enrichedAt: DateTime.UtcNow,
+                                        cancellationToken);
+
+                                    // Update the DTO to reflect the failed status
+                                    dto = dto with { EnrichmentStatus = "failed", EnrichmentError = EnrichmentFailureMessage, EnrichedAt = DateTime.UtcNow };
+                                }
                             }
 
                             return TypedResults.Created($"/api/v1/items/{dto.Id}", dto);
@@ -110,7 +108,7 @@ public static class ItemsEndpoints
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Save a URL";
-                operation.Description = "Save a new URL for later with optional title and tags. New items are created with enrichmentStatus=\"pending\" and an enrichment job is enqueued. If the URL already exists, the existing item is returned and no new enrichment job is enqueued.";
+                operation.Description = "Save a new URL for later with optional title and tags. New items attempt synchronous enrichment for title, excerpt, and preview image URL. Async fallback is queued only when no preview image URL is found. If the URL already exists, the existing item is returned and no new enrichment job is enqueued.";
                 return Task.CompletedTask;
             });
 
@@ -201,18 +199,20 @@ public static class ItemsEndpoints
                     IUserContext userContext,
                     IItemService service,
                     IItemRepository repository,
-                    DaprClient daprClient,
+                    IEnrichmentJobPublisher enrichmentPublisher,
                     ILoggerFactory loggerFactory,
                     CancellationToken cancellationToken)
                 =>
                 {
                     try
                     {
-                        var item = await service.MarkEnrichmentPendingAsync(userContext.UserId, id, cancellationToken);
-                        if (item is null)
+                        var result = await service.EnrichItemAsync(userContext.UserId, id, cancellationToken);
+                        if (result is null)
                         {
                             return TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Item not found")));
                         }
+
+                        var item = result.Item;
 
                         var job = new EnrichmentJob
                         {
@@ -224,43 +224,47 @@ public static class ItemsEndpoints
 
                         var logger = loggerFactory.CreateLogger("ItemsEndpoints");
 
-                        try
+                        if (result.NeedsAsyncFallback)
                         {
-                            await daprClient.PublishEventAsync(
-                                "enrichment-pubsub",
-                                "enrichment.requested",
-                                job,
-                                cancellationToken);
-                            logger.LogInformation(
-                                "Enrichment job queued. ItemId={ItemId} UserId={UserId}",
-                                item.Id,
-                                userContext.UserId);
+                            try
+                            {
+                                await enrichmentPublisher.PublishAsync(job, cancellationToken);
+                                logger.LogInformation(
+                                    "Enrichment job queued. ItemId={ItemId} UserId={UserId}",
+                                    item.Id,
+                                    userContext.UserId);
+                            }
+                            catch (Exception ex)
+                            {
+                                logger.LogWarning(
+                                    ex,
+                                    "Failed to enqueue enrichment job. ItemId={ItemId} UserId={UserId}",
+                                    item.Id,
+                                    userContext.UserId);
+
+                                // Set enrichment status to failed immediately if publishing fails
+                                await repository.UpdateEnrichmentResultAsync(
+                                    userContext.UserId,
+                                    item.Id,
+                                    title: null,
+                                    excerpt: null,
+                                    thumbnailStorageKey: null,
+                                    status: "failed",
+                                    error: EnrichmentFailureMessage,
+                                    enrichedAt: DateTime.UtcNow,
+                                    cancellationToken);
+
+                                var failedResponse = new EnrichResponse(EnrichmentFailureMessage, item.Id.ToString(), "failed");
+                                return TypedResults.Accepted($"/api/v1/items/{item.Id}", failedResponse);
+                            }
                         }
-                        catch (Exception ex)
-                        {
-                            logger.LogWarning(
-                                ex,
-                                "Failed to enqueue enrichment job. ItemId={ItemId} UserId={UserId}",
-                                item.Id,
-                                userContext.UserId);
 
-                            // Set enrichment status to failed immediately if publishing fails
-                            await repository.UpdateEnrichmentResultAsync(
-                                userContext.UserId,
-                                item.Id,
-                                title: null,
-                                excerpt: null,
-                                thumbnailStorageKey: null,
-                                status: "failed",
-                                error: EnrichmentFailureMessage,
-                                enrichedAt: DateTime.UtcNow,
-                                cancellationToken);
-
-                            var failedResponse = new EnrichResponse(EnrichmentFailureMessage, item.Id.ToString(), "failed");
-                            return TypedResults.Accepted($"/api/v1/items/{item.Id}", failedResponse);
-                        }
-
-                        var response = new EnrichResponse("Enrichment job enqueued", item.Id.ToString(), "pending");
+                        var responseMessage = result.NeedsAsyncFallback
+                            ? "Enrichment job enqueued"
+                            : result.Status == "succeeded"
+                                ? "Enrichment completed"
+                                : "Enrichment failed";
+                        var response = new EnrichResponse(responseMessage, item.Id.ToString(), result.Status);
                         return TypedResults.Accepted($"/api/v1/items/{item.Id}", response);
                     }
                     catch (RequestValidationException ex)
@@ -274,7 +278,7 @@ public static class ItemsEndpoints
             .AddOpenApiOperationTransformer((operation, context, ct) =>
             {
                 operation.Summary = "Trigger item enrichment";
-                operation.Description = "Manually trigger enrichment for an item. Sets enrichmentStatus=\"pending\" and enqueues a job. Returns 202 Accepted immediately.";
+                operation.Description = "Manually trigger enrichment for an item. Runs synchronous metadata extraction first and queues async fallback only when no preview image URL is found. Returns 202 Accepted with updated enrichment status.";
                 return Task.CompletedTask;
             });
 

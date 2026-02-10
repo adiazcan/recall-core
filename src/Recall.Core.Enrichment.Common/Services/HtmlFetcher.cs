@@ -1,53 +1,43 @@
 using System.Net;
 using System.Net.Http;
+using System.Text;
+using Microsoft.Extensions.Logging;
+using Recall.Core.Enrichment.Common.Configuration;
+using Recall.Core.Enrichment.Common.Models;
 
-namespace Recall.Core.Enrichment.Services;
+namespace Recall.Core.Enrichment.Common.Services;
 
-public sealed class HtmlFetcher : IHtmlFetcher, IDisposable
+public sealed class HtmlFetcher : IHtmlFetcher
 {
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ISsrfValidator _ssrfValidator;
     private readonly EnrichmentOptions _options;
     private readonly ILogger<HtmlFetcher> _logger;
-    private readonly HttpClient _httpClient;
 
-    public HtmlFetcher(ISsrfValidator ssrfValidator, EnrichmentOptions options, ILogger<HtmlFetcher> logger)
+    public HtmlFetcher(
+        IHttpClientFactory httpClientFactory,
+        ISsrfValidator ssrfValidator,
+        EnrichmentOptions options,
+        ILogger<HtmlFetcher> logger)
     {
+        _httpClientFactory = httpClientFactory;
         _ssrfValidator = ssrfValidator;
         _options = options;
         _logger = logger;
-
-        var handler = new SocketsHttpHandler
-        {
-            AllowAutoRedirect = false,
-            AutomaticDecompression = DecompressionMethods.All,
-            ConnectTimeout = TimeSpan.FromSeconds(_options.ConnectTimeoutSeconds)
-        };
-
-        _httpClient = new HttpClient(handler)
-        {
-            Timeout = TimeSpan.FromSeconds(_options.FetchTimeoutSeconds)
-        };
     }
 
     public async Task<string> FetchHtmlAsync(string url, CancellationToken cancellationToken = default)
     {
-        var bytes = await FetchContentAsync(url, _options.MaxHtmlSizeBytes, cancellationToken);
-        return System.Text.Encoding.UTF8.GetString(bytes);
+        var bytes = await FetchContentAsync(url, _options.MaxResponseSizeBytes, _options.FetchTimeoutSeconds, cancellationToken);
+        return Encoding.UTF8.GetString(bytes);
     }
 
-    public Task<byte[]> FetchBytesAsync(string url, CancellationToken cancellationToken = default)
-    {
-        return FetchContentAsync(url, _options.MaxHtmlSizeBytes, cancellationToken);
-    }
-
-    public void Dispose()
-    {
-        _httpClient.Dispose();
-    }
-
-    private async Task<byte[]> FetchContentAsync(string url, int maxBytes, CancellationToken cancellationToken)
+    private async Task<byte[]> FetchContentAsync(string url, long maxBytes, int timeoutSeconds, CancellationToken cancellationToken)
     {
         var currentUrl = url;
+        var client = _httpClientFactory.CreateClient("enrichment-fetch");
+        client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+
         for (var redirectCount = 0; redirectCount <= _options.MaxRedirects; redirectCount++)
         {
             await ValidateOrThrowAsync(currentUrl, cancellationToken);
@@ -55,7 +45,7 @@ public sealed class HtmlFetcher : IHtmlFetcher, IDisposable
             using var request = new HttpRequestMessage(HttpMethod.Get, currentUrl);
             request.Headers.TryAddWithoutValidation("User-Agent", _options.UserAgent);
 
-            using var response = await _httpClient.SendAsync(
+            using var response = await client.SendAsync(
                 request,
                 HttpCompletionOption.ResponseHeadersRead,
                 cancellationToken);
@@ -102,15 +92,15 @@ public sealed class HtmlFetcher : IHtmlFetcher, IDisposable
         return code is >= 300 and < 400;
     }
 
-    private static async Task<byte[]> ReadStreamWithLimitAsync(Stream stream, int maxBytes, CancellationToken cancellationToken)
+    private static async Task<byte[]> ReadStreamWithLimitAsync(Stream stream, long maxBytes, CancellationToken cancellationToken)
     {
         var buffer = new byte[8192];
-        var total = 0;
+        long total = 0;
         using var memoryStream = new MemoryStream();
 
         while (true)
         {
-            var read = await stream.ReadAsync(buffer, cancellationToken);
+            var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
             if (read == 0)
             {
                 break;
@@ -128,5 +118,3 @@ public sealed class HtmlFetcher : IHtmlFetcher, IDisposable
         return memoryStream.ToArray();
     }
 }
-
-public sealed class SsrfBlockedException(string message) : Exception(message);

@@ -19,7 +19,9 @@ public interface IItemService
         CancellationToken cancellationToken = default);
     Task<Item?> UpdateItemAsync(string userId, string id, UpdateItemRequest request, CancellationToken cancellationToken = default);
     Task<Item?> MarkEnrichmentPendingAsync(string userId, string id, CancellationToken cancellationToken = default);
+    Task<EnrichItemResult?> EnrichItemAsync(string userId, string id, CancellationToken cancellationToken = default);
     Task<bool> DeleteItemAsync(string userId, string id, CancellationToken cancellationToken = default);
 }
 
-public sealed record SaveItemResult(Item Item, bool Created);
+public sealed record SaveItemResult(Item Item, bool Created, bool NeedsAsyncFallback);
+public sealed record EnrichItemResult(Item Item, string Status, bool NeedsAsyncFallback);

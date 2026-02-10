@@ -10,10 +10,10 @@ export interface ItemDto {
   title: string | null;
   excerpt: string | null;
   thumbnailUrl?: string | null;
+  previewImageUrl?: string | null;
   enrichmentStatus: EnrichmentStatus;
   enrichmentError?: string | null;
   enrichedAt?: string | null;
-  imageUrl?: string | null;
   status: ItemStatus;
   isFavorite: boolean;
   collectionId: string | null;
@@ -115,7 +115,7 @@ export function mapItemDtoToItem(dto: ItemDto): Item {
     normalizedUrl: dto.normalizedUrl,
     title: dto.title,
     excerpt: dto.excerpt,
-    imageUrl: dto.thumbnailUrl ?? dto.imageUrl ?? undefined,
+    imageUrl: dto.previewImageUrl ?? dto.thumbnailUrl ?? undefined,
     domain: extractDomain(dto.url),
     collectionId: dto.collectionId,
     tags: dto.tags,

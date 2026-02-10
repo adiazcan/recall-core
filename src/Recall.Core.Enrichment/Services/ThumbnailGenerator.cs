@@ -1,20 +1,22 @@
 using Microsoft.Playwright;
+using Recall.Core.Enrichment.Common.Configuration;
+using Recall.Core.Enrichment.Common.Services;
 using SkiaSharp;
 
 namespace Recall.Core.Enrichment.Services;
 
 public sealed class ThumbnailGenerator : IThumbnailGenerator, IAsyncDisposable
 {
-    private readonly IHtmlFetcher _htmlFetcher;
+    private readonly IImageFetcher _imageFetcher;
     private readonly ISsrfValidator _ssrfValidator;
     private readonly EnrichmentOptions _options;
     private readonly ILogger<ThumbnailGenerator> _logger;
     private readonly Lazy<Task<IBrowser>> _browser;
     private IPlaywright? _playwright;
 
-    public ThumbnailGenerator(IHtmlFetcher htmlFetcher, ISsrfValidator ssrfValidator, EnrichmentOptions options, ILogger<ThumbnailGenerator> logger)
+    public ThumbnailGenerator(IImageFetcher imageFetcher, ISsrfValidator ssrfValidator, EnrichmentOptions options, ILogger<ThumbnailGenerator> logger)
     {
-        _htmlFetcher = htmlFetcher;
+        _imageFetcher = imageFetcher;
         _ssrfValidator = ssrfValidator;
         _options = options;
         _logger = logger;
@@ -35,7 +37,7 @@ public sealed class ThumbnailGenerator : IThumbnailGenerator, IAsyncDisposable
             {
                 try
                 {
-                    var imageBytes = await _htmlFetcher.FetchBytesAsync(ogImageUrl, cancellationToken);
+                    var imageBytes = await _imageFetcher.FetchBytesAsync(ogImageUrl, cancellationToken);
                     return ResizeToThumbnail(imageBytes);
                 }
                 catch (Exception ex)

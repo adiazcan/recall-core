@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Recall.Core.ServiceDefaults\Recall.Core.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Recall.Core.Enrichment.Common\Recall.Core.Enrichment.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,7 +1,6 @@
 namespace Recall.Core.Enrichment.Services;
 
-public interface IHtmlFetcher
+public interface IImageFetcher
 {
-    Task<string> FetchHtmlAsync(string url, CancellationToken cancellationToken = default);
     Task<byte[]> FetchBytesAsync(string url, CancellationToken cancellationToken = default);
 }

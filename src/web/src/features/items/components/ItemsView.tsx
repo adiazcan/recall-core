@@ -54,7 +54,7 @@ export function ItemsView() {
         <div className="flex items-center gap-2">
           <div className="hidden md:flex items-center gap-2">
             <div className="w-48 h-8 relative">
-              <Search className="w-4 h-4 absolute left-3 top-2 text-neutral-400" />
+              <Search aria-hidden="true" className="w-4 h-4 absolute left-3 top-2 text-neutral-400" />
               <input
                 type="text"
                 placeholder="Search..."

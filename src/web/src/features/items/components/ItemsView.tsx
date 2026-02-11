@@ -58,6 +58,7 @@ export function ItemsView() {
               <input
                 type="text"
                 placeholder="Search..."
+                aria-label="Search items"
                 className="w-full h-full bg-neutral-100 rounded-[10px] pl-9 pr-4 text-sm placeholder:text-neutral-900/50 tracking-[-0.15px] border-0 focus-visible:ring-2 focus-visible:ring-neutral-200"
               />
             </div>

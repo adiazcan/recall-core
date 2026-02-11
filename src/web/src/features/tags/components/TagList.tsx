@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Tag as TagIcon } from 'lucide-react';
+import { Hash } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { useTagsStore } from '../store';
 import { useUiStore } from '../../../stores/ui-store';
@@ -29,23 +29,11 @@ export function TagList() {
     setViewState(newViewState);
   };
 
-  // Extract just the background color from the color string
-  const getBackgroundColor = (colorClasses?: string): string => {
-    if (!colorClasses) return 'bg-green-500';
-    // Color classes come as "bg-orange-100 text-orange-700"
-    // We want a solid version for the dot, so map bg-X-100 to bg-X-500
-    const match = colorClasses.match(/bg-(\w+)-\d+/);
-    if (match) {
-      return `bg-${match[1]}-500`;
-    }
-    return 'bg-green-500';
-  };
-
   if (isLoading && tags.length === 0) {
     return (
       <div className="space-y-1">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-8 bg-neutral-100 rounded-lg animate-pulse" />
+          <div key={i} className="h-9 bg-neutral-100 rounded-[10px] animate-pulse" />
         ))}
       </div>
     );
@@ -60,7 +48,7 @@ export function TagList() {
   }
 
   return (
-    <div className="space-y-0.5 sm:space-y-1">
+    <div className="space-y-1">
       {tags.map((tag) => (
         <NavLink
           key={tag.name}
@@ -68,7 +56,7 @@ export function TagList() {
           onClick={() => handleTagClick(tag.name)}
           className={({ isActive }) =>
             cn(
-              'flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors',
+              'flex items-center gap-3 px-3 h-9 rounded-[10px] text-sm font-medium transition-colors',
               isActive
                 ? 'bg-neutral-100 text-neutral-900'
                 : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900',
@@ -77,15 +65,11 @@ export function TagList() {
         >
           {({ isActive }) => (
             <>
-              <div
-                className={cn(
-                  'h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full',
-                  getBackgroundColor(tag.color),
-                )}
+              <Hash
+                className={cn('h-4 w-4 flex-shrink-0', isActive ? 'text-indigo-600' : 'text-neutral-500')}
                 aria-hidden="true"
               />
-              <span className="flex-1 text-left truncate">#{tag.name}</span>
-              <span className="text-xs text-neutral-400">{tag.count}</span>
+              <span className="flex-1 text-left truncate">{tag.name}</span>
             </>
           )}
         </NavLink>

@@ -1,4 +1,4 @@
-import { Plus, Menu } from 'lucide-react';
+import { Plus, Menu, Search, SlidersHorizontal } from 'lucide-react';
 import { useEffect } from 'react';
 import { Button } from '../../../components/ui/button';
 import { EmptyState } from '../../../components/common/EmptyState';
@@ -31,8 +31,8 @@ export function ItemsView() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center justify-between gap-2 p-3 sm:p-4 md:p-6 border-b border-neutral-100">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <div className="flex-shrink-0 flex items-center justify-between gap-4 h-16 px-6 bg-white/80 backdrop-blur-sm border-b border-neutral-200">
+        <div className="flex items-center gap-3 min-w-0">
           {/* Mobile menu button */}
           <Button
             variant="ghost"
@@ -44,16 +44,40 @@ export function ItemsView() {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <div className="min-w-0">
-            <p className="text-xs uppercase tracking-wider text-neutral-500 mb-0.5 sm:mb-1">Your library</p>
-            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-neutral-900 truncate">{viewState.title}</h2>
+          <div className="min-w-0 flex items-center gap-3">
+            <h2 className="text-xl font-semibold tracking-[-0.45px] text-neutral-900 leading-7 truncate">{viewState.title}</h2>
+            <span className="bg-neutral-100 rounded-full h-6 px-2 text-sm font-medium text-neutral-400 leading-5 flex items-center">
+              {items.length}
+            </span>
           </div>
         </div>
-        <Button onClick={openSaveUrl} className="gap-1.5 sm:gap-2 text-xs sm:text-sm flex-shrink-0 px-2.5 sm:px-4">
-          <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          <span className="hidden sm:inline">Save URL</span>
-          <span className="sm:hidden">Save</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2">
+            <div className="w-48 h-8 relative">
+              <Search className="w-4 h-4 absolute left-3 top-2 text-neutral-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-full h-full bg-neutral-100 rounded-[10px] pl-9 pr-4 text-sm placeholder:text-neutral-900/50 tracking-[-0.15px] border-0 focus-visible:ring-2 focus-visible:ring-neutral-200"
+              />
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 p-2 text-neutral-500 hover:text-neutral-900"
+              aria-label="Filter items"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+            </Button>
+          </div>
+          <Button
+            onClick={openSaveUrl}
+            className="h-8 px-3 gap-2 rounded-[10px] bg-neutral-900 text-white text-sm font-medium tracking-[-0.15px] shadow-sm hover:bg-neutral-900/90"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Save URL</span>
+          </Button>
+        </div>
       </div>
 
       {/* Content */}

@@ -11,7 +11,7 @@ interface TagChipProps {
 }
 
 export function TagChip({ name, color, onRemove, className }: TagChipProps) {
-  const colorClasses = color || 'bg-green-50 text-green-700 hover:bg-green-100';
+  const colorClasses = color || 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200';
 
   return (
     <Badge

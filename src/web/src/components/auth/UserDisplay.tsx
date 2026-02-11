@@ -17,33 +17,24 @@ function getInitials(value: string | undefined) {
 export function UserDisplay() {
   const { account } = useAuth();
 
-  const { displayName, email, initials } = useMemo(() => {
+  const { displayName, initials } = useMemo(() => {
     const claims = account?.idTokenClaims as TokenClaims | undefined;
     const name = account?.name ?? claims?.name ?? 'Signed in';
-    const emailAddress = claims?.email ?? claims?.preferred_username ?? account?.username ?? '';
 
     return {
       displayName: name,
-      email: emailAddress,
       initials: getInitials(name),
     };
   }, [account]);
 
   return (
-    <div className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm">
-      <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-semibold text-indigo-700">
-        {initials}
+    <>
+      <div className="size-6 rounded-full bg-neutral-200 flex items-center justify-center flex-shrink-0">
+        <span className="text-xs font-medium text-neutral-600 leading-4">{initials}</span>
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="truncate font-medium text-neutral-800" title={displayName}>
-          {displayName}
-        </p>
-        {email ? (
-          <p className="truncate text-xs text-neutral-500" title={email}>
-            {email}
-          </p>
-        ) : null}
-      </div>
-    </div>
+      <span className="flex-1 min-w-0 truncate text-sm font-medium text-neutral-600 tracking-[-0.15px] leading-5" title={displayName}>
+        {displayName}
+      </span>
+    </>
   );
 }

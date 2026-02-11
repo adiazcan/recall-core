@@ -67,7 +67,7 @@ export const ItemRow = forwardRef<HTMLDivElement, ItemRowProps>(
         }
       }}
       className={cn(
-        'group relative flex items-start gap-2 sm:gap-4 px-3 sm:px-4 py-3 sm:py-4 border-b border-neutral-100 cursor-pointer transition-all duration-300',
+        'group relative flex items-start gap-4 px-4 py-4 border-b border-neutral-100 cursor-pointer transition-all duration-300',
         'hover:bg-neutral-50 focus:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset',
         isSelected && 'bg-indigo-50/60',
         isFocused && 'ring-2 ring-indigo-500 ring-inset',
@@ -75,61 +75,58 @@ export const ItemRow = forwardRef<HTMLDivElement, ItemRowProps>(
       )}
     >
       {/* Favicon / Image Thumbnail */}
-      <div className="flex-shrink-0 mt-0.5 sm:mt-1">
+      <div className="flex-shrink-0 mt-1">
         <div
           className={cn(
-            'w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100 flex items-center justify-center',
+            'w-10 h-10 rounded-[10px] overflow-hidden border border-neutral-200 bg-neutral-100 flex items-center justify-center',
             isSelected && 'border-indigo-200',
           )}
         >
           {thumbnailUrl ? (
             <img src={thumbnailUrl} alt="" className="w-full h-full object-cover" />
           ) : (
-            <span className="text-xs sm:text-sm font-bold text-neutral-400">
+            <span className="text-xs font-bold text-neutral-400">
               {item.domain.charAt(0).toUpperCase()}
             </span>
           )}
         </div>
       </div>
 
-      <div className="flex-1 min-w-0 pr-6 sm:pr-8">
-        <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
+      <div className="flex-1 min-w-0 pr-8">
+        <div className="flex items-center gap-2 mb-1">
           <h3
             className={cn(
-              'text-sm sm:text-base font-semibold truncate',
+              'text-base font-semibold leading-6 tracking-[-0.31px] truncate',
               isSelected ? 'text-indigo-900' : 'text-neutral-900',
             )}
           >
             {item.title || new URL(item.url).hostname}
           </h3>
           {item.isFavorite && (
-            <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />
+            <Star className="w-3 h-3 text-amber-400 fill-amber-400 flex-shrink-0" />
           )}
         </div>
 
         {item.excerpt && (
-          <p className="text-xs sm:text-sm text-neutral-500 mb-1.5 sm:mb-2 line-clamp-1">{item.excerpt}</p>
+          <p className="text-sm leading-5 text-neutral-500 tracking-[-0.15px] mb-1 line-clamp-1">{item.excerpt}</p>
         )}
 
-        <div className="flex items-center gap-2 sm:gap-3 text-xs text-neutral-400 flex-wrap">
+        <div className="flex items-center gap-3 text-xs flex-wrap">
           <span className="font-medium text-neutral-500">{item.domain}</span>
-          <span className="w-1 h-1 rounded-full bg-neutral-300 hidden sm:block" />
-          <time dateTime={item.createdAt.toISOString()} className="hidden sm:inline">
+          <span className="w-1 h-1 rounded-full bg-neutral-300" />
+          <time dateTime={item.createdAt.toISOString()} className="text-neutral-400">
             {formatDistanceToNow(item.createdAt, { addSuffix: true })}
           </time>
 
           {item.tags.length > 0 && (
-            <>
-              <span className="w-1 h-1 rounded-full bg-neutral-300 hidden sm:block" />
-              <div className="flex items-center gap-1 sm:gap-2 hidden sm:flex">
-                {item.tags.slice(0, 2).map((tag) => (
-                  <span key={tag} className="px-1.5 sm:px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 text-xs">
-                    #{tag}
-                  </span>
-                ))}
-                {item.tags.length > 2 && <span>+{item.tags.length - 2}</span>}
-              </div>
-            </>
+            <div className="flex items-center gap-2">
+              {item.tags.slice(0, 2).map((tag) => (
+                <span key={tag} className="h-5 px-2 rounded-full bg-neutral-100 text-neutral-600 text-xs leading-4 flex items-center">
+                  #{tag}
+                </span>
+              ))}
+              {item.tags.length > 2 && <span className="text-neutral-400">+{item.tags.length - 2}</span>}
+            </div>
           )}
         </div>
       </div>
@@ -137,7 +134,7 @@ export const ItemRow = forwardRef<HTMLDivElement, ItemRowProps>(
       {/* Hover Actions */}
       <div
         className={cn(
-          'absolute right-2 sm:right-4 top-3 sm:top-4 flex items-center gap-0.5 sm:gap-1 transition-opacity',
+          'absolute right-4 top-4 flex items-center gap-1 transition-opacity',
           isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
         )}
       >
@@ -146,26 +143,26 @@ export const ItemRow = forwardRef<HTMLDivElement, ItemRowProps>(
           aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           title={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           className={cn(
-            'p-1 sm:p-1.5 rounded-md transition-colors',
+            'p-1.5 rounded-md transition-colors',
             item.isFavorite
               ? 'text-amber-400 hover:bg-amber-50'
               : 'text-neutral-400 hover:text-amber-500 hover:bg-amber-50',
           )}
         >
-          <Star className={cn('h-3.5 w-3.5 sm:h-4 sm:w-4', item.isFavorite && 'fill-current')} />
+          <Star className={cn('h-4 w-4', item.isFavorite && 'fill-current')} />
         </button>
         <button
           onClick={handleArchiveClick}
           aria-label={item.isArchived ? 'Unarchive' : 'Archive'}
           title={item.isArchived ? 'Unarchive' : 'Archive'}
           className={cn(
-            'p-1 sm:p-1.5 rounded-md transition-colors',
+            'p-1.5 rounded-md transition-colors',
             item.isArchived
               ? 'text-indigo-600 hover:bg-indigo-50'
               : 'text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50',
           )}
         >
-          <Archive className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <Archive className="h-4 w-4" />
         </button>
         <a
           href={item.url}
@@ -174,9 +171,9 @@ export const ItemRow = forwardRef<HTMLDivElement, ItemRowProps>(
           onClick={(e) => e.stopPropagation()}
           aria-label="Open link in new tab"
           title="Open link in new tab"
-          className="p-1 sm:p-1.5 rounded-md text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
+          className="p-1.5 rounded-md text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
         >
-          <ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <ExternalLink className="h-4 w-4" />
         </a>
       </div>
     </div>

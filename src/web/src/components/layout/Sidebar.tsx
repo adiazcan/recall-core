@@ -177,8 +177,11 @@ export function Sidebar() {
             </h3>
             <button
               type="button"
-              className="size-3 flex items-center justify-center text-neutral-400 hover:text-neutral-900"
-              aria-label="Add tag"
+              className="size-3 flex items-center justify-center text-neutral-400 cursor-not-allowed"
+              aria-label="Add tag (coming soon)"
+              disabled
+              aria-disabled="true"
+              title="Tag creation coming soon"
             >
               <Plus className="size-3" />
             </button>

@@ -159,11 +159,11 @@ export function Sidebar() {
             </h3>
             <button
               type="button"
-              className="size-3 flex items-center justify-center text-neutral-400 hover:text-neutral-900"
+              className="size-8 flex items-center justify-center text-neutral-400 hover:text-neutral-900 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
               onClick={openCreateCollection}
               aria-label="Create new collection"
             >
-              <Plus className="size-3" />
+              <Plus className="size-4" />
             </button>
           </div>
           <CollectionList />

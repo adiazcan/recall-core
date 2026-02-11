@@ -113,7 +113,7 @@ export function Sidebar() {
   return (
     <div
       ref={navRef}
-      className="flex flex-col h-full bg-white border-r border-neutral-200 w-[183px] flex-shrink-0"
+      className="flex flex-col h-full bg-white border-r border-neutral-200 w-56 sm:w-60 md:w-64 lg:w-[183px] flex-shrink-0"
       role="navigation"
       aria-label="Main navigation"
     >

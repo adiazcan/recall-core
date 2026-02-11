@@ -7,9 +7,7 @@ import { useUiStore } from '../../stores/ui-store';
 import { DEFAULT_VIEWS, type ViewState } from '../../types/views';
 import { CollectionList } from '../../features/collections/components/CollectionList';
 import { TagList } from '../../features/tags/components/TagList';
-import { Button } from '../ui/button';
 import { SignInButton } from '../auth/SignInButton';
-import { SignOutButton } from '../auth/SignOutButton';
 import { UserDisplay } from '../auth/UserDisplay';
 import {
   isInExtensionFrame,
@@ -115,19 +113,19 @@ export function Sidebar() {
   return (
     <div
       ref={navRef}
-      className="flex flex-col h-full bg-white border-r border-neutral-200 w-56 sm:w-60 md:w-64 flex-shrink-0"
+      className="flex flex-col h-full bg-white border-r border-neutral-200 w-56 sm:w-60 md:w-64 lg:w-[183px] flex-shrink-0"
       role="navigation"
       aria-label="Main navigation"
     >
       {/* Header */}
-      <div className="p-4 sm:p-5 md:p-6">
-        <h1 className="text-lg sm:text-xl font-bold tracking-tight text-neutral-900">Recall</h1>
+      <div className="h-[76px] flex items-center pl-6">
+        <h1 className="text-xl font-bold tracking-[-0.95px] text-neutral-900 leading-7">Recall</h1>
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto px-3 sm:px-4 space-y-6 sm:space-y-8">
+      <div className="flex-1 overflow-y-auto px-4 space-y-8">
         {/* Main Navigation */}
-        <nav className="space-y-0.5 sm:space-y-1" role="list" aria-label="Main views">
+        <nav className="space-y-1" role="list" aria-label="Main views">
           {navItems.map(({ view, to, icon: Icon }) => (
             <NavLink
               key={to}
@@ -135,7 +133,7 @@ export function Sidebar() {
               onClick={() => handleNavClick(view)}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset',
+                  'flex items-center gap-3 px-3 h-9 rounded-[10px] text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset',
                   isActive
                     ? 'bg-neutral-100 text-neutral-900'
                     : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900',
@@ -145,7 +143,7 @@ export function Sidebar() {
             >
               {({ isActive }) => (
                 <>
-                  <Icon className={cn('h-3.5 w-3.5 sm:h-4 sm:w-4', isActive ? 'text-indigo-600' : 'text-neutral-500')} />
+                  <Icon className={cn('h-4 w-4', isActive ? 'text-indigo-600' : 'text-neutral-500')} />
                   <span className="flex-1 text-left">{view.title}</span>
                 </>
               )}
@@ -155,51 +153,58 @@ export function Sidebar() {
 
         {/* Collections */}
         <div>
-          <div className="flex items-center justify-between px-2 sm:px-3 mb-2">
-            <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+          <div className="flex items-center justify-between px-3 mb-2">
+            <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-[0.6px] leading-4">
               Collections
             </h3>
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 sm:h-7 sm:w-7 text-neutral-500 hover:text-neutral-900"
+              className="size-8 flex items-center justify-center text-neutral-400 hover:text-neutral-900 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
               onClick={openCreateCollection}
               aria-label="Create new collection"
             >
-              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </Button>
+              <Plus className="size-4" />
+            </button>
           </div>
           <CollectionList />
         </div>
 
         {/* Tags */}
         <div>
-          <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-2 sm:px-3 mb-2">Tags</h3>
+          <div className="flex items-center justify-between px-3 mb-2">
+            <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-[0.6px] leading-4">
+              Tags
+            </h3>
+            <button
+              type="button"
+              className="size-3 flex items-center justify-center text-neutral-400 cursor-not-allowed"
+              aria-label="Add tag (coming soon)"
+              disabled
+              aria-disabled="true"
+              title="Tag creation coming soon"
+            >
+              <Plus className="size-3" />
+            </button>
+          </div>
           <TagList />
         </div>
       </div>
 
       {/* User Profile */}
-      <div className="p-3 sm:p-4 border-t border-neutral-100 flex-shrink-0">
+      <div className="h-[73px] px-4 pt-[17px] border-t border-neutral-100 flex-shrink-0">
         {isAuthenticated ? (
-          <div className="space-y-2">
-            <div
-              className="w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm text-neutral-600"
-              aria-label="User profile"
-            >
-              {/* In extension frame, UserDisplay may not work since we don't have MSAL account */}
-              {inExtensionFrame ? (
-                <span className="text-xs sm:text-sm text-neutral-600">Signed in via extension</span>
-              ) : (
-                <>
-                  <UserDisplay />
-                  <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-400" />
-                </>
-              )}
-            </div>
-            {/* Only show sign out when not in extension frame */}
-            {!inExtensionFrame && <SignOutButton className="w-full" />}
+          <div
+            className="flex items-center gap-3 px-3 h-10 rounded-[10px]"
+            aria-label="User profile"
+          >
+            {inExtensionFrame ? (
+              <span className="text-sm text-neutral-600">Signed in via extension</span>
+            ) : (
+              <>
+                <UserDisplay />
+                <Settings className="w-4 h-4 flex-shrink-0 text-neutral-400" />
+              </>
+            )}
           </div>
         ) : (
           <SignInButton className="w-full" />

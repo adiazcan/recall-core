@@ -107,10 +107,8 @@ public sealed class TagService : ITagService
 
         // Optimize: only fetch counts for tags in current page, not all user's tags
         var tagIds = page.Select(tag => tag.Id).ToList();
-        var counts = await items.GetTagIdCountsAsync(userId, cancellationToken);
-        var countMap = counts
-            .Where(entry => tagIds.Contains(entry.TagId))
-            .ToDictionary(entry => entry.TagId, entry => entry.Count);
+        var counts = await items.GetTagIdCountsAsync(userId, tagIds, cancellationToken);
+        var countMap = counts.ToDictionary(entry => entry.TagId, entry => entry.Count);
 
         var dtos = page
             .Select(tag => TagDto.FromEntity(tag, countMap.GetValueOrDefault(tag.Id, 0)))
@@ -148,6 +146,7 @@ public sealed class TagService : ITagService
             updates.Add(Builders<EntityTag>.Update.Set(tag => tag.NormalizedName, normalizedName));
         }
 
+        // Allow clearing color by sending empty string (NormalizeColor converts empty to null)
         if (request.Color is not null)
         {
             var color = NormalizeColor(request.Color);
@@ -278,14 +277,8 @@ public sealed class TagService : ITagService
 
     private async Task<int> GetItemCountAsync(string userId, ObjectId tagId, CancellationToken cancellationToken)
     {
-        var counts = await items.GetTagIdCountsAsync(userId, cancellationToken);
+        var counts = await items.GetTagIdCountsAsync(userId, [tagId], cancellationToken);
         var count = counts.FirstOrDefault(entry => entry.TagId == tagId);
         return count?.Count ?? 0;
-    }
-
-    private async Task<Dictionary<ObjectId, int>> GetCountMapAsync(string userId, CancellationToken cancellationToken)
-    {
-        var counts = await items.GetTagIdCountsAsync(userId, cancellationToken);
-        return counts.ToDictionary(entry => entry.TagId, entry => entry.Count);
     }
 }

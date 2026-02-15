@@ -23,6 +23,7 @@ public interface IItemRepository
         CancellationToken cancellationToken = default);
     Task<long> DeleteAsync(string userId, ObjectId id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TagIdCount>> GetTagIdCountsAsync(string userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TagIdCount>> GetTagIdCountsAsync(string userId, IReadOnlyList<ObjectId> tagIds, CancellationToken cancellationToken = default);
     Task<long> RemoveTagIdFromItemsAsync(string userId, ObjectId tagId, CancellationToken cancellationToken = default);
 }
 

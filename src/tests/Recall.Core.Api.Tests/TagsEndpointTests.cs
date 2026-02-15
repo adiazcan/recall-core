@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc.Testing;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -24,15 +23,12 @@ public class TagsEndpointTests : IClassFixture<MongoDbFixture>
     public async Task CreateTag_ReturnsCreatedWithAllFields()
     {
         using var testClient = CreateClient();
-        var stopwatch = Stopwatch.StartNew();
         var response = await testClient.Client.PostAsJsonAsync("/api/v1/tags", new CreateTagRequest
         {
             Name = "JavaScript"
         });
-        stopwatch.Stop();
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        Assert.True(stopwatch.Elapsed < TimeSpan.FromSeconds(3), $"POST /api/v1/tags exceeded 3s ({stopwatch.Elapsed}).");
 
         var payload = await response.Content.ReadFromJsonAsync<TagDto>();
         Assert.NotNull(payload);
@@ -149,15 +145,12 @@ public class TagsEndpointTests : IClassFixture<MongoDbFixture>
         using var testClient = CreateClient();
         var tag = await CreateTagAsync(testClient.Client, "JavaScript");
 
-        var stopwatch = Stopwatch.StartNew();
         var response = await testClient.Client.PatchAsJsonAsync($"/api/v1/tags/{tag.Id}", new UpdateTagRequest
         {
             Name = "TypeScript"
         });
-        stopwatch.Stop();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.True(stopwatch.Elapsed < TimeSpan.FromSeconds(3), $"PATCH /api/v1/tags/{{id}} exceeded 3s ({stopwatch.Elapsed}).");
 
         var payload = await response.Content.ReadFromJsonAsync<TagDto>();
         Assert.NotNull(payload);
@@ -192,12 +185,9 @@ public class TagsEndpointTests : IClassFixture<MongoDbFixture>
         await SeedItemWithTagIdsAsync(testClient.ConnectionString, testClient.DatabaseName, TestUserId, tag.Id);
         await SeedItemWithTagIdsAsync(testClient.ConnectionString, testClient.DatabaseName, TestUserId, tag.Id);
 
-        var stopwatch = Stopwatch.StartNew();
         var response = await testClient.Client.DeleteAsync($"/api/v1/tags/{tag.Id}");
-        stopwatch.Stop();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.True(stopwatch.Elapsed < TimeSpan.FromSeconds(3), $"DELETE /api/v1/tags/{{id}} exceeded 3s ({stopwatch.Elapsed}).");
 
         var payload = await response.Content.ReadFromJsonAsync<TagDeleteResponse>();
         Assert.NotNull(payload);

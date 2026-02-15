@@ -133,11 +133,11 @@ export async function refreshToken(): Promise<AuthStateResponse> {
 export async function saveUrl(
   url: string,
   title?: string,
-  tags?: string[]
+  newTagNames?: string[]
 ): Promise<SaveResult> {
   return sendMessageAndUnwrap<SaveResult>({
     type: 'SAVE_URL',
-    payload: { url, title, tags },
+    payload: { url, title, newTagNames },
   });
 }
 

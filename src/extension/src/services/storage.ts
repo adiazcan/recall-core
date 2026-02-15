@@ -16,7 +16,7 @@ const KEYS = {
 /** Default settings */
 const DEFAULT_SETTINGS: StoredSettings = {
   autoOpenSidePanel: false,
-  defaultTags: [],
+  defaultTagNames: [],
 };
 
 /**

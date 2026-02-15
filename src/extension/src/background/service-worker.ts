@@ -149,7 +149,7 @@ async function handleOpenSidePanel(
 async function handleSaveUrl(
   message: SaveUrlMessage
 ): Promise<MessageResponse<SaveResult>> {
-  const { url, title, tags } = message.payload;
+  const { url, title, newTagNames } = message.payload;
 
   // Validate URL first
   const validation = validateUrl(url);
@@ -163,7 +163,7 @@ async function handleSaveUrl(
   }
 
   try {
-    const result = await saveItem(url, title, tags);
+    const result = await saveItem(url, title, newTagNames);
     return successResponse(result);
   } catch (error) {
     if (error instanceof ApiError) {

@@ -93,38 +93,38 @@ A user wants a dedicated screen in the web application to manage all their tags:
 #### Tag Entity
 
 - **FR-001**: System MUST support a Tag as an independent, first-class entity with a unique identifier, display name, normalized name (lowercase), color (optional), owner (user ID), and timestamps (created, updated).
-- **FR-002**: System MUST enforce uniqueness of tags per user based on normalized name — no two active or archived tags for the same user may share the same normalized name.
+- **FR-002**: System MUST enforce uniqueness of tags per user based on normalized name — no two tags for the same user may share the same normalized name.
 - **FR-003**: System MUST support creating a tag with a display name (1–50 characters, trimmed of leading/trailing whitespace).
 - **FR-004**: System MUST support renaming a tag, updating both the display name and normalized name, and rejecting the rename if the new normalized name conflicts with an existing tag for the same user.
 - **FR-005**: System MUST support deleting a tag, which also removes all references to that tag from the user's items.
 - **FR-006**: System MUST support listing all tags for a user, including the count of items referencing each tag.
 #### Item–Tag Relationship
 
-- **FR-009**: Items MUST reference tags by their unique identifier (tag ID) rather than by a string name.
-- **FR-010**: When creating or updating an item, the system MUST accept two separate fields: `tagIds` (list of existing tag IDs) and `newTagNames` (list of tag name strings for inline creation). The system MUST validate that each tag ID corresponds to an existing Tag entity owned by the requesting user.
-- **FR-011**: When retrieving an item, the system MUST expand tag IDs into full tag details (ID, display name) in the response.
-- **FR-012**: System MUST support filtering items by tag ID.
-- **FR-013**: System MUST limit the number of tag references per item to 50.
-- **FR-014**: When creating or updating an item, the system MUST allow inline creation of new tags via the `newTagNames` field. For each name that does not match an existing tag (by normalized name) for the user, the system creates the Tag entity and adds its ID to the item's tag references.
+- **FR-007**: Items MUST reference tags by their unique identifier (tag ID) rather than by a string name.
+- **FR-008**: When creating or updating an item, the system MUST accept two separate fields: `tagIds` (list of existing tag IDs) and `newTagNames` (list of tag name strings for inline creation). The system MUST validate that each tag ID corresponds to an existing Tag entity owned by the requesting user.
+- **FR-009**: When retrieving an item, the system MUST expand tag IDs into full tag details (ID, display name) in the response.
+- **FR-010**: System MUST support filtering items by tag ID.
+- **FR-011**: System MUST limit the number of tag references per item to 50.
+- **FR-012**: When creating or updating an item, the system MUST allow inline creation of new tags via the `newTagNames` field. For each name that does not match an existing tag (by normalized name) for the user, the system creates the Tag entity and adds its ID to the item's tag references.
 
 #### Migration
 
-- **FR-018**: System MUST provide a migration process that scans all items with embedded string tags, creates corresponding Tag entities (deduplicated by normalized name per user), and replaces the embedded tags with tag ID references. When multiple case variants exist for the same normalized name, the display name of the first occurrence encountered is used.
-- **FR-019**: The migration MUST be idempotent — running it multiple times produces the same result without creating duplicate tags or corrupting data.
-- **FR-020**: The migration MUST export a mapping file (embedded tag string → tag ID, per user) and item snapshots before modifying data, enabling rollback.
-- **FR-021**: System MUST provide a rollback mechanism that restores items to their original embedded-string tag format using the exported mapping and snapshots.
-- **FR-022**: The migration MUST record metrics: total items processed, tags created, duplicates merged, items updated, errors encountered.
+- **FR-013**: System MUST provide a migration process that scans all items with embedded string tags, creates corresponding Tag entities (deduplicated by normalized name per user), and replaces the embedded tags with tag ID references. When multiple case variants exist for the same normalized name, the display name of the first occurrence encountered is used.
+- **FR-014**: The migration MUST be idempotent — running it multiple times produces the same result without creating duplicate tags or corrupting data.
+- **FR-015**: The migration MUST export a mapping file (embedded tag string → tag ID, per user) and item snapshots before modifying data, enabling rollback.
+- **FR-016**: System MUST provide a rollback mechanism that restores items to their original embedded-string tag format using the exported mapping and snapshots.
+- **FR-017**: The migration MUST record metrics: total items processed, tags created, duplicates merged, items updated, errors encountered.
 
 #### Data Isolation
 
-- **FR-023**: All tag operations (CRUD, merge, list) MUST be scoped to the authenticated user. A user MUST NOT be able to see, modify, or reference another user's tags.
-- **FR-024**: System MUST return 404 (not 403) when a user attempts to access a tag owned by a different user, to avoid leaking tag existence.
+- **FR-018**: All tag operations (CRUD, merge, list) MUST be scoped to the authenticated user. A user MUST NOT be able to see, modify, or reference another user's tags.
+- **FR-019**: System MUST return 404 (not 403) when a user attempts to access a tag owned by a different user, to avoid leaking tag existence.
 
 #### UI/UX
 
-- **FR-025**: The web application MUST provide a tag management screen listing all tags with display name, item count, and actions (rename, delete).
-- **FR-026**: The item edit form MUST provide a searchable tag picker that suggests existing tags and allows inline creation of new tags.
-- **FR-027**: Tags on items MUST be displayed as visual chips showing the tag's display name (resolved from the Tag entity).
+- **FR-020**: The web application MUST provide a tag management screen listing all tags with display name, item count, and actions (rename, delete).
+- **FR-021**: The item edit form MUST provide a searchable tag picker that suggests existing tags and allows inline creation of new tags.
+- **FR-022**: Tags on items MUST be displayed as visual chips showing the tag's display name (resolved from the Tag entity).
 
 ### Key Entities
 

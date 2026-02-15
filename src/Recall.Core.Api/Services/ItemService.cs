@@ -548,7 +548,7 @@ public sealed class ItemService(
 
         // Limit concurrency to avoid bursty DB load with large tag lists
         var results = new ConcurrentBag<TagDto>();
-        var semaphore = new SemaphoreSlim(5, 5); // Max 5 concurrent tag creates
+        using var semaphore = new SemaphoreSlim(5, 5); // Max 5 concurrent tag creates
 
         await Task.WhenAll(validNames.Select(async name =>
         {

@@ -140,7 +140,7 @@ public sealed class TagRepository(IMongoDatabase database) : ITagRepository
 
         // Use LastIndexOf to handle pipe characters in normalized names
         var separatorIndex = cursor.LastIndexOf('|');
-        if (separatorIndex <= 0 || separatorIndex == cursor.Length - 1)
+        if (separatorIndex < 0 || separatorIndex == cursor.Length - 1)
         {
             throw new ArgumentException("Cursor is invalid.", nameof(cursor));
         }

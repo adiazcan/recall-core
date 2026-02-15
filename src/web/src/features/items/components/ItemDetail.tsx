@@ -127,7 +127,7 @@ export function ItemDetail() {
 
     try {
       await updateItem(item.id, {
-        collectionId: collectionId === 'none' ? null : collectionId,
+        collectionId: collectionId === 'none' ? '' : collectionId,
       });
       success('Collection updated');
     } catch (err) {

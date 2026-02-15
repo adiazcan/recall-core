@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import type { Tag } from '../../../types/entities';
 import { tagsApi } from '../../../lib/api/tags';
 import { mapTagDtoToTag } from '../../../lib/api/types';
@@ -7,6 +7,7 @@ export function useTagSearch(debounceMs = 300) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Tag[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     const trimmed = query.trim();
@@ -17,12 +18,19 @@ export function useTagSearch(debounceMs = 300) {
     }
 
     setIsLoading(true);
+    const currentRequestId = ++requestIdRef.current;
     const timeout = setTimeout(async () => {
       try {
         const response = await tagsApi.listTags(trimmed, undefined, 25);
-        setResults(response.tags.map(mapTagDtoToTag));
+        // Only update results if this is still the latest request
+        if (currentRequestId === requestIdRef.current) {
+          setResults(response.tags.map(mapTagDtoToTag));
+        }
       } finally {
-        setIsLoading(false);
+        // Only update loading state if this is still the latest request
+        if (currentRequestId === requestIdRef.current) {
+          setIsLoading(false);
+        }
       }
     }, debounceMs);
 

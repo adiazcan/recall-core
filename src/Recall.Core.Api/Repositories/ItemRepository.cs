@@ -165,6 +165,39 @@ public sealed class ItemRepository(IMongoDatabase database) : IItemRepository
             .ToList();
     }
 
+    public async Task<IReadOnlyList<TagIdCount>> GetTagIdCountsAsync(string userId, IReadOnlyList<ObjectId> tagIds, CancellationToken cancellationToken = default)
+    {
+        if (tagIds.Count == 0)
+        {
+            return [];
+        }
+
+        var pipeline = new[]
+        {
+            new BsonDocument("$match", new BsonDocument
+            {
+                { "userId", userId },
+                { "tagIds", new BsonDocument("$in", new BsonArray(tagIds)) }
+            }),
+            new BsonDocument("$unwind", "$tagIds"),
+            new BsonDocument("$match", new BsonDocument("tagIds", new BsonDocument("$in", new BsonArray(tagIds)))),
+            new BsonDocument("$group", new BsonDocument
+            {
+                { "_id", "$tagIds" },
+                { "count", new BsonDocument("$sum", 1) }
+            })
+        };
+
+        var results = await _items
+            .Aggregate<BsonDocument>(pipeline)
+            .ToListAsync(cancellationToken);
+
+        return results
+            .Where(doc => doc.Contains("_id") && doc.Contains("count") && doc["_id"].IsObjectId)
+            .Select(doc => new TagIdCount(doc["_id"].AsObjectId, doc["count"].ToInt32()))
+            .ToList();
+    }
+
     public async Task<long> RemoveTagIdFromItemsAsync(string userId, ObjectId tagId, CancellationToken cancellationToken = default)
     {
         var filter = new BsonDocument

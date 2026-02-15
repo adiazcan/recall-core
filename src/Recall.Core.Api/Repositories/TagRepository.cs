@@ -133,13 +133,27 @@ public sealed class TagRepository(IMongoDatabase database) : ITagRepository
 
     private static TagCursorToken ParseCursor(string cursor)
     {
-        var parts = cursor.Split('|', 2, StringSplitOptions.TrimEntries);
-        if (parts.Length != 2 || string.IsNullOrWhiteSpace(parts[0]) || !ObjectId.TryParse(parts[1], out var objectId))
+        if (string.IsNullOrWhiteSpace(cursor))
         {
             throw new ArgumentException("Cursor is invalid.", nameof(cursor));
         }
 
-        return new TagCursorToken(parts[0], objectId);
+        // Use LastIndexOf to handle pipe characters in normalized names
+        var separatorIndex = cursor.LastIndexOf('|');
+        if (separatorIndex <= 0 || separatorIndex == cursor.Length - 1)
+        {
+            throw new ArgumentException("Cursor is invalid.", nameof(cursor));
+        }
+
+        var normalizedName = cursor[..separatorIndex].Trim();
+        var idPart = cursor[(separatorIndex + 1)..].Trim();
+
+        if (string.IsNullOrWhiteSpace(normalizedName) || !ObjectId.TryParse(idPart, out var objectId))
+        {
+            throw new ArgumentException("Cursor is invalid.", nameof(cursor));
+        }
+
+        return new TagCursorToken(normalizedName, objectId);
     }
 
     private sealed record TagCursorToken(string NormalizedName, ObjectId Id);

@@ -545,14 +545,29 @@ public sealed class ItemService(
             return [];
         }
 
-        // Batch tag creation using Task.WhenAll to reduce DB round-trips
-        var createTasks = validNames.Select(name =>
-            tagService.CreateAsync(userId, new CreateTagRequest { Name = name }, cancellationToken));
+        // Limit concurrency to avoid bursty DB load with large tag lists
+        var results = new List<TagDto>();
+        var semaphore = new SemaphoreSlim(5, 5); // Max 5 concurrent tag creates
 
-        var results = await Task.WhenAll(createTasks);
+        await Task.WhenAll(validNames.Select(async name =>
+        {
+            await semaphore.WaitAsync(cancellationToken);
+            try
+            {
+                var result = await tagService.CreateAsync(userId, new CreateTagRequest { Name = name }, cancellationToken);
+                lock (results)
+                {
+                    results.Add(result.Tag);
+                }
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }));
 
         var ids = results
-            .Select(result => ObjectId.TryParse(result.Tag.Id, out var objectId) ? objectId : (ObjectId?)null)
+            .Select(result => ObjectId.TryParse(result.Id, out var objectId) ? objectId : (ObjectId?)null)
             .Where(id => id.HasValue)
             .Select(id => id!.Value)
             .Distinct()

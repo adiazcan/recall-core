@@ -1,0 +1,941 @@
+openapi: 3.1.1
+info:
+  title: Recall.Core.Api | v1 (Tag Entity Refactor)
+  description: |
+    API contract updates for the Tag Entity Refactor feature (spec 009).
+    
+    Breaking changes from v1.2.0 (spec 008):
+    - Tags are now first-class entities with their own CRUD endpoints.
+    - Tag endpoints changed from name-based (`/tags/{name}`) to ID-based (`/tags/{id}`).
+    - `POST /api/v1/tags` — create a new tag.
+    - `GET /api/v1/tags/{id}` — get a single tag by ID.
+    - `PATCH /api/v1/tags/{id}` — rename/update a tag by ID.
+    - `DELETE /api/v1/tags/{id}` — delete a tag by ID (removes references from all items).
+    - `GET /api/v1/tags` — list tags with item counts (pagination, search).
+    - Item `tags` field in responses changed from `string[]` to `TagSummary[]` (objects with id, name, color).
+    - Item create/update requests changed: `tags` field replaced by `tagIds` + `newTagNames`.
+    - Item list `tag` query parameter replaced by `tagId`.
+    
+    All changes are deployed alongside the migration from embedded string tags to Tag entity references.
+  version: 1.3.0
+servers:
+- url: http://localhost:5080/
+
+paths:
+  # ==========================================================================
+  # Tags endpoints (rewritten — ID-based CRUD)
+  # ==========================================================================
+
+  /api/v1/tags:
+    post:
+      tags:
+      - Tags
+      summary: Create a new tag
+      description: |
+        Create a new tag for the authenticated user.
+        
+        The display name is trimmed and a normalized name (lowercase) is computed.
+        If a tag with the same normalized name already exists for the user,
+        returns the existing tag with 200 OK (idempotent).
+      operationId: CreateTag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTagRequest'
+        required: true
+      responses:
+        '201':
+          description: Created — New tag created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagDto'
+              examples:
+                created:
+                  summary: New tag created
+                  value:
+                    id: "507f1f77bcf86cd799439011"
+                    displayName: "JavaScript"
+                    normalizedName: "javascript"
+                    color: null
+                    itemCount: 0
+                    createdAt: "2026-02-15T12:00:00Z"
+                    updatedAt: "2026-02-15T12:00:00Z"
+        '200':
+          description: OK — Tag with same normalized name already exists (returned as-is)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagDto'
+        '400':
+          description: Bad Request — Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+
+    get:
+      tags:
+      - Tags
+      summary: List tags with item counts
+      description: |
+        Retrieve a paginated list of the authenticated user's tags,
+        each with the count of items referencing it.
+        
+        Results are sorted alphabetically by normalized name.
+        Supports search filtering via `q` (prefix match on normalized name).
+        Supports cursor-based pagination.
+      operationId: ListTags
+      parameters:
+      - name: q
+        in: query
+        description: Search query — prefix match on normalized tag name
+        schema:
+          type: string
+      - name: cursor
+        in: query
+        description: Pagination cursor (opaque string from previous response)
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: Page size (default 50, max 100)
+        schema:
+          type: integer
+          format: int32
+          default: 50
+          maximum: 100
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagListResponse'
+              examples:
+                withTags:
+                  summary: Tags with item counts
+                  value:
+                    tags:
+                      - id: "507f1f77bcf86cd799439011"
+                        displayName: "JavaScript"
+                        normalizedName: "javascript"
+                        color: null
+                        itemCount: 12
+                        createdAt: "2026-02-15T12:00:00Z"
+                        updatedAt: "2026-02-15T12:00:00Z"
+                      - id: "507f1f77bcf86cd799439012"
+                        displayName: "Recipes"
+                        normalizedName: "recipes"
+                        color: "#FF5733"
+                        itemCount: 5
+                        createdAt: "2026-02-15T12:30:00Z"
+                        updatedAt: "2026-02-15T12:30:00Z"
+                    nextCursor: null
+                    hasMore: false
+                empty:
+                  summary: No tags
+                  value:
+                    tags: []
+                    nextCursor: null
+                    hasMore: false
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+
+  /api/v1/tags/{id}:
+    get:
+      tags:
+      - Tags
+      summary: Get a tag by ID
+      description: |
+        Retrieve a single tag by its ID for the authenticated user.
+        Includes the count of items referencing this tag.
+      operationId: GetTag
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Tag ID (ObjectId)
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagDto'
+        '400':
+          description: Bad Request — Invalid ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Tag not found (or belongs to another user)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      tags:
+      - Tags
+      summary: Update a tag
+      description: |
+        Update a tag's display name and/or color.
+        
+        If the name is changed, the normalized name is recomputed.
+        If the new normalized name conflicts with another existing tag
+        for the same user, returns 409 Conflict.
+        
+        Tag renames do NOT require updating items — items reference tags by ID,
+        so the new name is automatically reflected on all associated items.
+      operationId: UpdateTag
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Tag ID (ObjectId)
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTagRequest'
+        required: true
+      responses:
+        '200':
+          description: OK — Tag updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagDto'
+              examples:
+                renamed:
+                  summary: Tag renamed
+                  value:
+                    id: "507f1f77bcf86cd799439011"
+                    displayName: "TypeScript"
+                    normalizedName: "typescript"
+                    color: null
+                    itemCount: 12
+                    createdAt: "2026-02-15T12:00:00Z"
+                    updatedAt: "2026-02-15T13:00:00Z"
+        '400':
+          description: Bad Request — Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Tag not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict — A tag with the new normalized name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                conflict:
+                  summary: Normalized name conflict
+                  value:
+                    error:
+                      code: "duplicate_tag"
+                      message: "A tag with this name already exists."
+
+    delete:
+      tags:
+      - Tags
+      summary: Delete a tag
+      description: |
+        Delete a tag and remove its reference from all items that use it.
+        Returns the count of items that were updated.
+      operationId: DeleteTag
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Tag ID (ObjectId)
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK — Tag deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagDeleteResponse'
+              examples:
+                deleted:
+                  summary: Tag deleted, references removed from 3 items
+                  value:
+                    id: "507f1f77bcf86cd799439011"
+                    itemsUpdated: 3
+        '400':
+          description: Bad Request — Invalid ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Tag not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==========================================================================
+  # Items endpoints (modified — tagIds + newTagNames, expanded tags)
+  # ==========================================================================
+
+  /api/v1/items:
+    post:
+      tags:
+      - Items
+      summary: Save a URL
+      description: |
+        Save a new URL for later with optional title and tag references.
+        
+        **Tag handling (v1.3.0):**
+        - `tagIds`: Array of existing Tag entity IDs to associate. Each ID is validated
+          against the user's tags. Invalid IDs are silently ignored with a warning.
+        - `newTagNames`: Array of tag name strings. For each name, if a tag with the
+          same normalized name exists for the user, it is reused. Otherwise, a new Tag
+          entity is created. The resulting tag IDs are added to the item.
+        - Combined tag count (tagIds + newTagNames) must not exceed 50.
+        
+        Enrichment behavior unchanged from v1.2.0.
+        Deduplication behavior unchanged.
+      operationId: CreateItem
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateItemRequest'
+        required: true
+      responses:
+        '201':
+          description: Created — New item saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDto'
+              examples:
+                withTags:
+                  summary: Item with tag references
+                  value:
+                    id: "507f1f77bcf86cd799439011"
+                    url: "https://example.com/article"
+                    normalizedUrl: "example.com/article"
+                    title: "Example Article Title"
+                    excerpt: "A brief description..."
+                    status: "unread"
+                    isFavorite: false
+                    tags:
+                      - id: "607f1f77bcf86cd799439001"
+                        name: "JavaScript"
+                        color: null
+                      - id: "607f1f77bcf86cd799439002"
+                        name: "Tutorial"
+                        color: "#4CAF50"
+                    createdAt: "2026-02-15T12:00:00Z"
+                    updatedAt: "2026-02-15T12:00:00Z"
+                    previewImageUrl: "https://example.com/og-image.jpg"
+                    thumbnailUrl: null
+                    enrichmentStatus: "succeeded"
+                    enrichmentError: null
+                    enrichedAt: "2026-02-15T12:00:00Z"
+        '200':
+          description: OK — Existing item returned (deduplication)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDto'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+
+    get:
+      tags:
+      - Items
+      summary: List saved items
+      description: |
+        Retrieve a paginated list of saved items with optional filters.
+        
+        **Changes from v1.2.0:**
+        - `tag` query parameter replaced by `tagId` — filter by Tag entity ID instead of tag name string.
+        - `tags` field in response items is now an array of TagSummary objects (id, name, color)
+          instead of string array.
+      operationId: ListItems
+      parameters:
+      - name: status
+        in: query
+        description: Filter by item status (unread, archived)
+        schema:
+          type: string
+      - name: collectionId
+        in: query
+        description: Filter by collection ID
+        schema:
+          type: string
+      - name: tagId
+        in: query
+        description: Filter by Tag entity ID (replaces `tag` string parameter)
+        schema:
+          type: string
+      - name: isFavorite
+        in: query
+        description: Filter by favorite status
+        schema:
+          type: boolean
+      - name: enrichmentStatus
+        in: query
+        description: Filter by enrichment status
+        schema:
+          type: string
+          enum: [pending, succeeded, failed]
+      - name: cursor
+        in: query
+        description: Pagination cursor
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: Page size (default 20, max 50)
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          maximum: 50
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemListResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+
+  /api/v1/items/{id}:
+    get:
+      tags:
+      - Items
+      summary: Get item details
+      description: |
+        Retrieve a single saved item by ID.
+        Tags are expanded to TagSummary objects (id, name, color).
+      operationId: GetItem
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDto'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      tags:
+      - Items
+      summary: Update an item
+      description: |
+        Update item fields including tag references.
+        
+        **Tag handling:**
+        - `tagIds`: When provided, replaces the entire tag reference list. Each ID
+          is validated. Invalid IDs are silently ignored.
+        - `newTagNames`: Creates new tags inline and adds their IDs to the item.
+        - Combined count must not exceed 50 tags.
+        - To remove all tags, send `tagIds: []` with no `newTagNames`.
+      operationId: UpdateItem
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItemRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDto'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+      - Items
+      summary: Delete an item
+      operationId: DeleteItem
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/items/{id}/thumbnail:
+    get:
+      tags:
+      - Items
+      summary: Get item thumbnail
+      description: Unchanged from v1.2.0.
+      operationId: GetItemThumbnail
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Thumbnail image
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+        '404':
+          description: Item not found or thumbnail not available
+
+  /api/v1/items/{id}/enrich:
+    post:
+      tags:
+      - Items
+      summary: Trigger item re-enrichment
+      description: Unchanged from v1.2.0.
+      operationId: EnrichItem
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Item not found
+
+# ==========================================================================
+# Component Schemas
+# ==========================================================================
+
+components:
+  schemas:
+    # -----------------------------------------------------------------------
+    # Tag schemas
+    # -----------------------------------------------------------------------
+
+    TagDto:
+      type: object
+      description: Full tag entity with item count (for management endpoints).
+      properties:
+        id:
+          type: string
+          description: Tag ID (ObjectId)
+          example: "507f1f77bcf86cd799439011"
+        displayName:
+          type: string
+          description: User-entered tag name (case-preserving)
+          example: "JavaScript"
+          minLength: 1
+          maxLength: 50
+        normalizedName:
+          type: string
+          description: Lowercase normalized name used for uniqueness
+          example: "javascript"
+        color:
+          type: ['null', string]
+          description: Optional hex color (e.g., "#FF5733")
+          example: null
+        itemCount:
+          type: integer
+          description: Number of items referencing this tag
+          example: 12
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - displayName
+        - normalizedName
+        - itemCount
+        - createdAt
+        - updatedAt
+
+    TagSummaryDto:
+      type: object
+      description: Lightweight tag info embedded in item responses.
+      properties:
+        id:
+          type: string
+          description: Tag ID
+          example: "507f1f77bcf86cd799439011"
+        name:
+          type: string
+          description: Tag display name
+          example: "JavaScript"
+        color:
+          type: ['null', string]
+          description: Optional hex color
+          example: null
+      required:
+        - id
+        - name
+
+    TagListResponse:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagDto'
+        nextCursor:
+          type: ['null', string]
+          description: Cursor for next page, null if no more results
+        hasMore:
+          type: boolean
+      required:
+        - tags
+        - hasMore
+
+    TagDeleteResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Deleted tag ID
+        itemsUpdated:
+          type: integer
+          description: Number of items from which the tag reference was removed
+      required:
+        - id
+        - itemsUpdated
+
+    CreateTagRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Tag display name (1–50 chars, trimmed)
+          example: "JavaScript"
+          minLength: 1
+          maxLength: 50
+        color:
+          type: ['null', string]
+          description: Optional hex color
+          example: "#4CAF50"
+      required:
+        - name
+
+    UpdateTagRequest:
+      type: object
+      description: At least one field must be provided.
+      properties:
+        name:
+          type: string
+          description: New display name (1–50 chars, trimmed)
+          minLength: 1
+          maxLength: 50
+        color:
+          type: ['null', string]
+          description: New color (hex string or null to remove)
+
+    # -----------------------------------------------------------------------
+    # Item schemas (modified for tag references)
+    # -----------------------------------------------------------------------
+
+    ItemDto:
+      type: object
+      description: |
+        Item DTO. In v1.3.0, the `tags` field changed from `string[]` to
+        `TagSummary[]` — each tag is now an object with id, name, and color.
+      properties:
+        id:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        url:
+          type: string
+          example: "https://example.com/article"
+        normalizedUrl:
+          type: string
+          example: "example.com/article"
+        title:
+          type: ['null', string]
+          maxLength: 200
+        excerpt:
+          type: ['null', string]
+          maxLength: 500
+        status:
+          type: string
+          enum: [unread, archived]
+          default: unread
+        isFavorite:
+          type: boolean
+          default: false
+        collectionId:
+          type: ['null', string]
+        tags:
+          type: array
+          description: Expanded tag references (id, name, color)
+          items:
+            $ref: '#/components/schemas/TagSummaryDto'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        previewImageUrl:
+          type: ['null', string]
+        thumbnailUrl:
+          type: ['null', string]
+        enrichmentStatus:
+          type: string
+          enum: [pending, succeeded, failed]
+          default: pending
+        enrichmentError:
+          type: ['null', string]
+          maxLength: 500
+        enrichedAt:
+          type: ['null', string]
+          format: date-time
+      required:
+        - id
+        - url
+        - normalizedUrl
+        - status
+        - isFavorite
+        - tags
+        - createdAt
+        - updatedAt
+        - enrichmentStatus
+
+    ItemListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemDto'
+        nextCursor:
+          type: ['null', string]
+        hasMore:
+          type: boolean
+      required:
+        - items
+        - hasMore
+
+    CreateItemRequest:
+      type: object
+      description: |
+        Create item request. In v1.3.0, `tags` (string[]) is replaced by
+        `tagIds` (existing tag IDs) and `newTagNames` (inline tag creation).
+      properties:
+        url:
+          type: string
+          description: URL to save
+          example: "https://example.com/article"
+        title:
+          type: ['null', string]
+          description: Optional user-provided title
+        tagIds:
+          type: ['null', array]
+          description: Array of existing Tag entity IDs to associate
+          items:
+            type: string
+          maxItems: 50
+        newTagNames:
+          type: ['null', array]
+          description: |
+            Array of tag name strings for inline creation.
+            For each name, if a tag with the same normalized name exists,
+            it is reused. Otherwise, a new tag is created.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 50
+          maxItems: 50
+      required:
+        - url
+
+    UpdateItemRequest:
+      type: object
+      description: |
+        Update item request. In v1.3.0, `tags` (string[]) is replaced by
+        `tagIds` and `newTagNames`. When `tagIds` is provided, it replaces
+        the entire tag list. `newTagNames` creates tags inline and adds them.
+      properties:
+        title:
+          type: ['null', string]
+        excerpt:
+          type: ['null', string]
+        status:
+          type: string
+          enum: [unread, archived]
+        isFavorite:
+          type: boolean
+        collectionId:
+          type: ['null', string]
+        tagIds:
+          type: ['null', array]
+          description: Replace tag references with these IDs
+          items:
+            type: string
+          maxItems: 50
+        newTagNames:
+          type: ['null', array]
+          description: Create new tags inline and add their IDs
+          items:
+            type: string
+            minLength: 1
+            maxLength: 50
+          maxItems: 50
+
+    EnrichResponse:
+      type: object
+      description: Unchanged from v1.2.0.
+      properties:
+        message:
+          type: string
+        itemId:
+          type: string
+        status:
+          type: string
+          enum: [pending, succeeded, failed]
+      required:
+        - message
+        - itemId
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+      required:
+        - error
+
+    ErrorDetail:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "not_found"
+        message:
+          type: string
+          example: "Tag not found"
+      required:
+        - code
+        - message
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from Entra External ID
+
+security:
+  - bearerAuth: []
+
+tags:
+- name: Tags
+  description: Tag entity CRUD operations
+- name: Items
+  description: Bookmark item operations

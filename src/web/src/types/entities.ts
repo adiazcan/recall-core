@@ -9,13 +9,19 @@ export interface Item {
   domain: string;
   imageUrl?: string;
   collectionId: string | null;
-  tags: string[];
+  tags: TagSummary[];
   status: ItemStatus;
   isFavorite: boolean;
   isArchived: boolean;
   isRead: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface TagSummary {
+  id: string;
+  name: string;
+  color: string | null;
 }
 
 export interface Collection {
@@ -29,7 +35,11 @@ export interface Collection {
 }
 
 export interface Tag {
-  name: string;
-  count: number;
-  color?: string;
+  id: string;
+  displayName: string;
+  normalizedName: string;
+  color: string | null;
+  itemCount: number;
+  createdAt: string;
+  updatedAt: string;
 }

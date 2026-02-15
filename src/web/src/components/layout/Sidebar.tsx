@@ -24,6 +24,7 @@ const navItems = [
 export function Sidebar() {
   const setViewState = useUiStore((state) => state.setViewState);
   const openCreateCollection = useUiStore((state) => state.openCreateCollection);
+  const openCreateTag = useUiStore((state) => state.openCreateTag);
   const setSidebarOpen = useUiStore((state) => state.setSidebarOpen);
   const location = useLocation();
   const navRef = useRef<HTMLDivElement>(null);
@@ -177,13 +178,11 @@ export function Sidebar() {
             </h3>
             <button
               type="button"
-              className="size-3 flex items-center justify-center text-neutral-400 cursor-not-allowed"
-              aria-label="Add tag (coming soon)"
-              disabled
-              aria-disabled="true"
-              title="Tag creation coming soon"
+              className="size-8 flex items-center justify-center text-neutral-400 hover:text-neutral-900 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+              onClick={openCreateTag}
+              aria-label="Create new tag"
             >
-              <Plus className="size-3" />
+              <Plus className="size-4" />
             </button>
           </div>
           <TagList />

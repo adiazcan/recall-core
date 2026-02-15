@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
-import { X, ExternalLink, Star, Archive, Trash2, Calendar, Plus, Check, ChevronsUpDown } from 'lucide-react';
+import { X, ExternalLink, Star, Archive, Trash2, Calendar } from 'lucide-react';
 import FocusLock from 'react-focus-lock';
 import { Button } from '../../../components/ui/button';
 import { Textarea } from '../../../components/ui/textarea';
@@ -11,25 +11,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../components/ui/select';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from '../../../components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '../../../components/ui/popover';
-import { Input } from '../../../components/ui/input';
 import { useItemsStore } from '../store';
 import { useCollectionsStore } from '../../collections/store';
-import { useTagsStore } from '../../tags/store';
 import { useToastStore } from '../../../stores/toast-store';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { TagChip } from '../../tags/components/TagChip';
+import { TagPicker, type TagPickerSelection } from '../../tags/components/TagPicker';
 import { cn } from '../../../lib/utils';
 import { useAuthorizedImageUrl } from '../../../lib/hooks/useAuthorizedImageUrl';
 
@@ -41,11 +28,6 @@ function isValidHttpUrl(url: string): boolean {
   } catch {
     return false;
   }
-}
-
-// Security: Sanitize tag names to prevent XSS/injection
-function isValidTagName(tag: string): boolean {
-  return /^[a-zA-Z0-9-_]+$/.test(tag);
 }
 
 export function ItemDetail() {
@@ -60,27 +42,22 @@ export function ItemDetail() {
   const collections = useCollectionsStore((state) => state.collections);
   const collectionsLoading = useCollectionsStore((state) => state.isLoading);
   const fetchCollections = useCollectionsStore((state) => state.fetchCollections);
-  const tags = useTagsStore((state) => state.tags);
-  const fetchTags = useTagsStore((state) => state.fetchTags);
   const success = useToastStore((state) => state.success);
   const error = useToastStore((state) => state.error);
   const [notes, setNotes] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [newTagInput, setNewTagInput] = useState('');
-  const [isAddingTag, setIsAddingTag] = useState(false);
-  const [comboboxOpen, setComboboxOpen] = useState(false);
+  const [isSavingTags, setIsSavingTags] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  const item = selectedItemSnapshot ?? items.find((i) => i.id === selectedItemId);
+  const item = items.find((i) => i.id === selectedItemId) ?? selectedItemSnapshot;
   const thumbnailUrl = useAuthorizedImageUrl(item?.imageUrl);
 
-  // Fetch collections and tags when panel opens
+  // Fetch collections when panel opens
   useEffect(() => {
     if (selectedItemId) {
       fetchCollections();
-      fetchTags();
     }
-  }, [selectedItemId, fetchCollections, fetchTags]);
+  }, [selectedItemId, fetchCollections]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -112,7 +89,7 @@ export function ItemDetail() {
     }
 
     return Array.from(document.querySelectorAll('[data-radix-portal]')) as HTMLElement[];
-  }, [selectedItemId, comboboxOpen]);
+  }, [selectedItemId]);
 
   const selectedCollectionLabel = useMemo(() => {
     if (!item) {
@@ -150,7 +127,7 @@ export function ItemDetail() {
 
     try {
       await updateItem(item.id, {
-        collectionId: collectionId === 'none' ? null : collectionId,
+        collectionId: collectionId === 'none' ? '' : collectionId,
       });
       success('Collection updated');
     } catch (err) {
@@ -180,58 +157,22 @@ export function ItemDetail() {
     }
   };
 
-  const handleAddTag = async () => {
-    if (!item || !newTagInput.trim()) return;
-
-    const tagName = newTagInput.trim();
-    setComboboxOpen(false);
-    
-    // Security: Validate tag name format to prevent XSS/injection
-    if (!isValidTagName(tagName)) {
-      error('Tag name can only contain letters, numbers, hyphens, and underscores');
-      return;
-    }
-    
-    // Check if tag already exists
-    if (item.tags.includes(tagName)) {
-      error('Tag already exists');
+  const handleTagSelectionChange = async (selection: TagPickerSelection) => {
+    if (!item || isSavingTags) {
       return;
     }
 
-    // Validate tag name length
-    if (tagName.length > 50) {
-      error('Tag name too long (max 50 characters)');
-      return;
-    }
-
-    // Check max tags limit
-    if (item.tags.length >= 20) {
-      error('Maximum 20 tags per item');
-      return;
-    }
-
+    setIsSavingTags(true);
     try {
       await updateItem(item.id, {
-        tags: [...item.tags, tagName],
+        tagIds: selection.tagIds,
+        newTagNames: selection.newTagNames,
       });
-      setNewTagInput('');
-      setIsAddingTag(false);
-      success('Tag added');
-    } catch (err) {
-      error('Failed to add tag');
-    }
-  };
-
-  const handleRemoveTag = async (tagName: string) => {
-    if (!item) return;
-
-    try {
-      await updateItem(item.id, {
-        tags: item.tags.filter((t) => t !== tagName),
-      });
-      success('Tag removed');
-    } catch (err) {
-      error('Failed to remove tag');
+      success('Tags updated');
+    } catch {
+      error('Failed to update tags');
+    } finally {
+      setIsSavingTags(false);
     }
   };
 
@@ -402,112 +343,11 @@ export function ItemDetail() {
                 <span>#</span>
                 <span>Tags</span>
               </div>
-              <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                {item.tags.map((tag) => (
-                  <TagChip key={tag} name={tag} onRemove={() => handleRemoveTag(tag)} />
-                ))}
-                
-                {isAddingTag ? (
-                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                    <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={comboboxOpen}
-                          aria-label="Select or create tag"
-                          className="h-7 sm:h-8 w-[160px] sm:w-[200px] justify-between text-xs sm:text-sm"
-                        >
-                          {newTagInput || "Select or type tag..."}
-                          <ChevronsUpDown className="ml-1.5 sm:ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[160px] sm:w-[200px] p-0" align="start">
-                        <Command
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && newTagInput.trim()) {
-                              e.preventDefault();
-                              handleAddTag();
-                            }
-                          }}
-                        >
-                          <CommandInput 
-                            placeholder="Search or type tag..." 
-                            value={newTagInput}
-                            onValueChange={setNewTagInput}
-                          />
-                          <CommandEmpty>
-                            {newTagInput && isValidTagName(newTagInput) ? (
-                              <div className="py-2 text-xs sm:text-sm text-neutral-600">
-                                Press Enter to create "{newTagInput}"
-                              </div>
-                            ) : (
-                              <div className="py-2 text-xs sm:text-sm text-neutral-500">
-                                {newTagInput ? 'Invalid tag name format' : 'No tags found'}
-                              </div>
-                            )}
-                          </CommandEmpty>
-                          <CommandGroup>
-                            {tags
-                              .filter((tag) => !item?.tags.includes(tag.name))
-                              .map((tag) => (
-                                <CommandItem
-                                  key={tag.name}
-                                  value={tag.name}
-                                  onSelect={(currentValue) => {
-                                    setNewTagInput(currentValue);
-                                    // Immediately add the selected tag
-                                    setTimeout(() => handleAddTag(), 0);
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      newTagInput === tag.name ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
-                                  #{tag.name}
-                                  <span className="ml-auto text-xs text-neutral-400">{tag.count}</span>
-                                </CommandItem>
-                              ))}
-                          </CommandGroup>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleAddTag}
-                      disabled={!newTagInput.trim()}
-                      className="h-7 sm:h-8 px-2 text-xs sm:text-sm"
-                    >
-                      Add
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setIsAddingTag(false);
-                        setNewTagInput('');
-                        setComboboxOpen(false);
-                      }}
-                      className="h-7 sm:h-8 px-2 text-xs sm:text-sm"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsAddingTag(true)}
-                    className="h-auto px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm text-neutral-600 hover:bg-neutral-100"
-                  >
-                    <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
-                    Add
-                  </Button>
-                )}
-              </div>
+              <TagPicker
+                selectedTags={item.tags}
+                onChange={(selection) => void handleTagSelectionChange(selection)}
+                maxTags={50}
+              />
             </div>
 
             {/* Added timestamp */}

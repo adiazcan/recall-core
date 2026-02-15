@@ -1,4 +1,4 @@
-import type { Collection, Item, ItemStatus, Tag } from '../../types/entities';
+import type { Collection, Item, ItemStatus, Tag, TagSummary } from '../../types/entities';
 import { extractDomain } from '../utils';
 
 export type EnrichmentStatus = 'pending' | 'succeeded' | 'failed';
@@ -17,7 +17,7 @@ export interface ItemDto {
   status: ItemStatus;
   isFavorite: boolean;
   collectionId: string | null;
-  tags: string[];
+  tags: TagSummaryDto[];
   createdAt: string;
   updatedAt: string;
 }
@@ -31,7 +31,7 @@ export interface ItemListResponse {
 export interface ItemListParams {
   status?: ItemStatus;
   collectionId?: string;
-  tag?: string;
+  tagId?: string;
   isFavorite?: boolean;
   cursor?: string;
   limit?: number;
@@ -41,7 +41,6 @@ export interface ItemListParams {
 export interface CreateItemRequest {
   url: string;
   title?: string | null;
-  tags?: string[] | null;
 }
 
 export interface UpdateItemRequest {
@@ -50,7 +49,8 @@ export interface UpdateItemRequest {
   status?: ItemStatus | null;
   isFavorite?: boolean | null;
   collectionId?: string | null;
-  tags?: string[] | null;
+  tagIds?: string[] | null;
+  newTagNames?: string[] | null;
 }
 
 export interface CollectionDto {
@@ -80,32 +80,40 @@ export interface UpdateCollectionRequest {
 }
 
 export interface TagDto {
-  name: string;
-  count: number;
+  id: string;
+  displayName: string;
+  normalizedName: string;
+  color: string | null;
+  itemCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TagListResponse {
   tags: TagDto[];
+  nextCursor: string | null;
+  hasMore: boolean;
 }
 
-export interface RenameTagRequest {
-  newName: string;
+export interface TagSummaryDto {
+  id: string;
+  name: string;
+  color: string | null;
 }
 
-const TAG_COLORS = [
-  'bg-orange-100 text-orange-700',
-  'bg-blue-100 text-blue-700',
-  'bg-green-100 text-green-700',
-  'bg-purple-100 text-purple-700',
-  'bg-pink-100 text-pink-700',
-  'bg-yellow-100 text-yellow-700',
-  'bg-cyan-100 text-cyan-700',
-  'bg-red-100 text-red-700',
-] as const;
+export interface CreateTagRequest {
+  name: string;
+  color?: string | null;
+}
 
-function getTagColor(name: string): string {
-  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return TAG_COLORS[hash % TAG_COLORS.length];
+export interface UpdateTagRequest {
+  name?: string;
+  color?: string | null;
+}
+
+export interface TagDeleteResponse {
+  id: string;
+  itemsUpdated: number;
 }
 
 export function mapItemDtoToItem(dto: ItemDto): Item {
@@ -118,7 +126,11 @@ export function mapItemDtoToItem(dto: ItemDto): Item {
     imageUrl: dto.previewImageUrl ?? dto.thumbnailUrl ?? undefined,
     domain: extractDomain(dto.url),
     collectionId: dto.collectionId,
-    tags: dto.tags,
+    tags: dto.tags.map((tag): TagSummary => ({
+      id: tag.id,
+      name: tag.name,
+      color: tag.color,
+    })),
     status: dto.status,
     isFavorite: dto.isFavorite,
     isArchived: dto.status === 'archived',
@@ -142,8 +154,12 @@ export function mapCollectionDtoToCollection(dto: CollectionDto): Collection {
 
 export function mapTagDtoToTag(dto: TagDto): Tag {
   return {
-    name: dto.name,
-    count: dto.count,
-    color: getTagColor(dto.name),
+    id: dto.id,
+    displayName: dto.displayName,
+    normalizedName: dto.normalizedName,
+    color: dto.color,
+    itemCount: dto.itemCount,
+    createdAt: dto.createdAt,
+    updatedAt: dto.updatedAt,
   };
 }

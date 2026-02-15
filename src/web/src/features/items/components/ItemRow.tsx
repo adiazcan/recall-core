@@ -6,6 +6,7 @@ import { cn } from '../../../lib/utils';
 import { useItemsStore } from '../store';
 import { useToastStore } from '../../../stores/toast-store';
 import { useAuthorizedImageUrl } from '../../../lib/hooks/useAuthorizedImageUrl';
+import { TagChip } from '../../tags/components/TagChip';
 
 interface ItemRowProps {
   item: Item;
@@ -121,9 +122,7 @@ export const ItemRow = forwardRef<HTMLDivElement, ItemRowProps>(
           {item.tags.length > 0 && (
             <div className="flex items-center gap-2">
               {item.tags.slice(0, 2).map((tag) => (
-                <span key={tag} className="h-5 px-2 rounded-full bg-neutral-100 text-neutral-600 text-xs leading-4 flex items-center">
-                  #{tag}
-                </span>
+                <TagChip key={tag.id} tag={tag} className="h-5 px-2 py-0 text-xs leading-4" />
               ))}
               {item.tags.length > 2 && <span className="text-neutral-400">+{item.tags.length - 2}</span>}
             </div>

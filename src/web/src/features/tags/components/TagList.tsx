@@ -7,23 +7,25 @@ import { useUiStore } from '../../../stores/ui-store';
 import type { ViewState } from '../../../types/views';
 
 export function TagList() {
-  const tags = useTagsStore((state) => state.tags);
+  const tagsMap = useTagsStore((state) => state.tags);
   const hasLoaded = useTagsStore((state) => state.hasLoaded);
   const isLoading = useTagsStore((state) => state.isLoading);
-  const fetchTags = useTagsStore((state) => state.fetchTags);
+  const listTags = useTagsStore((state) => state.listTags);
   const setViewState = useUiStore((state) => state.setViewState);
+  const tags = Array.from(tagsMap.values()).sort((a, b) =>
+    a.normalizedName.localeCompare(b.normalizedName),
+  );
 
   useEffect(() => {
-    // Only fetch once if we don't have tags and aren't currently loading
     if (!hasLoaded && tags.length === 0 && !isLoading) {
-      fetchTags();
+      void listTags();
     }
-  }, [fetchTags, hasLoaded, tags.length, isLoading]);
+  }, [hasLoaded, isLoading, listTags, tags.length]);
 
-  const handleTagClick = (tagName: string) => {
+  const handleTagClick = (tagId: string, tagName: string) => {
     const newViewState: ViewState = {
       type: 'tag',
-      id: tagName,
+      id: tagId,
       title: `#${tagName}`,
     };
     setViewState(newViewState);
@@ -51,9 +53,9 @@ export function TagList() {
     <div className="space-y-1">
       {tags.map((tag) => (
         <NavLink
-          key={tag.name}
-          to={`/tags/${encodeURIComponent(tag.name)}`}
-          onClick={() => handleTagClick(tag.name)}
+          key={tag.id}
+          to={`/tags/${tag.id}`}
+          onClick={() => handleTagClick(tag.id, tag.displayName)}
           className={({ isActive }) =>
             cn(
               'flex items-center gap-3 px-3 h-9 rounded-[10px] text-sm font-medium transition-colors',
@@ -69,7 +71,8 @@ export function TagList() {
                 className={cn('h-4 w-4 flex-shrink-0', isActive ? 'text-indigo-600' : 'text-neutral-500')}
                 aria-hidden="true"
               />
-              <span className="flex-1 text-left truncate">{tag.name}</span>
+              <span className="flex-1 text-left truncate">{tag.displayName}</span>
+              <span className="text-xs text-neutral-400 tabular-nums">{tag.itemCount}</span>
             </>
           )}
         </NavLink>

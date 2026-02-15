@@ -36,8 +36,7 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         var response = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
         {
             Url = "https://example.com/article",
-            Title = "Interesting Article",
-            Tags = ["Tech", "reading"]
+            Title = "Interesting Article"
         });
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -45,9 +44,11 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         var payload = await response.Content.ReadFromJsonAsync<ItemDto>();
         Assert.NotNull(payload);
         Assert.Equal("https://example.com/article", payload!.Url);
+        Assert.Equal("Interesting Article", payload.Title);
         Assert.Equal("unread", payload.Status);
-        Assert.Contains("tech", payload.Tags);
     }
+
+
 
     [Fact]
     public async Task CreateItem_ReturnsEnrichedItemWhenPreviewImageFound()
@@ -230,25 +231,45 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         using var testClient = CreateClient();
         var client = testClient.Client;
 
-        await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        var createTagResponse = await client.PostAsJsonAsync("/api/v1/tags", new CreateTagRequest
         {
-            Url = "https://example.com/tech",
-            Tags = ["tech", "reading"]
+            Name = "Tech"
+        });
+        var techTag = await createTagResponse.Content.ReadFromJsonAsync<TagDto>();
+        Assert.NotNull(techTag);
+
+        var createItem1Response = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        {
+            Url = "https://example.com/tech"
+        });
+        var item1 = await createItem1Response.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(item1);
+
+        await client.PatchAsJsonAsync($"/api/v1/items/{item1!.Id}", new UpdateItemRequest
+        {
+            TagIds = [techTag!.Id],
+            NewTagNames = ["Reading"]
         });
 
-        await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        var createItem2Response = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
         {
-            Url = "https://example.com/other",
-            Tags = ["reading"]
+            Url = "https://example.com/other"
+        });
+        var item2 = await createItem2Response.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(item2);
+
+        await client.PatchAsJsonAsync($"/api/v1/items/{item2!.Id}", new UpdateItemRequest
+        {
+            NewTagNames = ["Reading"]
         });
 
-        var tagResponse = await client.GetAsync("/api/v1/items?tag=tech");
+        var tagResponse = await client.GetAsync($"/api/v1/items?tagId={techTag.Id}");
         Assert.Equal(HttpStatusCode.OK, tagResponse.StatusCode);
 
         var tagPayload = await tagResponse.Content.ReadFromJsonAsync<ItemListResponse>();
         Assert.NotNull(tagPayload);
         Assert.Single(tagPayload!.Items);
-        Assert.Contains("tech", tagPayload.Items[0].Tags);
+        Assert.Contains(tagPayload.Items[0].Tags, tag => tag.Id == techTag.Id && tag.Name == "Tech");
 
         var favoriteResponse = await client.GetAsync("/api/v1/items?isFavorite=true");
         Assert.Equal(HttpStatusCode.OK, favoriteResponse.StatusCode);
@@ -320,6 +341,13 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         var item = await createResponse.Content.ReadFromJsonAsync<ItemDto>();
         Assert.NotNull(item);
 
+        var createTagResponse = await client.PostAsJsonAsync("/api/v1/tags", new CreateTagRequest
+        {
+            Name = "Updates"
+        });
+        var updatesTag = await createTagResponse.Content.ReadFromJsonAsync<TagDto>();
+        Assert.NotNull(updatesTag);
+
         var updateResponse = await client.PatchAsJsonAsync($"/api/v1/items/{item!.Id}", new UpdateItemRequest
         {
             Title = "Updated",
@@ -327,7 +355,8 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
             Status = "archived",
             IsFavorite = true,
             CollectionId = collection!.Id,
-            Tags = ["Tech", "Updates"]
+            TagIds = [updatesTag!.Id],
+            NewTagNames = ["Tech"]
         });
 
         Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
@@ -339,9 +368,46 @@ public class ItemsEndpointTests : IClassFixture<MongoDbFixture>
         Assert.Equal("archived", updated.Status);
         Assert.True(updated.IsFavorite);
         Assert.Equal(collection.Id, updated.CollectionId);
-        Assert.Contains("tech", updated.Tags);
-        Assert.Contains("updates", updated.Tags);
+        Assert.Contains(updated.Tags, tag => tag.Name == "Tech");
+        Assert.Contains(updated.Tags, tag => tag.Id == updatesTag.Id && tag.Name == "Updates");
     }
+
+    [Fact]
+    public async Task UpdateItem_RemoveAllTags_Succeeds()
+    {
+        using var testClient = CreateClient();
+        var client = testClient.Client;
+
+        var createResponse = await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        {
+            Url = "https://example.com/remove-tags"
+        });
+
+        var item = await createResponse.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(item);
+
+        await client.PatchAsJsonAsync($"/api/v1/items/{item!.Id}", new UpdateItemRequest
+        {
+            NewTagNames = ["One", "Two"]
+        });
+
+        var getResponse = await client.GetAsync($"/api/v1/items/{item.Id}");
+        var tagged = await getResponse.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(tagged);
+        Assert.NotEmpty(tagged!.Tags);
+
+        var updateResponse = await client.PatchAsJsonAsync($"/api/v1/items/{item.Id}", new UpdateItemRequest
+        {
+            TagIds = []
+        });
+
+        Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
+        var updated = await updateResponse.Content.ReadFromJsonAsync<ItemDto>();
+        Assert.NotNull(updated);
+        Assert.Empty(updated!.Tags);
+    }
+
+
 
     [Fact]
     public async Task UpdateItem_InvalidCollectionReturnsBadRequest()

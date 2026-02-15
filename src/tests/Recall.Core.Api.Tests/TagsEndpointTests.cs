@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using Recall.Core.Api.Models;
 using Recall.Core.Api.Tests.TestFixtures;
 using Xunit;
@@ -18,98 +20,250 @@ public class TagsEndpointTests : IClassFixture<MongoDbFixture>
     }
 
     [Fact]
-    public async Task ListTags_ReturnsTagCounts()
+    public async Task CreateTag_ReturnsCreatedWithAllFields()
     {
         using var testClient = CreateClient();
-        var client = testClient.Client;
-
-        await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        var response = await testClient.Client.PostAsJsonAsync("/api/v1/tags", new CreateTagRequest
         {
-            Url = "https://example.com/tech-a",
-            Tags = ["tech", "reading"]
+            Name = "JavaScript"
         });
 
-        await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
-        {
-            Url = "https://example.com/tech-b",
-            Tags = ["tech"]
-        });
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var response = await client.GetAsync("/api/v1/tags");
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var payload = await response.Content.ReadFromJsonAsync<TagListResponse>();
+        var payload = await response.Content.ReadFromJsonAsync<TagDto>();
         Assert.NotNull(payload);
-
-        var tech = payload!.Tags.Single(tag => tag.Name == "tech");
-        Assert.Equal(2, tech.Count);
+        Assert.False(string.IsNullOrWhiteSpace(payload!.Id));
+        Assert.Equal("JavaScript", payload.DisplayName);
+        Assert.Equal("javascript", payload.NormalizedName);
+        Assert.Null(payload.Color);
+        Assert.Equal(0, payload.ItemCount);
+        Assert.False(string.IsNullOrWhiteSpace(payload.CreatedAt));
+        Assert.False(string.IsNullOrWhiteSpace(payload.UpdatedAt));
     }
 
     [Fact]
-    public async Task RenameTag_ReturnsItemsUpdated()
+    public async Task CreateTag_DuplicateReturnsExistingWithOk()
     {
         using var testClient = CreateClient();
-        var client = testClient.Client;
-
-        await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        var first = await testClient.Client.PostAsJsonAsync("/api/v1/tags", new CreateTagRequest
         {
-            Url = "https://example.com/rename-a",
-            Tags = ["tech"]
+            Name = "JavaScript"
         });
 
-        await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        var created = await first.Content.ReadFromJsonAsync<TagDto>();
+        Assert.NotNull(created);
+
+        var second = await testClient.Client.PostAsJsonAsync("/api/v1/tags", new CreateTagRequest
         {
-            Url = "https://example.com/rename-b",
-            Tags = ["tech"]
+            Name = "javascript"
         });
 
-        var response = await client.PatchAsJsonAsync("/api/v1/tags/tech", new RenameTagRequest
-        {
-            NewName = "Technology"
-        });
+        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var payload = await response.Content.ReadFromJsonAsync<TagOperationResponse>();
-        Assert.NotNull(payload);
-        Assert.Equal("tech", payload!.OldName);
-        Assert.Equal("technology", payload.NewName);
-        Assert.Equal(2, payload.ItemsUpdated);
+        var duplicate = await second.Content.ReadFromJsonAsync<TagDto>();
+        Assert.NotNull(duplicate);
+        Assert.Equal(created!.Id, duplicate!.Id);
+        Assert.Equal("JavaScript", duplicate.DisplayName);
     }
 
     [Fact]
-    public async Task DeleteTag_RemovesTagFromItems()
+    public async Task CreateTag_WithColorReturnsCreated()
     {
         using var testClient = CreateClient();
-        var client = testClient.Client;
-
-        await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        var response = await testClient.Client.PostAsJsonAsync("/api/v1/tags", new CreateTagRequest
         {
-            Url = "https://example.com/delete-a",
-            Tags = ["obsolete", "keep"]
+            Name = "Recipes",
+            Color = "#FF5733"
         });
 
-        await client.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
-        {
-            Url = "https://example.com/delete-b",
-            Tags = ["obsolete"]
-        });
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var response = await client.DeleteAsync("/api/v1/tags/obsolete");
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var payload = await response.Content.ReadFromJsonAsync<TagOperationResponse>();
+        var payload = await response.Content.ReadFromJsonAsync<TagDto>();
         Assert.NotNull(payload);
-        Assert.Equal("obsolete", payload!.OldName);
-        Assert.Null(payload.NewName);
-        Assert.Equal(2, payload.ItemsUpdated);
+        Assert.Equal("#FF5733", payload!.Color);
+    }
 
-        var listResponse = await client.GetAsync("/api/v1/tags");
+    [Fact]
+    public async Task ListTags_ReturnsTagsWithItemCounts_AndSupportsSearch()
+    {
+        using var testClient = CreateClient();
+        var java = await CreateTagAsync(testClient.Client, "JavaScript");
+        var recipes = await CreateTagAsync(testClient.Client, "Recipes");
+
+        await SeedItemWithTagIdsAsync(testClient.ConnectionString, testClient.DatabaseName, TestUserId, java.Id, recipes.Id);
+        await SeedItemWithTagIdsAsync(testClient.ConnectionString, testClient.DatabaseName, TestUserId, java.Id);
+
+        var listResponse = await testClient.Client.GetAsync("/api/v1/tags");
+        Assert.Equal(HttpStatusCode.OK, listResponse.StatusCode);
+
         var listPayload = await listResponse.Content.ReadFromJsonAsync<TagListResponse>();
         Assert.NotNull(listPayload);
-        Assert.DoesNotContain(listPayload!.Tags, tag => tag.Name == "obsolete");
+        Assert.True(listPayload!.Tags.Count >= 2);
+
+        var javaTag = listPayload.Tags.Single(tag => tag.Id == java.Id);
+        var recipesTag = listPayload.Tags.Single(tag => tag.Id == recipes.Id);
+        Assert.Equal(2, javaTag.ItemCount);
+        Assert.Equal(1, recipesTag.ItemCount);
+
+        var searchResponse = await testClient.Client.GetAsync("/api/v1/tags?q=java");
+        Assert.Equal(HttpStatusCode.OK, searchResponse.StatusCode);
+
+        var searchPayload = await searchResponse.Content.ReadFromJsonAsync<TagListResponse>();
+        Assert.NotNull(searchPayload);
+        Assert.Single(searchPayload!.Tags);
+        Assert.Equal(java.Id, searchPayload.Tags[0].Id);
+    }
+
+    [Fact]
+    public async Task GetTagById_ReturnsTag()
+    {
+        using var testClient = CreateClient();
+        var tag = await CreateTagAsync(testClient.Client, "Tech");
+
+        var response = await testClient.Client.GetAsync($"/api/v1/tags/{tag.Id}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var payload = await response.Content.ReadFromJsonAsync<TagDto>();
+        Assert.NotNull(payload);
+        Assert.Equal(tag.Id, payload!.Id);
+        Assert.Equal("Tech", payload.DisplayName);
+    }
+
+    [Fact]
+    public async Task GetTagById_NonExistentReturnsNotFound()
+    {
+        using var testClient = CreateClient();
+        var response = await testClient.Client.GetAsync($"/api/v1/tags/{ObjectId.GenerateNewId()}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateTag_RenameReturnsOk()
+    {
+        using var testClient = CreateClient();
+        var tag = await CreateTagAsync(testClient.Client, "JavaScript");
+
+        var response = await testClient.Client.PatchAsJsonAsync($"/api/v1/tags/{tag.Id}", new UpdateTagRequest
+        {
+            Name = "TypeScript"
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var payload = await response.Content.ReadFromJsonAsync<TagDto>();
+        Assert.NotNull(payload);
+        Assert.Equal("TypeScript", payload!.DisplayName);
+        Assert.Equal("typescript", payload.NormalizedName);
+    }
+
+    [Fact]
+    public async Task UpdateTag_RenameConflictReturnsConflict()
+    {
+        using var testClient = CreateClient();
+        var source = await CreateTagAsync(testClient.Client, "JavaScript");
+        await CreateTagAsync(testClient.Client, "TypeScript");
+
+        var response = await testClient.Client.PatchAsJsonAsync($"/api/v1/tags/{source.Id}", new UpdateTagRequest
+        {
+            Name = "TypeScript"
+        });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+
+        var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.NotNull(payload);
+        Assert.Equal("duplicate_tag", payload!.Error.Code);
+    }
+
+    [Fact]
+    public async Task DeleteTag_ReturnsItemsUpdated()
+    {
+        using var testClient = CreateClient();
+        var tag = await CreateTagAsync(testClient.Client, "Obsolete");
+        await SeedItemWithTagIdsAsync(testClient.ConnectionString, testClient.DatabaseName, TestUserId, tag.Id);
+        await SeedItemWithTagIdsAsync(testClient.ConnectionString, testClient.DatabaseName, TestUserId, tag.Id);
+
+        var response = await testClient.Client.DeleteAsync($"/api/v1/tags/{tag.Id}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var payload = await response.Content.ReadFromJsonAsync<TagDeleteResponse>();
+        Assert.NotNull(payload);
+        Assert.Equal(tag.Id, payload!.Id);
+        Assert.Equal(2, payload.ItemsUpdated);
+    }
+
+    [Fact]
+    public async Task DeleteTag_NonExistentReturnsNotFound()
+    {
+        using var testClient = CreateClient();
+        var response = await testClient.Client.DeleteAsync($"/api/v1/tags/{ObjectId.GenerateNewId()}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateTag_InvalidNameConstraintsReturnBadRequest()
+    {
+        using var testClient = CreateClient();
+
+        var emptyResponse = await testClient.Client.PostAsJsonAsync("/api/v1/tags", new CreateTagRequest
+        {
+            Name = "   "
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, emptyResponse.StatusCode);
+
+        var longResponse = await testClient.Client.PostAsJsonAsync("/api/v1/tags", new CreateTagRequest
+        {
+            Name = new string('a', 51)
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, longResponse.StatusCode);
+    }
+
+    private static async Task<TagDto> CreateTagAsync(HttpClient client, string name, string? color = null)
+    {
+        var response = await client.PostAsJsonAsync("/api/v1/tags", new CreateTagRequest
+        {
+            Name = name,
+            Color = color
+        });
+
+        Assert.True(response.StatusCode is HttpStatusCode.Created or HttpStatusCode.OK);
+        var payload = await response.Content.ReadFromJsonAsync<TagDto>();
+        Assert.NotNull(payload);
+        return payload!;
+    }
+
+    private static async Task SeedItemWithTagIdsAsync(string connectionString, string databaseName, string userId, params string[] tagIds)
+    {
+        var mongoClient = new MongoClient(connectionString);
+        var database = mongoClient.GetDatabase(databaseName);
+        var collection = database.GetCollection<BsonDocument>("items");
+        var tagObjectIds = tagIds.Select(ObjectId.Parse);
+        var uniqueSuffix = Guid.NewGuid().ToString("N");
+        var now = DateTime.UtcNow;
+
+        var document = new BsonDocument
+        {
+            { "_id", ObjectId.GenerateNewId() },
+            { "url", $"https://example.com/seed/{uniqueSuffix}" },
+            { "normalizedUrl", $"example.com/seed/{uniqueSuffix}" },
+            { "title", "Seeded Item" },
+            { "status", "unread" },
+            { "isFavorite", false },
+            { "tags", new BsonArray() },
+            { "tagIds", new BsonArray(tagObjectIds) },
+            { "userId", userId },
+            { "createdAt", now },
+            { "updatedAt", now },
+            { "enrichmentStatus", "pending" }
+        };
+
+        await collection.InsertOneAsync(document);
     }
 
     private TestClientWrapper CreateClient()
@@ -128,18 +282,22 @@ public class TagsEndpointTests : IClassFixture<MongoDbFixture>
         var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add("X-Test-UserId", TestUserId);
 
-        return new TestClientWrapper(factory, client);
+        return new TestClientWrapper(factory, client, connectionString, databaseName);
     }
 
     private sealed class TestClientWrapper : IDisposable
     {
         private readonly WebApplicationFactory<Program> _factory;
         public HttpClient Client { get; }
+        public string ConnectionString { get; }
+        public string DatabaseName { get; }
 
-        public TestClientWrapper(WebApplicationFactory<Program> factory, HttpClient client)
+        public TestClientWrapper(WebApplicationFactory<Program> factory, HttpClient client, string connectionString, string databaseName)
         {
             _factory = factory;
             Client = client;
+            ConnectionString = connectionString;
+            DatabaseName = databaseName;
         }
 
         public void Dispose()

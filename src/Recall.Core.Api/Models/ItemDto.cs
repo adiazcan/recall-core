@@ -12,7 +12,7 @@ public sealed record ItemDto
     public string Status { get; init; } = "unread";
     public bool IsFavorite { get; init; }
     public string? CollectionId { get; init; }
-    public IReadOnlyList<string> Tags { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<TagSummaryDto> Tags { get; init; } = Array.Empty<TagSummaryDto>();
     public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; init; }
     public string? PreviewImageUrl { get; init; }
@@ -21,7 +21,7 @@ public sealed record ItemDto
     public string? EnrichmentError { get; init; }
     public DateTime? EnrichedAt { get; init; }
 
-    public static ItemDto FromEntity(Item item, string? baseUrl = null)
+    public static ItemDto FromEntity(Item item, IReadOnlyList<TagSummaryDto> tags, string? baseUrl = null)
     {
         var prefix = string.IsNullOrWhiteSpace(baseUrl)
             ? string.Empty
@@ -37,7 +37,7 @@ public sealed record ItemDto
             Status = item.Status,
             IsFavorite = item.IsFavorite,
             CollectionId = item.CollectionId?.ToString(),
-            Tags = item.Tags.AsReadOnly(),
+            Tags = tags,
             CreatedAt = item.CreatedAt,
             UpdatedAt = item.UpdatedAt,
             PreviewImageUrl = item.PreviewImageUrl,

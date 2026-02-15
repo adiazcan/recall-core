@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Recall.Core.Api.Entities;
@@ -10,11 +11,15 @@ namespace Recall.Core.Api.Services;
 public sealed class ItemService(
     IItemRepository repository,
     ICollectionRepository collections,
+    ITagRepository tagRepository,
+    ITagService tagService,
     ISyncEnrichmentService syncEnrichmentService) : IItemService
 {
+    private const int MaxTagsPerItem = 50;
+
     public async Task<SaveItemResult> SaveItemAsync(string userId, CreateItemRequest request, CancellationToken cancellationToken = default)
     {
-        var (url, title, tags) = NormalizeRequest(request);
+        var (url, title) = NormalizeRequest(request);
         var normalizedUrl = UrlNormalizer.Normalize(url);
 
         var existing = await repository.FindByNormalizedUrlAsync(userId, normalizedUrl, cancellationToken);
@@ -37,7 +42,7 @@ public sealed class ItemService(
             Status = "unread",
             IsFavorite = false,
             CollectionId = null,
-            Tags = tags,
+            TagIds = [],
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -133,7 +138,7 @@ public sealed class ItemService(
         string userId,
         string? status,
         string? collectionId,
-        string? tag,
+        string? tagId,
         bool? isFavorite,
         string? enrichmentStatus,
         string? cursor,
@@ -141,7 +146,7 @@ public sealed class ItemService(
         CancellationToken cancellationToken = default)
     {
         var normalizedStatus = NormalizeStatus(status);
-        var normalizedTag = NormalizeTag(tag);
+        var normalizedTagId = NormalizeTagId(tagId);
         var normalizedEnrichmentStatus = NormalizeEnrichmentStatus(enrichmentStatus);
         var (inboxOnly, collectionObjectId) = NormalizeCollectionFilter(collectionId);
         var (cursorId, cursorCreatedAt) = NormalizeCursor(cursor);
@@ -152,7 +157,7 @@ public sealed class ItemService(
             normalizedStatus,
             collectionObjectId,
             inboxOnly,
-            normalizedTag,
+            normalizedTagId,
             isFavorite,
             normalizedEnrichmentStatus,
             cursorId,
@@ -162,11 +167,14 @@ public sealed class ItemService(
         var items = await repository.ListAsync(query, cancellationToken);
         var hasMore = items.Count > pageSize;
         var pageItems = items.Take(pageSize).ToList();
+        var tagMap = await GetTagSummaryMapAsync(userId, pageItems.SelectMany(item => item.TagIds), cancellationToken);
         var nextCursor = hasMore
             ? CursorPagination.Encode(pageItems[^1].Id.ToString(), pageItems[^1].CreatedAt)
             : null;
 
-        var dtos = pageItems.Select(item => ItemDto.FromEntity(item)).ToList();
+        var dtos = pageItems
+            .Select(item => ItemDto.FromEntity(item, ExpandTags(item.TagIds, tagMap)))
+            .ToList();
         return new ItemListResponse
         {
             Items = dtos,
@@ -178,6 +186,7 @@ public sealed class ItemService(
     public async Task<Item?> UpdateItemAsync(string userId, string id, UpdateItemRequest request, CancellationToken cancellationToken = default)
     {
         var objectId = ParseObjectId(id, "ItemId must be a valid ObjectId.");
+        Item? existing = null;
 
         var updates = new List<UpdateDefinition<Item>>();
 
@@ -210,10 +219,30 @@ public sealed class ItemService(
             updates.Add(Builders<Item>.Update.Set(item => item.CollectionId, collectionId));
         }
 
-        if (request.Tags is not null)
+        if (request.TagIds is not null || request.NewTagNames is not null)
         {
-            var tags = NormalizeTags(request.Tags);
-            updates.Add(Builders<Item>.Update.Set(item => item.Tags, tags));
+            existing = await repository.GetByIdAsync(userId, objectId, cancellationToken);
+            if (existing is null)
+            {
+                return null;
+            }
+
+            var baseTagIds = request.TagIds is null
+                ? existing.TagIds
+                : await ResolveExistingTagIdsAsync(userId, ParseObjectIds(request.TagIds), cancellationToken);
+
+            var inlineTagIds = await ResolveInlineTagIdsAsync(userId, request.NewTagNames, cancellationToken);
+            var resolvedTagIds = baseTagIds
+                .Concat(inlineTagIds)
+                .Distinct()
+                .ToList();
+
+            if (resolvedTagIds.Count > MaxTagsPerItem)
+            {
+                throw new RequestValidationException("validation_error", "Items can have at most 50 tags.");
+            }
+
+            updates.Add(Builders<Item>.Update.Set(item => item.TagIds, resolvedTagIds));
         }
 
         if (updates.Count == 0)
@@ -224,6 +253,12 @@ public sealed class ItemService(
         updates.Add(Builders<Item>.Update.Set(item => item.UpdatedAt, DateTime.UtcNow));
         var update = Builders<Item>.Update.Combine(updates);
         return await repository.UpdateAsync(userId, objectId, update, cancellationToken);
+    }
+
+    public async Task<ItemDto> ToDtoAsync(string userId, Item item, CancellationToken cancellationToken = default)
+    {
+        var tagMap = await GetTagSummaryMapAsync(userId, item.TagIds, cancellationToken);
+        return ItemDto.FromEntity(item, ExpandTags(item.TagIds, tagMap));
     }
 
     public async Task<Item?> MarkEnrichmentPendingAsync(string userId, string id, CancellationToken cancellationToken = default)
@@ -333,7 +368,7 @@ public sealed class ItemService(
         return deleted > 0;
     }
 
-    private static (string Url, string? Title, List<string> Tags) NormalizeRequest(CreateItemRequest request)
+    private static (string Url, string? Title) NormalizeRequest(CreateItemRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Url))
         {
@@ -358,28 +393,7 @@ public sealed class ItemService(
             title = trimmedTitle;
         }
 
-        var tags = new List<string>();
-        if (request.Tags is not null)
-        {
-            foreach (var tag in request.Tags)
-            {
-                if (string.IsNullOrWhiteSpace(tag))
-                {
-                    continue;
-                }
-
-                var normalized = tag.Trim().ToLowerInvariant();
-                if (normalized.Length > 50)
-                {
-                    throw new RequestValidationException("validation_error", "Tags must be 50 characters or fewer.");
-                }
-
-                tags.Add(normalized);
-            }
-        }
-
-        tags = tags.Distinct(StringComparer.Ordinal).ToList();
-        return (url, title, tags);
+        return (url, title);
     }
 
     private static string? NormalizeStatus(string? status)
@@ -398,20 +412,19 @@ public sealed class ItemService(
         };
     }
 
-    private static string? NormalizeTag(string? tag)
+    private static ObjectId? NormalizeTagId(string? tagId)
     {
-        if (string.IsNullOrWhiteSpace(tag))
+        if (string.IsNullOrWhiteSpace(tagId))
         {
             return null;
         }
 
-        var normalized = tag.Trim().ToLowerInvariant();
-        if (normalized.Length > 50)
+        if (!ObjectId.TryParse(tagId, out var objectId))
         {
-            throw new RequestValidationException("validation_error", "Tag must be 50 characters or fewer.");
+            throw new RequestValidationException("validation_error", "TagId must be a valid ObjectId.");
         }
 
-        return normalized.Length == 0 ? null : normalized;
+        return objectId;
     }
 
     private static string? NormalizeEnrichmentStatus(string? enrichmentStatus)
@@ -463,26 +476,130 @@ public sealed class ItemService(
         };
     }
 
-    private static List<string> NormalizeTags(IEnumerable<string> tags)
+    private static List<ObjectId> ParseObjectIds(IEnumerable<string> ids)
     {
-        var normalizedTags = new List<string>();
-        foreach (var tag in tags)
+        var objectIds = new List<ObjectId>();
+        foreach (var id in ids)
         {
-            if (string.IsNullOrWhiteSpace(tag))
+            if (string.IsNullOrWhiteSpace(id))
             {
                 continue;
             }
 
-            var normalized = tag.Trim().ToLowerInvariant();
-            if (normalized.Length > 50)
+            if (ObjectId.TryParse(id, out var objectId))
             {
-                throw new RequestValidationException("validation_error", "Tags must be 50 characters or fewer.");
+                objectIds.Add(objectId);
             }
-
-            normalizedTags.Add(normalized);
         }
 
-        return normalizedTags.Distinct(StringComparer.Ordinal).ToList();
+        return objectIds.Distinct().ToList();
+    }
+
+    private async Task<List<ObjectId>> ResolveTagIdsAsync(
+        string userId,
+        IReadOnlyList<string>? requestedTagIds,
+        IReadOnlyList<string>? newTagNames,
+        CancellationToken cancellationToken)
+    {
+        var existingTagIds = await ResolveExistingTagIdsAsync(userId, ParseObjectIds(requestedTagIds ?? Array.Empty<string>()), cancellationToken);
+        var inlineTagIds = await ResolveInlineTagIdsAsync(userId, newTagNames, cancellationToken);
+
+        var resolved = existingTagIds
+            .Concat(inlineTagIds)
+            .Distinct()
+            .ToList();
+
+        if (resolved.Count > MaxTagsPerItem)
+        {
+            throw new RequestValidationException("validation_error", "Items can have at most 50 tags.");
+        }
+
+        return resolved;
+    }
+
+    private async Task<List<ObjectId>> ResolveExistingTagIdsAsync(string userId, IReadOnlyList<ObjectId> tagIds, CancellationToken cancellationToken)
+    {
+        if (tagIds.Count == 0)
+        {
+            return [];
+        }
+
+        var tags = await tagRepository.GetByIdsAsync(userId, tagIds, cancellationToken);
+        return tags.Select(tag => tag.Id).Distinct().ToList();
+    }
+
+    private async Task<List<ObjectId>> ResolveInlineTagIdsAsync(string userId, IReadOnlyList<string>? newTagNames, CancellationToken cancellationToken)
+    {
+        if (newTagNames is null || newTagNames.Count == 0)
+        {
+            return [];
+        }
+
+        var validNames = newTagNames
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Select(name => name.Trim())
+            .Distinct()
+            .ToList();
+
+        if (validNames.Count == 0)
+        {
+            return [];
+        }
+
+        // Limit concurrency to avoid bursty DB load with large tag lists
+        var results = new ConcurrentBag<TagDto>();
+        using var semaphore = new SemaphoreSlim(5, 5); // Max 5 concurrent tag creates
+
+        await Task.WhenAll(validNames.Select(async name =>
+        {
+            await semaphore.WaitAsync(cancellationToken);
+            try
+            {
+                var result = await tagService.CreateAsync(userId, new CreateTagRequest { Name = name }, cancellationToken);
+                results.Add(result.Tag);
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }));
+
+        var ids = results
+            .Select(result => ObjectId.TryParse(result.Id, out var objectId) ? objectId : (ObjectId?)null)
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value)
+            .Distinct()
+            .ToList();
+
+        return ids;
+    }
+
+    private async Task<Dictionary<ObjectId, TagSummaryDto>> GetTagSummaryMapAsync(
+        string userId,
+        IEnumerable<ObjectId> tagIds,
+        CancellationToken cancellationToken)
+    {
+        var distinctTagIds = tagIds.Distinct().ToList();
+        if (distinctTagIds.Count == 0)
+        {
+            return [];
+        }
+
+        var tags = await tagRepository.GetByIdsAsync(userId, distinctTagIds, cancellationToken);
+        return tags.ToDictionary(
+            tag => tag.Id,
+            tag => new TagSummaryDto(tag.Id.ToString(), tag.DisplayName, tag.Color));
+    }
+
+    private static IReadOnlyList<TagSummaryDto> ExpandTags(
+        IEnumerable<ObjectId> tagIds,
+        IReadOnlyDictionary<ObjectId, TagSummaryDto> tagMap)
+    {
+        return tagIds
+            .Select(tagId => tagMap.TryGetValue(tagId, out var summary) ? summary : null)
+            .Where(summary => summary is not null)
+            .Select(summary => summary!)
+            .ToList();
     }
 
     private async Task<ObjectId?> NormalizeCollectionAssignmentAsync(string userId, string collectionId, CancellationToken cancellationToken)

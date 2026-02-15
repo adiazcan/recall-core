@@ -8,10 +8,10 @@ import type {
 } from './types';
 
 export const itemsApi = {
-  list: (params: ItemListParams = {}) =>
+  listItems: (params: ItemListParams = {}) =>
     apiRequest<ItemListResponse>(`/api/v1/items${buildQueryString(params)}`),
-  get: (id: string) => apiRequest<ItemDto>(`/api/v1/items/${id}`),
-  create: async (data: CreateItemRequest) => {
+  getItem: (id: string) => apiRequest<ItemDto>(`/api/v1/items/${id}`),
+  createItem: async (data: CreateItemRequest) => {
     const response = await apiRequestWithResponse<ItemDto>('/api/v1/items', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -22,12 +22,12 @@ export const itemsApi = {
       created: response.status === 201,
     };
   },
-  update: (id: string, data: UpdateItemRequest) =>
+  updateItem: (id: string, data: UpdateItemRequest) =>
     apiRequest<ItemDto>(`/api/v1/items/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
-  delete: (id: string) =>
+  deleteItem: (id: string) =>
     apiRequest<void>(`/api/v1/items/${id}`, {
       method: 'DELETE',
     }),

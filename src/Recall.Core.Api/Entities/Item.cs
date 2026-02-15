@@ -33,6 +33,9 @@ public class Item
     [BsonElement("tags")]
     public List<string> Tags { get; set; } = [];
 
+    [BsonElement("tagIds")]
+    public List<ObjectId> TagIds { get; set; } = [];
+
     [BsonElement("userId")]
     public string? UserId { get; set; }
 

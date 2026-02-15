@@ -17,7 +17,7 @@ export const DEFAULT_VIEWS = {
 export interface ItemFilterParams {
   status?: ItemStatus;
   collectionId?: string;
-  tag?: string;
+  tagId?: string;
   isFavorite?: boolean;
   cursor?: string;
   limit?: number;
@@ -35,7 +35,7 @@ export function viewStateToFilterParams(view: ViewState): ItemFilterParams {
     case 'collection':
       return { collectionId: view.id };
     case 'tag':
-      return { tag: view.id };
+      return { tagId: view.id };
     default:
       return {};
   }

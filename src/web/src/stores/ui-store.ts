@@ -13,6 +13,9 @@ export interface UIState {
   isCreateCollectionOpen: boolean;
   openCreateCollection: () => void;
   closeCreateCollection: () => void;
+  isCreateTagOpen: boolean;
+  openCreateTag: () => void;
+  closeCreateTag: () => void;
 }
 
 export const useUiStore = create<UIState>((set) => ({
@@ -35,4 +38,7 @@ export const useUiStore = create<UIState>((set) => ({
   isCreateCollectionOpen: false,
   openCreateCollection: () => set({ isCreateCollectionOpen: true }),
   closeCreateCollection: () => set({ isCreateCollectionOpen: false }),
+  isCreateTagOpen: false,
+  openCreateTag: () => set({ isCreateTagOpen: true }),
+  closeCreateTag: () => set({ isCreateTagOpen: false }),
 }));

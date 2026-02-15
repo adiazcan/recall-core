@@ -29,7 +29,7 @@ export interface SaveUrlMessage {
   payload: {
     url: string;
     title?: string;
-    tags?: string[];
+    newTagNames?: string[];
   };
 }
 
@@ -204,8 +204,8 @@ export interface StoredAuth {
 export interface StoredSettings {
   /** Automatically open side panel after saving */
   autoOpenSidePanel: boolean;
-  /** Tags to auto-apply when saving */
-  defaultTags: string[];
+  /** Tag names to auto-apply when saving (inline creation) */
+  defaultTagNames: string[];
 }
 
 // =============================================================================
@@ -230,11 +230,19 @@ export interface SaveableTab extends TabInfo {
 // API Request/Response Types (mirrors backend contracts)
 // =============================================================================
 
+/** Tag summary (expanded from tag ID in responses) */
+export interface TagSummaryDto {
+  id: string;
+  name: string;
+  color: string | null;
+}
+
 /** Request to create a new item - POST /api/v1/items */
 export interface CreateItemRequest {
   url: string;
   title?: string | null;
-  tags?: string[] | null;
+  tagIds?: string[] | null;
+  newTagNames?: string[] | null;
 }
 
 /** Item returned from API */
@@ -247,7 +255,7 @@ export interface ItemDto {
   thumbnailUrl?: string;
   status: 'inbox' | 'archived';
   isFavorite: boolean;
-  tags: string[];
+  tags: TagSummaryDto[];
   collectionId?: string;
   enrichmentStatus?: 'pending' | 'succeeded' | 'failed';
   createdAt: string;

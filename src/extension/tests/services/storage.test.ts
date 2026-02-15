@@ -220,7 +220,7 @@ describe('Storage Service', () => {
   describe('Settings Storage', () => {
     const mockSettings: StoredSettings = {
       autoOpenSidePanel: true,
-      defaultTags: ['test', 'bookmark'],
+      defaultTagNames: ['test', 'bookmark'],
     };
 
     describe('getSettings', () => {
@@ -229,7 +229,7 @@ describe('Storage Service', () => {
 
         expect(result).toEqual({
           autoOpenSidePanel: false,
-          defaultTags: [],
+          defaultTagNames: [],
         });
       });
 
@@ -242,7 +242,7 @@ describe('Storage Service', () => {
 
         expect(result).toEqual({
           autoOpenSidePanel: true,
-          defaultTags: [], // default value
+          defaultTagNames: [], // default value
         });
       });
 
@@ -273,7 +273,7 @@ describe('Storage Service', () => {
         expect(mocks.storage.local.set).toHaveBeenCalledWith({
           settings: {
             autoOpenSidePanel: false,
-            defaultTags: mockSettings.defaultTags,
+            defaultTagNames: mockSettings.defaultTagNames,
           },
         });
       });
@@ -284,7 +284,7 @@ describe('Storage Service', () => {
         expect(mocks.storage.local.set).toHaveBeenCalledWith({
           settings: {
             autoOpenSidePanel: true,
-            defaultTags: [],
+            defaultTagNames: [],
           },
         });
       });

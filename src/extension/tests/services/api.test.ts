@@ -265,7 +265,7 @@ describe('API Service', () => {
       await createItem({
         url: 'https://example.com',
         title: 'Custom Title',
-        tags: ['tag1', 'tag2'],
+        newTagNames: ['tag1', 'tag2'],
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
@@ -274,7 +274,7 @@ describe('API Service', () => {
           body: JSON.stringify({
             url: 'https://example.com',
             title: 'Custom Title',
-            tags: ['tag1', 'tag2'],
+            newTagNames: ['tag1', 'tag2'],
           }),
         })
       );
@@ -415,7 +415,7 @@ describe('API Service', () => {
       expect(result.error).toBeDefined();
     });
 
-    it('passes tags to createItem', async () => {
+    it('passes newTagNames to createItem', async () => {
       setupAuth();
 
       mockFetch.mockResolvedValueOnce({
@@ -429,7 +429,7 @@ describe('API Service', () => {
       expect(mockFetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          body: expect.stringContaining('"tags":["tag1","tag2"]'),
+          body: expect.stringContaining('"newTagNames":["tag1","tag2"]'),
         })
       );
     });

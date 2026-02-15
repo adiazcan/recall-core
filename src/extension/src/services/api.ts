@@ -315,7 +315,7 @@ export async function createItem(
 export async function saveItem(
   url: string,
   title?: string,
-  tags?: string[]
+  newTagNames?: string[]
 ): Promise<SaveResult> {
   // Validate URL first
   const validation = validateUrl(url);
@@ -329,7 +329,7 @@ export async function saveItem(
   }
 
   try {
-    const { item, isNew } = await createItem({ url, title, tags });
+    const { item, isNew } = await createItem({ url, title, newTagNames });
     return {
       success: true,
       isNew,

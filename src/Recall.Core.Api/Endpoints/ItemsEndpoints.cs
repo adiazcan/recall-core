@@ -31,7 +31,7 @@ public static class ItemsEndpoints
                     {
                         var logger = loggerFactory.CreateLogger("ItemsEndpoints");
                         var result = await service.SaveItemAsync(userContext.UserId, request, cancellationToken);
-                        var dto = ItemDto.FromEntity(result.Item);
+                        var dto = await service.ToDtoAsync(userContext.UserId, result.Item, cancellationToken);
 
                         if (result.Created)
                         {
@@ -118,7 +118,7 @@ public static class ItemsEndpoints
             (
                     string? status,
                     string? collectionId,
-                    string? tag,
+                    string? tagId,
                     bool? isFavorite,
                     string? enrichmentStatus,
                     string? cursor,
@@ -134,7 +134,7 @@ public static class ItemsEndpoints
                                 userContext.UserId,
                                 status,
                                 collectionId,
-                                tag,
+                                tagId,
                                 isFavorite,
                                 enrichmentStatus,
                                 cursor,
@@ -174,7 +174,7 @@ public static class ItemsEndpoints
                                 return TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Item not found")));
                             }
 
-                            return TypedResults.Ok(ItemDto.FromEntity(item));
+                            return TypedResults.Ok(await service.ToDtoAsync(userContext.UserId, item, cancellationToken));
                         }
                         catch (RequestValidationException ex)
                         {
@@ -343,7 +343,7 @@ public static class ItemsEndpoints
                                 return TypedResults.NotFound(new ErrorResponse(new ErrorDetail("not_found", "Item not found")));
                             }
 
-                            return TypedResults.Ok(ItemDto.FromEntity(updated));
+                            return TypedResults.Ok(await service.ToDtoAsync(userContext.UserId, updated, cancellationToken));
                         }
                         catch (RequestValidationException ex)
                         {

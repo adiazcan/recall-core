@@ -275,12 +275,6 @@ components:
           type:
           - 'null'
           - string
-        tags:
-          type:
-          - 'null'
-          - array
-          items:
-            type: string
     RenameTagRequest:
       type: object
       properties:

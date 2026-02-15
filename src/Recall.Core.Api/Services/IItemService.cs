@@ -11,12 +11,13 @@ public interface IItemService
         string userId,
         string? status,
         string? collectionId,
-        string? tag,
+        string? tagId,
         bool? isFavorite,
         string? enrichmentStatus,
         string? cursor,
         int? limit,
         CancellationToken cancellationToken = default);
+    Task<ItemDto> ToDtoAsync(string userId, Item item, CancellationToken cancellationToken = default);
     Task<Item?> UpdateItemAsync(string userId, string id, UpdateItemRequest request, CancellationToken cancellationToken = default);
     Task<Item?> MarkEnrichmentPendingAsync(string userId, string id, CancellationToken cancellationToken = default);
     Task<EnrichItemResult?> EnrichItemAsync(string userId, string id, CancellationToken cancellationToken = default);

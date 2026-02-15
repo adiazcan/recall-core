@@ -2,12 +2,15 @@ import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { ItemDetail } from '../../features/items/components/ItemDetail';
 import { CreateCollectionDialog } from '../../features/collections/components/CreateCollectionDialog';
+import { CreateTagDialog } from '../../features/tags/components/CreateTagDialog';
 import { useUiStore } from '../../stores/ui-store';
 import { cn } from '../../lib/utils';
 
 export function Layout() {
   const isCreateCollectionOpen = useUiStore((state) => state.isCreateCollectionOpen);
   const closeCreateCollection = useUiStore((state) => state.closeCreateCollection);
+  const isCreateTagOpen = useUiStore((state) => state.isCreateTagOpen);
+  const closeCreateTag = useUiStore((state) => state.closeCreateTag);
   const isSidebarOpen = useUiStore((state) => state.isSidebarOpen);
   const setSidebarOpen = useUiStore((state) => state.setSidebarOpen);
 
@@ -50,6 +53,10 @@ export function Layout() {
       <CreateCollectionDialog
         open={isCreateCollectionOpen}
         onOpenChange={(open) => (!open ? closeCreateCollection() : undefined)}
+      />
+      <CreateTagDialog
+        open={isCreateTagOpen}
+        onOpenChange={(open) => (!open ? closeCreateTag() : undefined)}
       />
     </div>
   );

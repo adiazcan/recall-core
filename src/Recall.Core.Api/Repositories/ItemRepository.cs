@@ -48,9 +48,9 @@ public sealed class ItemRepository(IMongoDatabase database) : IItemRepository
             filter &= Builders<Item>.Filter.Eq(item => item.IsFavorite, query.IsFavorite.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(query.Tag))
+        if (query.TagId.HasValue)
         {
-            filter &= Builders<Item>.Filter.AnyEq(item => item.Tags, query.Tag);
+            filter &= Builders<Item>.Filter.AnyEq(item => item.TagIds, query.TagId.Value);
         }
 
         if (query.InboxOnly)
@@ -142,18 +142,17 @@ public sealed class ItemRepository(IMongoDatabase database) : IItemRepository
         return result.DeletedCount;
     }
 
-    public async Task<IReadOnlyList<TagCount>> GetAllTagsWithCountsAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TagIdCount>> GetTagIdCountsAsync(string userId, CancellationToken cancellationToken = default)
     {
         var pipeline = new[]
         {
             new BsonDocument("$match", new BsonDocument("userId", userId)),
-            new BsonDocument("$unwind", "$tags"),
+            new BsonDocument("$unwind", "$tagIds"),
             new BsonDocument("$group", new BsonDocument
             {
-                { "_id", "$tags" },
+                { "_id", "$tagIds" },
                 { "count", new BsonDocument("$sum", 1) }
-            }),
-            new BsonDocument("$sort", new BsonDocument("count", -1))
+            })
         };
 
         var results = await _items
@@ -161,34 +160,21 @@ public sealed class ItemRepository(IMongoDatabase database) : IItemRepository
             .ToListAsync(cancellationToken);
 
         return results
-            .Where(doc => doc.Contains("_id") && doc.Contains("count") && doc["_id"].IsString)
-            .Select(doc => new TagCount(doc["_id"].AsString, doc["count"].ToInt32()))
+            .Where(doc => doc.Contains("_id") && doc.Contains("count") && doc["_id"].IsObjectId)
+            .Select(doc => new TagIdCount(doc["_id"].AsObjectId, doc["count"].ToInt32()))
             .ToList();
     }
 
-    public async Task<long> RenameTagAsync(string userId, string oldTag, string newTag, CancellationToken cancellationToken = default)
+    public async Task<long> RemoveTagIdFromItemsAsync(string userId, ObjectId tagId, CancellationToken cancellationToken = default)
     {
-        var filter = Builders<Item>.Filter.Eq(item => item.UserId, userId)
-                     & Builders<Item>.Filter.AnyEq(item => item.Tags, oldTag);
-        var update = Builders<Item>.Update.Set("tags.$[tag]", newTag);
-        var options = new UpdateOptions
+        var filter = new BsonDocument
         {
-            ArrayFilters =
-            [
-                new BsonDocumentArrayFilterDefinition<BsonDocument>(new BsonDocument("tag", oldTag))
-            ]
+            { "userId", userId },
+            { "tagIds", tagId }
         };
 
-        var result = await _items.UpdateManyAsync(filter, update, options, cancellationToken);
-        return result.MatchedCount;
-    }
-
-    public async Task<long> DeleteTagAsync(string userId, string tag, CancellationToken cancellationToken = default)
-    {
-        var filter = Builders<Item>.Filter.Eq(item => item.UserId, userId)
-                     & Builders<Item>.Filter.AnyEq(item => item.Tags, tag);
-        var update = Builders<Item>.Update.Pull(item => item.Tags, tag);
+        var update = new BsonDocument("$pull", new BsonDocument("tagIds", tagId));
         var result = await _items.UpdateManyAsync(filter, update, cancellationToken: cancellationToken);
-        return result.MatchedCount;
+        return result.ModifiedCount;
     }
 }

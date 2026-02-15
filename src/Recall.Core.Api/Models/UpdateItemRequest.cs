@@ -7,5 +7,6 @@ public sealed record UpdateItemRequest
     public string? Status { get; init; }
     public bool? IsFavorite { get; init; }
     public string? CollectionId { get; init; }
-    public IReadOnlyList<string>? Tags { get; init; }
+    public IReadOnlyList<string>? TagIds { get; init; }
+    public IReadOnlyList<string>? NewTagNames { get; init; }
 }

@@ -8,6 +8,7 @@ using Microsoft.Identity.Web;
 using MongoDB.Driver;
 using Recall.Core.Api.Auth;
 using Recall.Core.Api.Endpoints;
+using Recall.Core.Api.Migration;
 using Recall.Core.Api.Models;
 using Recall.Core.Api.Repositories;
 using Recall.Core.Api.Services;
@@ -52,8 +53,12 @@ builder.Services.AddSingleton(sp => mongoClient.GetDatabase(mongoDatabaseName));
 builder.Services.AddHostedService<IndexInitializer>();
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<IItemService, ItemService>();
+builder.Services.AddSingleton<ITagRepository, TagRepository>();
+builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<ICollectionRepository, CollectionRepository>();
 builder.Services.AddScoped<ICollectionService, CollectionService>();
+builder.Services.AddScoped<TagMigrationService>();
+builder.Services.AddScoped<TagMigrationRunner>();
 builder.Services.AddSingleton(blobServiceClient);
 builder.Services.AddEnrichmentCommon();
 builder.Services.AddSingleton<IThumbnailStorage, BlobThumbnailStorage>();
@@ -108,6 +113,15 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+if (args.Length > 0 && string.Equals(args[0], "migrate-tags", StringComparison.OrdinalIgnoreCase))
+{
+    using var scope = app.Services.CreateScope();
+    var runner = scope.ServiceProvider.GetRequiredService<TagMigrationRunner>();
+    var exitCode = await runner.RunAsync(args.Skip(1).ToArray(), CancellationToken.None);
+    Environment.ExitCode = exitCode;
+    return;
+}
 
 if (app.Environment.IsDevelopment())
 {

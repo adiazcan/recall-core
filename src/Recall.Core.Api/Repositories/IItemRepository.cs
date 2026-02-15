@@ -22,9 +22,8 @@ public interface IItemRepository
         DateTime? enrichedAt,
         CancellationToken cancellationToken = default);
     Task<long> DeleteAsync(string userId, ObjectId id, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<TagCount>> GetAllTagsWithCountsAsync(string userId, CancellationToken cancellationToken = default);
-    Task<long> RenameTagAsync(string userId, string oldTag, string newTag, CancellationToken cancellationToken = default);
-    Task<long> DeleteTagAsync(string userId, string tag, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TagIdCount>> GetTagIdCountsAsync(string userId, CancellationToken cancellationToken = default);
+    Task<long> RemoveTagIdFromItemsAsync(string userId, ObjectId tagId, CancellationToken cancellationToken = default);
 }
 
 public sealed record ItemListQuery(
@@ -32,11 +31,11 @@ public sealed record ItemListQuery(
     string? Status,
     ObjectId? CollectionId,
     bool InboxOnly,
-    string? Tag,
+    ObjectId? TagId,
     bool? IsFavorite,
     string? EnrichmentStatus,
     ObjectId? CursorId,
     DateTime? CursorCreatedAt,
     int Limit);
 
-public sealed record TagCount(string Name, int Count);
+public sealed record TagIdCount(ObjectId TagId, int Count);

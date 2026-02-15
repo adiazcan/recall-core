@@ -86,19 +86,38 @@ public class DataIsolationTests : IClassFixture<MongoDbFixture>
         using var userAClient = server.CreateClient("user-a");
         using var userBClient = server.CreateClient("user-b");
 
-        var createResponse = await userAClient.PostAsJsonAsync("/api/v1/items", new CreateItemRequest
+        var createResponse = await userAClient.PostAsJsonAsync("/api/v1/tags", new CreateTagRequest
         {
-            Url = "https://example.com/tagged",
-            Tags = ["alpha"]
+            Name = "alpha"
         });
 
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var userATag = await createResponse.Content.ReadFromJsonAsync<TagDto>();
+        Assert.NotNull(userATag);
 
         var listB = await userBClient.GetFromJsonAsync<TagListResponse>("/api/v1/tags");
         Assert.NotNull(listB);
-        Assert.DoesNotContain(listB!.Tags, tag => tag.Name == "alpha");
+        Assert.DoesNotContain(listB!.Tags, tag => tag.DisplayName == "alpha");
 
-        var deleteResponse = await userBClient.DeleteAsync("/api/v1/tags/alpha");
+        var getResponse = await userBClient.GetAsync($"/api/v1/tags/{userATag!.Id}");
+        Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
+
+        var patchResponse = await userBClient.PatchAsJsonAsync($"/api/v1/tags/{userATag.Id}", new UpdateTagRequest
+        {
+            Name = "renamed"
+        });
+        Assert.Equal(HttpStatusCode.NotFound, patchResponse.StatusCode);
+
+        var createBResponse = await userBClient.PostAsJsonAsync("/api/v1/tags", new CreateTagRequest
+        {
+            Name = "alpha"
+        });
+        Assert.Equal(HttpStatusCode.Created, createBResponse.StatusCode);
+        var userBTag = await createBResponse.Content.ReadFromJsonAsync<TagDto>();
+        Assert.NotNull(userBTag);
+        Assert.NotEqual(userATag.Id, userBTag!.Id);
+
+        var deleteResponse = await userBClient.DeleteAsync($"/api/v1/tags/{userATag.Id}");
         Assert.Equal(HttpStatusCode.NotFound, deleteResponse.StatusCode);
     }
 

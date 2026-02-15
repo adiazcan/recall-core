@@ -13,17 +13,15 @@ const refreshCollections = () => {
 };
 
 const refreshTags = () => {
-  void useTagsStore.getState().fetchTags();
+  void useTagsStore.getState().listTags();
 };
-
-const normalizeTagList = (tags: string[]) => [...tags].sort().join('|');
 
 const matchesViewState = (item: Item, viewState: ViewState): boolean => {
   switch (viewState.type) {
     case 'collection':
       return viewState.id ? item.collectionId === viewState.id : true;
     case 'tag':
-      return viewState.id ? item.tags.includes(viewState.id) : true;
+      return viewState.id ? item.tags.some((tag) => tag.id === viewState.id) : true;
     case 'favorites':
       return item.isFavorite;
     case 'archive':
@@ -47,7 +45,7 @@ export interface ItemsState {
   error: string | null;
   fetchItems: (params: ItemFilterParams) => Promise<void>;
   fetchMore: () => Promise<void>;
-  createItem: (url: string, tags?: string[]) => Promise<{ item: Item; created: boolean } | null>;
+  createItem: (url: string) => Promise<{ item: Item; created: boolean } | null>;
   updateItem: (id: string, data: UpdateItemRequest) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
   toggleFavorite: (id: string) => Promise<void>;
@@ -70,7 +68,7 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const response = await itemsApi.list(params);
+      const response = await itemsApi.listItems(params);
       const items = response.items.map(mapItemDtoToItem);
 
       set({
@@ -94,7 +92,7 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
     set({ isLoadingMore: true, error: null });
 
     try {
-      const response = await itemsApi.list({ cursor: nextCursor });
+      const response = await itemsApi.listItems({ cursor: nextCursor });
       const newItems = response.items.map(mapItemDtoToItem);
 
       set((state) => ({
@@ -108,14 +106,11 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
       set({ error: message, isLoadingMore: false });
     }
   },
-  createItem: async (url, tags) => {
+  createItem: async (url) => {
     set({ isSaving: true, error: null });
 
     try {
-      const response = await itemsApi.create({
-        url,
-        tags: tags && tags.length > 0 ? tags : undefined,
-      });
+      const response = await itemsApi.createItem({ url });
       const item = mapItemDtoToItem(response.item);
 
       set((state) => {
@@ -129,9 +124,6 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
         return { items: [item, ...state.items] };
       });
 
-      if (response.created && tags && tags.length > 0) {
-        refreshTags();
-      }
       return { item, created: response.created };
     } catch (error) {
       const message = error instanceof ApiError ? error.message : 'Unable to save URL.';
@@ -151,19 +143,18 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
 
     const previousItems = [...items];
     const previousCollectionId = item.collectionId;
-    const previousTags = item.tags;
-    const normalizedRequest: UpdateItemRequest =
-      data.collectionId === null ? { ...data, collectionId: '' } : data;
+    const normalizedRequest: UpdateItemRequest = data;
     const nextCollectionId =
-      data.collectionId === undefined ? previousCollectionId : data.collectionId === '' ? null : data.collectionId;
+      data.collectionId === undefined ? previousCollectionId : data.collectionId;
     const shouldRefreshCollections =
       data.collectionId !== undefined && nextCollectionId !== previousCollectionId;
     const shouldRefreshTags =
-      data.tags !== undefined && normalizeTagList(data.tags) !== normalizeTagList(previousTags);
+      data.tagIds !== undefined ||
+      (Array.isArray(data.newTagNames) && data.newTagNames.length > 0);
     const viewState = useUiStore.getState().viewState;
     const nextStatus = data.status ?? item.status;
     const nextFavorite = data.isFavorite ?? item.isFavorite;
-    const nextTags = data.tags ?? item.tags;
+    const nextTagIds = data.tagIds ?? item.tags.map((tag) => tag.id);
     const shouldRemoveFromView = !matchesViewState(
       {
         ...item,
@@ -171,7 +162,7 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
         status: nextStatus,
         isArchived: nextStatus === 'archived',
         isFavorite: nextFavorite,
-        tags: nextTags,
+        tags: item.tags.filter((tag) => nextTagIds.includes(tag.id)),
       },
       viewState,
     );
@@ -193,9 +184,11 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
           updated.isFavorite = data.isFavorite;
         }
         if (data.collectionId !== undefined) {
-          updated.collectionId = data.collectionId === '' ? null : data.collectionId;
+          updated.collectionId = data.collectionId;
         }
-        if (data.tags !== undefined && data.tags !== null) updated.tags = data.tags;
+        if (data.tagIds !== undefined && data.tagIds !== null) {
+          updated.tags = i.tags.filter((tag) => data.tagIds?.includes(tag.id));
+        }
 
         return updated;
       });
@@ -213,7 +206,21 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
     });
 
     try {
-      await itemsApi.update(id, normalizedRequest);
+      const updatedItemDto = await itemsApi.updateItem(id, normalizedRequest);
+      const updatedItem = mapItemDtoToItem(updatedItemDto);
+      
+      // Update with actual response from server
+      set((state) => {
+        const nextItems = state.items.map((i) => (i.id === id ? updatedItem : i));
+        const updatedSnapshot =
+          state.selectedItemId === id ? updatedItem : state.selectedItemSnapshot;
+
+        return {
+          items: shouldRemoveFromView ? nextItems.filter((i) => i.id !== id) : nextItems,
+          selectedItemSnapshot: updatedSnapshot,
+        };
+      });
+
       if (shouldRefreshCollections) {
         refreshCollections();
       }
@@ -244,7 +251,7 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
     });
 
     try {
-      await itemsApi.delete(id);
+      await itemsApi.deleteItem(id);
       if (hadCollection) {
         refreshCollections();
       }
@@ -292,7 +299,7 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
     });
 
     try {
-      await itemsApi.update(id, { isFavorite: newFavoriteState });
+      await itemsApi.updateItem(id, { isFavorite: newFavoriteState });
     } catch (error) {
       // Rollback on error
       set({ items: previousItems });
@@ -332,7 +339,7 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     try {
-      await itemsApi.update(id, { status: newStatus });
+      await itemsApi.updateItem(id, { status: newStatus });
       // Remove from list after successful archive/unarchive when it no longer matches view
       if (shouldRemoveFromView) {
         if (newStatus === 'archived') {

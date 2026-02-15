@@ -6,6 +6,7 @@ import { LoadingState } from './components/common/LoadingState';
 
 const Layout = lazy(() => import('./components/layout/Layout').then((m) => ({ default: m.Layout })));
 const ItemsView = lazy(() => import('./features/items/components/ItemsView').then((m) => ({ default: m.ItemsView })));
+const TagManagementPage = lazy(() => import('./pages/TagManagementPage').then((m) => ({ default: m.TagManagementPage })));
 
 function CollectionView() {
   const { id } = useParams<{ id: string }>();
@@ -25,16 +26,14 @@ function CollectionView() {
 }
 
 function TagView() {
-  const { name } = useParams<{ name: string }>();
+  const { id } = useParams<{ id: string }>();
   const setViewState = useUiStore((state) => state.setViewState);
 
   useEffect(() => {
-    if (name) {
-      // Decode URL-encoded tag name
-      const decodedName = decodeURIComponent(name);
-      setViewState({ type: 'tag', id: decodedName, title: `#${decodedName}` });
+    if (id) {
+      setViewState({ type: 'tag', id, title: 'Tag' });
     }
-  }, [name, setViewState]);
+  }, [id, setViewState]);
 
   return <ItemsView />;
 }
@@ -82,7 +81,15 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'tags/:name',
+        path: 'tags/manage',
+        element: (
+          <Suspense fallback={<LoadingState />}>
+            <TagManagementPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'tags/:id',
         element: (
           <Suspense fallback={<LoadingState />}>
             <TagView />

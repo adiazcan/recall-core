@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Recall.Core.Api.Entities;
@@ -546,7 +547,7 @@ public sealed class ItemService(
         }
 
         // Limit concurrency to avoid bursty DB load with large tag lists
-        var results = new List<TagDto>();
+        var results = new ConcurrentBag<TagDto>();
         var semaphore = new SemaphoreSlim(5, 5); // Max 5 concurrent tag creates
 
         await Task.WhenAll(validNames.Select(async name =>
@@ -555,10 +556,7 @@ public sealed class ItemService(
             try
             {
                 var result = await tagService.CreateAsync(userId, new CreateTagRequest { Name = name }, cancellationToken);
-                lock (results)
-                {
-                    results.Add(result.Tag);
-                }
+                results.Add(result.Tag);
             }
             finally
             {
